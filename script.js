@@ -577,11 +577,22 @@ function desenharJogadores() {
         }
 
         // 🔥 ATUALIZA tileId SEM destruir o tile
-        jogador.tileId = jogador.tile.dataset.id
+        let tileEl = null
+
+        if (jogador.tile === "entrada") {
+            tileEl = document.querySelector('.tile[data-tipo="entrada"]')
+        } else {
+            tileEl = document.querySelector(`.tile[data-id="${jogador.tile}"]`)
+        }
+
+        if (!tileEl) return
 
        const jogadorEl = document.createElement("div")
         jogadorEl.classList.add("jogador", `jogador-${jogador.id}`)
+        jogadorEl.className = "jogador"
+        jogadorEl.textContent = jogador.ordem
 
+        tileEl.appendChild(jogadorEl)
 
         const numero = document.createElement("div")
         numero.innerText = jogador.ordem
@@ -1696,5 +1707,6 @@ socket.on("estadoAtualizado", estado => {
 })
 
 socket.emit("definirTabuleiro", tabuleiroMatriz)
+
 
 
