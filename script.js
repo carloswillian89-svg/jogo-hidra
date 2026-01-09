@@ -42,7 +42,7 @@ function jogadorAtual() {
 }
 
 let entradaPosicao = null
-gerarMatriz() 
+//gerarMatriz() 
 function gerarMatriz() {
     // cria matriz vazia
     tabuleiroMatriz = Array.from({ length: TAMANHO }, () =>
@@ -508,7 +508,7 @@ function obterConexoes(tile) {
 }
 */
 
-criarTabuleiro()
+//criarTabuleiro()
 
 
 function criarTabuleiro() {
@@ -529,15 +529,16 @@ function criarTabuleiro() {
     }
 }
 
+
 function obterTileEntrada() {
-    return document.querySelector(
-        `.tile[data-id="${entradaPosicao.linha}-${entradaPosicao.coluna}"]`
-    )
+    const tile = document.querySelector('.tile[data-tipo="entrada"]')
+    return tile || null
 }
+
 
 console.log("tile:", obterTileEntrada().dataset.id)
 console.log("entradaPosicao:", entradaPosicao)
-
+/*
 function inicializarJogadores() {
     const tileEntrada = obterTileEntrada()
 
@@ -553,7 +554,7 @@ function inicializarJogadores() {
         j.tileId = tileEntrada.dataset.id     // STRING
     })
 }
-
+*/
 jogadorAtualIndex = 0
 
 console.log("inicializarJogadores():", inicializarJogadores() )
@@ -1677,6 +1678,17 @@ socket.on("estadoAtualizado", estado => {
         socket.emit("definirTabuleiro", tabuleiroMatriz)
         return
     }
+    
+    if (estado.tabuleiro && !jogadoresInicializados) {
+    const tileEntrada = obterTileEntrada()
+    if (tileEntrada) {
+        jogadores.forEach(j => {
+            j.tile = tileEntrada.dataset.id
+        })
+        jogadoresInicializados = true
+    }
+}
+
 
     // 🔁 redesenha com dados do servidor
     desenharTabuleiro(estado.tabuleiro)
@@ -1684,4 +1696,5 @@ socket.on("estadoAtualizado", estado => {
 })
 
 socket.emit("definirTabuleiro", tabuleiroMatriz)
+
 
