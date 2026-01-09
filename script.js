@@ -42,7 +42,7 @@ function jogadorAtual() {
 }
 
 let entradaPosicao = null
-//gerarMatriz() 
+gerarMatriz() 
 function gerarMatriz() {
     // cria matriz vazia
     tabuleiroMatriz = Array.from({ length: TAMANHO }, () =>
@@ -508,7 +508,7 @@ function obterConexoes(tile) {
 }
 */
 
-//criarTabuleiro()
+criarTabuleiro()
 
 
 function criarTabuleiro() {
@@ -1679,4 +1679,5 @@ socket.on("estadoAtualizado", estado => {
 })
 
 socket.emit("definirTabuleiro", tabuleiroMatriz)
+
 
