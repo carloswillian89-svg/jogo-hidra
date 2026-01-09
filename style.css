@@ -1,0 +1,840 @@
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+}
+
+#tabuleiro {
+    display: grid;
+    grid-template-columns: repeat(5, 140px);
+    grid-template-rows: repeat(5, 140px);
+    gap: 5px;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+/* Layout principal: tabuleiro + painel lateral */
+#main-area {
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+    justify-content: center;
+    margin-top: 12px;
+}
+
+#side-panel {
+    width: 600px; /* aumentado para comportar inventários mais largos */
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+}
+
+#left-panel {
+    width: 360px; /* maior para caber pelo menos 4 cartas lado a lado */
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+}
+
+#inventario-esquerdo { width: 100%; }
+
+/* Inventário esquerdo: cartas uma ao lado da outra */
+#inventario-esquerdo .zona.inventario {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap; /* mantém uma linha; scrolla se necessário */
+    gap: 8px;
+    padding: 8px;
+    align-items: center;
+    justify-content: flex-start;
+    min-height: 100px;
+    box-sizing: border-box;
+    width: 100%;
+    overflow-x: auto; /* permite rolagem horizontal se houver muitas cartas */
+}
+
+/* Aumentar largura do painel esquerdo para comportar duas cartas lado a lado */
+/* já definido acima: largura maior para comportar 4 cartas */
+
+/* Ajuste para centralizar o tabuleiro entre os painéis */
+#tabuleiro {
+    margin: 0 8px;
+}
+
+/* Ajustes das zonas e inventários no painel lateral */
+#area-cartas { display: flex; gap: 12px; }
+
+#descarte { width: 100%; }
+
+#inventarios { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; }
+
+.zona.inventario { height: 120px; }
+
+/* Responsivo: em telas pequenas empilha verticalmente */
+@media (max-width: 900px) {
+    #main-area { flex-direction: column; align-items: center; }
+    #side-panel { width: auto; }
+    #inventarios { grid-template-columns: 1fr; }
+}
+
+.tile {
+    width: 140px;
+    height: 140px;
+    background-color: #ddd;
+    border: 2px solid #333;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    cursor: pointer;
+    z-index: 1;
+}
+.tile {
+    width: 140px;
+    height: 140px;
+    background-color: #f0f0f0;
+    border: 2px solid #333;
+    position: relative;
+    cursor: pointer;
+    transition: transform 0.2s;
+    z-index: 1;
+}
+
+
+.caminho {
+    position: absolute;
+    background-color: #333;
+    z-index: 1;
+}
+
+
+
+.tile-movimento-valido {
+    outline: 3px solid rgba(76, 175, 80, 0.85);
+    background-color: #e8f5e9;
+    box-shadow: 0 0 10px rgba(76, 175, 80, 0.2);
+    z-index: 2;
+}
+
+.tile-movimento-wrap {
+    outline: 3px dashed rgba(255, 165, 0, 0.95);
+    background-color: rgba(255, 248, 220, 0.9);
+    box-shadow: 0 0 12px rgba(255, 165, 0, 0.18);
+    z-index: 2;
+}
+
+/* Grito da Hidra - destaque de linha/coluna */
+.tile-grito-hidra {
+    outline: 4px solid rgba(139, 0, 0, 1);
+    background: linear-gradient(135deg, rgba(139, 0, 0, 0.25) 0%, rgba(220, 20, 60, 0.15) 100%);
+    box-shadow: 0 0 20px rgba(220, 20, 60, 0.6), inset 0 0 10px rgba(139, 0, 0, 0.3);
+    animation: grito-pulse 0.6s ease-in-out;
+    z-index: 3;
+}
+
+@keyframes grito-pulse {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 20px rgba(220, 20, 60, 0.6), inset 0 0 10px rgba(139, 0, 0, 0.3);
+    }
+    50% {
+        transform: scale(1.02);
+        box-shadow: 0 0 30px rgba(220, 20, 60, 0.9), inset 0 0 15px rgba(139, 0, 0, 0.5);
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 20px rgba(220, 20, 60, 0.6), inset 0 0 10px rgba(139, 0, 0, 0.3);
+    }
+}
+
+/* Animação de terremoto para o tabuleiro */
+@keyframes terremoto {
+    0%, 100% { transform: translate(0, 0) rotate(0deg); }
+    10% { transform: translate(-4px, -3px) rotate(-0.5deg); }
+    20% { transform: translate(3px, -2px) rotate(0.5deg); }
+    30% { transform: translate(-3px, 2px) rotate(-0.5deg); }
+    40% { transform: translate(4px, 3px) rotate(0.5deg); }
+    50% { transform: translate(-2px, -4px) rotate(-0.5deg); }
+    60% { transform: translate(3px, 2px) rotate(0.5deg); }
+    70% { transform: translate(-3px, -3px) rotate(-0.5deg); }
+    80% { transform: translate(2px, 4px) rotate(0.5deg); }
+    90% { transform: translate(-4px, 2px) rotate(-0.5deg); }
+}
+
+#tabuleiro.terremoto {
+    animation: terremoto 1.2s cubic-bezier(0.36, 0, 0.66, -0.56);
+}
+
+/* Contador de rodadas */
+#contador-rodadas {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    background: rgba(0,0,0,0.03);
+    border-radius: 6px;
+}
+
+#contador-rodadas button {
+    width: 28px;
+    height: 28px;
+    border: 1px solid rgba(0,0,0,0.12);
+    background: #fff;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+#contador-rodadas label {
+    font-weight: 600;
+    color: #222;
+}
+
+#rodadas-valor {
+    min-width: 34px;
+    text-align: center;
+    font-weight: 700;
+}
+
+/* Contadores de PA e FA (entre inventários e tabuleiro) */
+#player-counters {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: stretch;
+    justify-content: flex-start;
+    width: 100%;
+}
+
+.player-counter-row {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
+}
+
+.player-counter-row > label {
+    font-weight: 600;
+    color: #222;
+    font-size: 14px;
+}
+
+.counters-group {
+    display: flex;
+    gap: 6px;
+    width: 100%;
+}
+
+.pa-counter,
+.fa-counter {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 6px;
+    background: rgba(0,0,0,0.03);
+    border-radius: 6px;
+    flex: 1;
+    box-sizing: border-box;
+}
+
+.counter-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #666;
+}
+
+.pa-counter button,
+.fa-counter button {
+    width: 24px;
+    height: 24px;
+    border: 1px solid rgba(0,0,0,0.12);
+    background: #fff;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.player-dot {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-right: 6px;
+    border: 2px solid rgba(0,0,0,0.15);
+    vertical-align: -2px;
+}
+
+[id^="pa-"][id$="-valor"],
+[id^="fa-"][id$="-valor"] {
+    min-width: 28px;
+    text-align: center;
+    font-weight: 700;
+    font-size: 14px;
+}
+
+#fimTurno {
+    margin-top: 15px;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+#grito-da-hidra {
+    margin-top: 10px;
+    padding: 10px 16px;
+    font-size: 15px;
+    cursor: pointer;
+    background: linear-gradient(135deg, #8B0000 0%, #DC143C 100%);
+    color: white;
+    border: 2px solid #5a0000;
+    border-radius: 6px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+#grito-da-hidra:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(139, 0, 0, 0.4);
+}
+
+#grito-da-hidra:active {
+    transform: translateY(0px);
+    box-shadow: 0 2px 4px rgba(139, 0, 0, 0.3);
+}
+
+#infoTurno {
+    margin-top: 10px;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.jogador {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    position: absolute;
+    bottom: 6px;
+    right: 6px;
+    z-index: 30;
+}
+
+.tile .jogador:nth-child(1) {
+    transform: translate(-50%, -50%);
+}
+
+.tile .jogador:nth-child(2) {
+    transform: translate(-100%, -50%);
+}
+
+.tile .jogador:nth-child(3) {
+    transform: translate(0%, -50%);
+}
+
+.tile .jogador:nth-child(4) {
+    transform: translate(-50%, -100%);
+}
+
+.tile {
+    position: relative;
+    overflow: visible; /* segurança extra */
+    z-index: 1;
+    transform-origin: center center;
+}
+
+.conteudo-tile {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transition: transform 0.2s;
+}
+
+.conteudo {
+    transform-origin: center center;
+}
+
+
+.jogador-1 { background-color: blue; }
+.jogador-2 { background-color: red; }
+.jogador-3 { background-color: green; }
+.jogador-4 { background-color: purple; }
+
+
+.zona {
+    width: 100px;
+    height: 140px;
+    border: 2px dashed #666;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,255,0,0.2);
+}
+
+/* posicionamento relativo para permitir overlay das cartas */
+.zona {
+    position: relative;
+}
+
+/* rótulo das zonas: permanece centralizado, atrás das cartas */
+.zona-label {
+    position: absolute;
+    left: 50%;
+    top: 8px;
+    transform: translateX(-50%);
+    z-index: 2; /* abaixo das cartas */
+    pointer-events: none; /* não bloqueia interações com cartas */
+    font-weight: bold;
+}
+
+.carta-inner {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.4s;
+}
+
+.carta.virada .carta-inner {
+    transform: rotateY(180deg);
+}
+
+.carta-face {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: bold;
+    text-align: center;
+}
+
+.carta-face {
+    backface-visibility: hidden;
+}
+
+.carta-frente {
+    transform: rotateY(180deg);
+    background-color: transparent;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.tile.drop-ativo {
+    outline: 3px dashed gold;
+}
+
+.cartas-no-tile {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    z-index: 20; /* 🔥 acima do desenho do tile */
+    pointer-events: auto;
+}
+
+.tile::before,
+.tile::after,
+.tile .tile-conteudo,
+.tile .tile-imagem {
+    z-index: 5;
+    position: relative;
+}
+
+
+
+/* BASE DA CARTA */
+.carta {
+    width: 50px;
+    height: 50px;
+    border-radius: 8px;
+    border: 2px solid #000;
+    color: white;
+    font-weight: bold;
+    cursor: grab;
+    position: relative; /* faz o zoom-btn posicionar-se relativo à carta */
+}
+
+/* garante que cartas fiquem visualmente acima dos rótulos */
+.zona .carta {
+    position: relative;
+    z-index: 10;
+}
+
+/* 🟥 CARTAS DE PERIGO */
+.carta.perigo .carta-verso{
+    background-color: #8b0000; /* vermelho escuro */
+}
+
+/* ⬛ CARTAS DE ARTEFATO */
+.carta.artefato .carta-verso {
+    background-color: #111; /* preto */
+}
+
+/* TEXTO */
+.carta-frente {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 6px;
+}
+
+.carta.perigo {
+    box-shadow: 0 0 10px red;
+}
+
+.carta.artefato {
+    box-shadow: 0 0 10px black;
+}
+
+
+.zoom-btn {
+    position: absolute;
+    bottom: 4px;
+    left: 4px;
+    font-size: 10px;
+    background: rgba(0,0,0,0.6);
+    color: white;
+    border-radius: 4px;
+    padding: 2px 4px;
+    cursor: pointer;
+    z-index: 10;
+}
+
+.zoom-btn:hover {
+    background: rgba(0,0,0,0.9);
+}
+.zoom-btn {
+    pointer-events: auto;
+}
+
+
+/* OVERLAY */
+#zoom-carta-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.8);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 99999;
+}
+
+#zoom-carta-overlay.ativo {
+    display: flex;
+}
+
+/* BOTÃO FECHAR */
+#zoom-fechar-btn {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: 50%;
+    background: #000;
+    color: #fff;
+    font-size: 22px;
+    font-weight: bold;
+    cursor: pointer;
+    z-index: 100000;
+}
+
+#zoom-fechar-btn:hover {
+    background: #b00000;
+}
+
+/* CARTA EM ZOOM */
+#zoom-carta-container .carta {
+    width: 240px;
+    height: 360px;
+    cursor: default;
+}
+
+/* Área de personagens abaixo do tabuleiro */
+#cartas-personagens {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    align-items: flex-start;
+    margin: 18px auto 40px auto;
+    padding: 6px;
+    max-width: calc(100% - 40px);
+    box-sizing: border-box;
+    flex-wrap: wrap;
+}
+
+.personagens-container .carta-personagem {
+    margin: 6px;
+}
+
+
+#painel-dado {
+    margin-top: 12px;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    background: #222;
+    border-radius: 6px;
+    color: #fff;
+}
+
+#btn-rolar-2d6 {
+    padding: 6px 12px;
+    font-size: 15px;
+    cursor: pointer;
+}
+
+#resultado-dado {
+    font-weight: bold;
+    font-size: 15px;
+}
+
+#btn-rolar-d6 {
+    padding: 6px 12px;
+    font-size: 15px;
+    cursor: pointer;
+}
+
+
+#dados-visual {
+    display: flex;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+.dado {
+    width: 30px;
+    height: 30px;
+    background: #fff;
+    color: #000;
+    font-weight: bold;
+    font-size: 20px;
+    border-radius: 6px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+    transition: transform 0.1s;
+}
+
+.dado.rolando {
+    transform: rotate(15deg);
+}
+
+
+.carta-personagem {
+    width: 160px;
+    height: 220px;
+    perspective: 1000px;
+    cursor: pointer;
+    position: relative; /* para botão de zoom absoluto */
+}
+
+/* Borda de cartas-personagem correspondendo às cores dos jogadores */
+.carta-personagem { border: 3px solid transparent; }
+.carta-personagem.jogador-1 { border-color: blue; }
+.carta-personagem.jogador-2 { border-color: red; }
+.carta-personagem.jogador-3 { border-color: green; }
+.carta-personagem.jogador-4 { border-color: purple; }
+
+/* Inventário: aplicar cor do jogador aos slots */
+#jogador-1.zona.inventario { 
+    border: 3px solid blue; 
+    background: rgba(0, 0, 255, 0.2);
+}
+#jogador-2.zona.inventario { 
+    border: 3px solid red; 
+    background: rgba(255, 0, 0, 0.2);
+}
+#jogador-3.zona.inventario { 
+    border: 3px solid green; 
+    background: rgba(0, 128, 0, 0.2);
+}
+#jogador-4.zona.inventario { 
+    border: 3px solid purple; 
+    background: rgba(128, 0, 128, 0.2);
+}
+
+/* Destaque de inventário ativo */
+.zona.inventario.ativo {
+    box-shadow: 0 0 0 6px rgba(255,215,0,0.18);
+    outline: 2px solid rgba(255,215,0,0.6);
+}
+
+/* Destaque do jogador ativo: borda/halo dourado */
+.carta-personagem.ativo {
+    border-color: gold !important;
+    box-shadow: 0 0 0 4px rgba(255,215,0,0.25), 0 6px 18px rgba(0,0,0,0.25);
+    outline: 2px solid rgba(255,215,0,0.6);
+}
+
+.carta-inner {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transition: transform 0.6s;
+    transform-style: preserve-3d;
+}
+
+.carta-personagem.virada .carta-inner {
+    transform: rotateY(180deg);
+}
+
+/* Fallback: garantir que o verso seja visível ao virar usando opacidade
+   (protege contra navegadores que não aplicam backface-visibility corretamente) */
+.carta-personagem .carta-frente {
+    opacity: 1 !important;
+    transition: opacity 0.4s ease !important;
+}
+
+.carta-personagem .carta-verso {
+    opacity: 0 !important;
+    transition: opacity 0.4s ease !important;
+}
+
+.carta-personagem.virada .carta-frente {
+    opacity: 0 !important;
+}
+
+.carta-personagem.virada .carta-verso {
+    opacity: 1 !important;
+}
+
+/* Regras explícitas para garantir flip correto das cartas-personagem */
+.carta-personagem .carta-inner {
+    transform-style: preserve-3d;
+    transition: transform 0.6s;
+}
+
+.carta-personagem .carta-frente,
+.carta-personagem .carta-verso {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+}
+
+.carta-personagem .carta-frente {
+    transform: rotateY(0deg) !important;
+    z-index: 2;
+}
+
+.carta-personagem .carta-verso {
+    transform: rotateY(180deg) !important;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 8px;
+    box-sizing: border-box;
+}
+
+.carta-personagem .carta-verso img {
+    width: 110%;
+    height: auto;
+    max-height: 100%; /* aumenta espaço reservado para a imagem do verso */
+    object-fit: cover; /* preserva proporção e mostra toda a imagem */
+    display: block;
+}
+
+.carta-personagem .carta-verso {
+    overflow: auto; /* permite rolagem caso o conteúdo exceda a área */
+}
+
+/* Regras finais e específicas para forçar o flip correto das cartas-personagem */
+.carta-personagem {
+    perspective: 1200px !important;
+}
+
+.carta-personagem .carta-inner {
+    transform-style: preserve-3d !important;
+    transition: transform 0.6s !important;
+    transform-origin: center center !important;
+}
+
+.carta-personagem .carta-frente,
+.carta-personagem .carta-verso {
+    backface-visibility: hidden !important;
+    -webkit-backface-visibility: hidden !important;
+    position: absolute !important;
+    inset: 0 !important;
+}
+
+.carta-personagem .carta-frente {
+    transform: rotateY(0deg) !important;
+    z-index: 2 !important;
+}
+
+.carta-personagem .carta-verso {
+    transform: rotateY(180deg) !important;
+    z-index: 1 !important;
+    visibility: visible !important;
+}
+
+.carta-personagem.virada .carta-inner {
+    transform: rotateY(180deg) !important;
+}
+
+
+.carta-frente,
+.carta-verso {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 2px solid #555;
+    background: #111;
+    color: #fff;
+    box-sizing: border-box;
+}
+
+/* FRENTE */
+.carta-frente {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.carta-frente img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+
+.carta-verso img {
+    width: 100%;
+    height: auto; /* permitir altura automática para mostrar a imagem completa */
+    max-height: 40%;
+    object-fit: cover;
+    border-radius: 4px;
+    margin-bottom: 6px;
+}
+
+/* Corrige sobreposição de transform global para cartas personagens
+   (o seletor .carta-frente foi usado globalmente para pequenas cartas,
+    então precisamos redefinir para as cartas-personagem) */
+.carta-personagem .carta-frente {
+    transform: none !important;
+    z-index: 2;
+}
+
+.carta-personagem .carta-verso {
+    transform: rotateY(180deg) !important;
+    z-index: 1;
+}

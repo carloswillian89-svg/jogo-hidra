@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Labirinto da Hidra</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <h1>Labirinto da Hidra</h1>
+
+
+    <div id="main-area">
+        <aside id="left-panel">
+            <div id="inventario-esquerdo">
+                <div id="jogador-1" class="zona inventario"><span class="zona-label">Torvin</span></div>
+                <div id="jogador-2" class="zona inventario"><span class="zona-label">Elara</span></div>
+                <div id="jogador-3" class="zona inventario"><span class="zona-label">Zephyr</span></div>
+                <div id="jogador-4" class="zona inventario"><span class="zona-label">Kaelen</span></div>
+            </div>
+            <div id="player-counters">
+                <div class="player-counter-row">
+                    <label><span class="player-dot jogador-1"></span> Torvin</label>
+                    <div class="counters-group">
+                        <div class="pa-counter" id="pa-j1">
+                            <span class="counter-label">PA</span>
+                            <button id="pa-1-decr" aria-label="Diminuir PA J1">-</button>
+                            <span id="pa-1-valor">0</span>
+                            <button id="pa-1-incr" aria-label="Aumentar PA J1">+</button>
+                        </div>
+                        <div class="fa-counter" id="fa-j1">
+                            <span class="counter-label">FA</span>
+                            <button id="fa-1-decr" aria-label="Diminuir FA J1">-</button>
+                            <span id="fa-1-valor">0</span>
+                            <button id="fa-1-incr" aria-label="Aumentar FA J1">+</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="player-counter-row">
+                    <label><span class="player-dot jogador-2"></span> Elara</label>
+                    <div class="counters-group">
+                        <div class="pa-counter" id="pa-j2">
+                            <span class="counter-label">PA</span>
+                            <button id="pa-2-decr" aria-label="Diminuir PA J2">-</button>
+                            <span id="pa-2-valor">0</span>
+                            <button id="pa-2-incr" aria-label="Aumentar PA J2">+</button>
+                        </div>
+                        <div class="fa-counter" id="fa-j2">
+                            <span class="counter-label">FA</span>
+                            <button id="fa-2-decr" aria-label="Diminuir FA J2">-</button>
+                            <span id="fa-2-valor">0</span>
+                            <button id="fa-2-incr" aria-label="Aumentar FA J2">+</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="player-counter-row">
+                    <label><span class="player-dot jogador-3"></span> Zephyr</label>
+                    <div class="counters-group">
+                        <div class="pa-counter" id="pa-j3">
+                            <span class="counter-label">PA</span>
+                            <button id="pa-3-decr" aria-label="Diminuir PA J3">-</button>
+                            <span id="pa-3-valor">0</span>
+                            <button id="pa-3-incr" aria-label="Aumentar PA J3">+</button>
+                        </div>
+                        <div class="fa-counter" id="fa-j3">
+                            <span class="counter-label">FA</span>
+                            <button id="fa-3-decr" aria-label="Diminuir FA J3">-</button>
+                            <span id="fa-3-valor">0</span>
+                            <button id="fa-3-incr" aria-label="Aumentar FA J3">+</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="player-counter-row">
+                    <label><span class="player-dot jogador-4"></span> Kaelen</label>
+                    <div class="counters-group">
+                        <div class="pa-counter" id="pa-j4">
+                            <span class="counter-label">PA</span>
+                            <button id="pa-4-decr" aria-label="Diminuir PA J4">-</button>
+                            <span id="pa-4-valor">0</span>
+                            <button id="pa-4-incr" aria-label="Aumentar PA J4">+</button>
+                        </div>
+                        <div class="fa-counter" id="fa-j4">
+                            <span class="counter-label">FA</span>
+                            <button id="fa-4-decr" aria-label="Diminuir FA J4">-</button>
+                            <span id="fa-4-valor">0</span>
+                            <button id="fa-4-incr" aria-label="Aumentar FA J4">+</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+                <div id="tabuleiro"></div>
+        
+
+        <aside id="side-panel">
+            <div id="painel-dado">
+    <button id="btn-rolar-d6">🎲 Rolar D6</button>
+    <button id="btn-rolar-2d6">🎲🎲 Rolar 2D6</button>
+
+    <div id="dados-visual">
+        <span class="dado" id="dado1">–</span>
+        <span class="dado" id="dado2">–</span>
+    </div>
+
+    <div id="resultado-dado"></div>
+            </div>
+
+            <button id="fimTurno">Encerrar Turno</button>
+            <p id="infoTurno"></p>
+
+            <button id="grito-da-hidra">🐉 Grito da Hidra</button>
+
+            <div id="contador-rodadas" class="contador-rodadas">
+                <span class="rotulo-rodada">Rodada atual</span>
+                <button id="rodadas-decr" aria-label="Diminuir rodada">-</button>
+                <span id="rodadas-valor">1</span>
+                <button id="rodadas-incr" aria-label="Aumentar rodada">+</button>
+            </div>
+
+            <div id="area-cartas">
+                <div id="pilha-perigo" class="zona cartas"><span class="zona-label">Perigo</span></div>
+                <div id="pilha-artefato" class="zona cartas"><span class="zona-label">Artefatos</span></div>
+            </div>
+
+            <div id="descarte" class="zona descarte"><span class="zona-label">Descarte</span></div>
+
+        </aside>
+    </div>
+
+
+    <div id="cartas-personagens" class="personagens-container"></div>
+
+    <script src="script.js"></script>
+</body>
+
+
+</html>
