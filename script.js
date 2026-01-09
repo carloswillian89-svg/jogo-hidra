@@ -1011,6 +1011,18 @@ function inicializarCartas() {
         { id: "a10", nome: "A Máscara do Caos (A Face da Mentira)", efeito: "Escolhe onde o próximo artefato é descartado", imagem: "cartas/Artefatos/10-A_Mascara_do_Caos_carta.png", imagemMiniatura: "cartas/Artefatos/10-A_Mascara_do_Caos.png" }
     ]
 
+    function serializarCartas() {
+    return Array.from(cartas.values()).map(c => ({
+        id: c.id,
+        tipo: c.tipo,
+        faceUp: c.faceUp,
+        zona: c.zona,
+        nome: c.nome,
+        efeito: c.efeito,
+        imagem: c.imagem
+    }))
+}
+
     
     /* =========================
        EMBARALHAR
@@ -1701,7 +1713,10 @@ socket.on("estadoAtualizado", estado => {
 })
 
 socket.emit("definirTabuleiro", tabuleiroMatriz)
+const cartasSerializadas = serializarCartas()
 socket.emit("definirCartas", cartasSerializadas)
+
+
 
 
 
