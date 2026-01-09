@@ -1654,11 +1654,23 @@ socket.on("connect", () => {
 })
 
 socket.on("estadoAtualizado", estado => {
-    console.log("Estado recebido do servidor:", estado)
+    console.log("Estado sincronizado:", estado)
+
+    // 🔁 substituir estado local
+    estadoGlobal = estado
+
+    // 🔥 redesenhar TUDO
+    desenharTabuleiro(estado.tabuleiro)
+    desenharJogadores(estado.jogadores)
+    renderizarCartas(estado.cartas)
+    atualizarTurno(estado.turnoAtual)
+})
+
 
     // ⚠️ aqui no futuro:
     // sincronizar jogadores
     // sincronizar tabuleiro
     // sincronizar cartas
 })
+
 
