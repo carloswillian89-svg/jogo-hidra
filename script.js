@@ -557,8 +557,6 @@ jogadorAtualIndex = 0
 
 //Jogadores
 
-console.log("Jogadores antes do desenho:", jogadores[jogadorAtualIndex])
-
 function desenharJogadores() {
     document.querySelectorAll(".jogador").forEach(j => j.remove())
 
@@ -1704,6 +1702,7 @@ socket.on("estadoAtualizado", estado => {
 
 socket.emit("definirTabuleiro", tabuleiroMatriz)
 socket.emit("definirCartas", cartasSerializadas)
+
 
 
 
