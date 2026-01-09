@@ -1644,3 +1644,22 @@ renderizarCartasPersonagens(jogadorAtual().id)
 // garante que o nome do personagem apareça ao iniciar, após a definição de `personagens`
 atualizarInfoTurno()
 atualizarDestaqueInventario()
+
+
+const socket = io("http://localhost:3000")
+
+socket.on("connect", () => {
+    console.log("Conectado ao servidor:", socket.id)
+
+    const nome = prompt("Digite seu nome:")
+    socket.emit("entrarJogo", nome)
+})
+
+socket.on("estadoAtualizado", estado => {
+    console.log("Estado recebido do servidor:", estado)
+
+    // ⚠️ aqui no futuro:
+    // sincronizar jogadores
+    // sincronizar tabuleiro
+    // sincronizar cartas
+})
