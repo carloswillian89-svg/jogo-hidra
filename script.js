@@ -555,8 +555,6 @@ function inicializarJogadores() {
 */
 jogadorAtualIndex = 0
 
-console.log("inicializarJogadores():", inicializarJogadores() )
-
 //Jogadores
 
 console.log("Jogadores antes do desenho:", jogadores[jogadorAtualIndex])
@@ -1706,6 +1704,7 @@ socket.on("estadoAtualizado", estado => {
 
 socket.emit("definirTabuleiro", tabuleiroMatriz)
 socket.emit("definirCartas", cartasSerializadas)
+
 
 
 
