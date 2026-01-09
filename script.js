@@ -556,6 +556,8 @@ function inicializarJogadores() {
 
 jogadorAtualIndex = 0
 
+console.log("inicializarJogadores():", inicializarJogadores() )
+
 //Jogadores
 
 console.log("Jogadores antes do desenho:", jogadores[jogadorAtualIndex])
@@ -1046,7 +1048,7 @@ function embaralharArray(array) {
 
 
 
-//inicializarCartas()
+inicializarCartas()
 
 function obterTopoDaPilha(zonaId) {
     const cartasDaPilha = [...cartas.values()]
@@ -1644,6 +1646,9 @@ atualizarInfoTurno()
 atualizarDestaqueInventario()
 
 
+
+
+
 const socket = io("http://localhost:3000")
 
 socket.on("connect", () => {
@@ -1679,5 +1684,4 @@ socket.on("estadoAtualizado", estado => {
 })
 
 socket.emit("definirTabuleiro", tabuleiroMatriz)
-
 
