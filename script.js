@@ -536,8 +536,6 @@ function obterTileEntrada() {
 }
 
 
-console.log("tile:", obterTileEntrada().dataset.id)
-console.log("entradaPosicao:", entradaPosicao)
 /*
 function inicializarJogadores() {
     const tileEntrada = obterTileEntrada()
@@ -1707,6 +1705,7 @@ socket.on("estadoAtualizado", estado => {
 })
 
 socket.emit("definirTabuleiro", tabuleiroMatriz)
+
 
 
 
