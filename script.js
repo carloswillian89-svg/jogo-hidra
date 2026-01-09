@@ -42,7 +42,7 @@ function jogadorAtual() {
 }
 
 let entradaPosicao = null
-gerarMatriz() 
+//gerarMatriz() 
 function gerarMatriz() {
     // cria matriz vazia
     tabuleiroMatriz = Array.from({ length: TAMANHO }, () =>
@@ -508,7 +508,7 @@ function obterConexoes(tile) {
 }
 */
 
-criarTabuleiro()
+//criarTabuleiro()
 
 
 function criarTabuleiro() {
@@ -555,8 +555,6 @@ function inicializarJogadores() {
 }
 
 jogadorAtualIndex = 0
-
-console.log("inicializarJogadores():", inicializarJogadores() )
 
 //Jogadores
 
@@ -1048,7 +1046,7 @@ function embaralharArray(array) {
 
 
 
-inicializarCartas()
+//inicializarCartas()
 
 function obterTopoDaPilha(zonaId) {
     const cartasDaPilha = [...cartas.values()]
@@ -1663,3 +1661,4 @@ socket.on("estadoAtualizado", estado => {
     // sincronizar tabuleiro
     // sincronizar cartas
 })
+
