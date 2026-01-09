@@ -1652,6 +1652,11 @@ socket.on("connect", () => {
     const nome = prompt("Digite seu nome:")
     socket.emit("entrarJogo", nome)
 })
+
+socket.on("connect_error", err => {
+    console.error("❌ Erro de conexão:", err.message)
+})
+
 let estadoGlobal = null
 
 socket.on("estadoAtualizado", estado => {
@@ -1681,6 +1686,7 @@ socket.emit("definirTabuleiro", tabuleiroMatriz)
     // sincronizar tabuleiro
     // sincronizar cartas
 })
+
 
 
 
