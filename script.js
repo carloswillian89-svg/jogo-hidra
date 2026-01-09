@@ -1680,13 +1680,3 @@ socket.on("estadoAtualizado", estado => {
 
 socket.emit("definirTabuleiro", tabuleiroMatriz)
 
-
-    // ⚠️ aqui no futuro:
-    // sincronizar jogadores
-    // sincronizar tabuleiro
-    // sincronizar cartas
-})
-
-
-
-
