@@ -999,29 +999,17 @@ function inicializarCartas() {
        ARTEFATOS
        ========================= */
     const artefatos = [
-        { id: "a1", nome: "A Gema da Visão (O Olho de Ciclope)", efeito: "+3 PA para o turno", imagem: "cartas/Artefatos/1-Gema_da_visao_carta.png", imagemMiniatura: "cartas/Artefatos/1-Gema_da_visao.png" },
-        { id: "a2", nome: "A Lâmina do Limiar (A Espada Quebra-Feitiços)", efeito: "Imune aos efeitos de Tiles de Perigo", imagem: "cartas/Artefatos/2-A_Lamina_do_Limiar_carta.png", imagemMiniatura: "cartas/Artefatos/2-A_Lamina_do_Limiar.png" },
-        { id: "a3", nome: "O Amuleto do Eco (A Concha da Memória)", efeito: "Recupera 1 item perdido", imagem: "cartas/Artefatos/3-O_Amuleto_do_Eco_carta.png", imagemMiniatura: "cartas/Artefatos/3-O_Amuleto_do_Eco.png" },
-        { id: "a4", nome: "O Cálice do Tempo (O Recipiente Gotejante)", efeito: "Força de Ataque em combate aumentado", imagem: "cartas/Artefatos/4-O_Calice_do_Tempo_carta.png", imagemMiniatura: "cartas/Artefatos/4-O_Calice_do_Tempo.png" },
-        { id: "a5", nome: "A Coroa da Fuga (O Diadema do Vencedor)", efeito: "+1 em todos os testes", imagem: "cartas/Artefatos/5-A_Coroa_da_Fuga_carta.png", imagemMiniatura: "cartas/Artefatos/5-A_Coroa_da_Fuga.png" },
-        { id: "a6", nome: "O Sino da Calma (A Campainha Silenciosa)", efeito: "Recupera PA perdidos", imagem: "cartas/Artefatos/6-O_Sino_da_Calma_carta.png", imagemMiniatura: "cartas/Artefatos/6-O_Sino_da_Calma.png" },
-        { id: "a7", nome: "A Lamparina da Sombra (A Lanterna Desorientadora)", efeito: "Mover 1 Tile de perigo para borda", imagem: "cartas/Artefatos/7-A_Lamparina_da_Sombra_carta.png", imagemMiniatura: "cartas/Artefatos/7-A_Lamparina_da_Sombra.png" },
-        { id: "a8", nome: "O Anel da Gravidade (O Peso de Pedra)", efeito: "Move 1 Tile para longe da Hidra", imagem: "cartas/Artefatos/8-O_Anel_da_Gravidade_carta.png", imagemMiniatura: "cartas/Artefatos/8-O_Anel_da_Gravidade.png" },
-        { id: "a9", nome: "O Mapa do Espectro (A Tábua Riscada)", efeito: "Pode olhar o próximo Artefato da Pilha", imagem: "cartas/Artefatos/9-O_Mapa_do_Espectro_carta.png", imagemMiniatura: "cartas/Artefatos/9-O_Mapa_do_Espectro.png" },
-        { id: "a10", nome: "A Máscara do Caos (A Face da Mentira)", efeito: "Escolhe onde o próximo artefato é descartado", imagem: "cartas/Artefatos/10-A_Mascara_do_Caos_carta.png", imagemMiniatura: "cartas/Artefatos/10-A_Mascara_do_Caos.png" }
+        { id: "a1", tipo: "artefatos", nome: "A Gema da Visão (O Olho de Ciclope)", efeito: "+3 PA para o turno", imagem: "cartas/Artefatos/1-Gema_da_visao_carta.png", imagemMiniatura: "cartas/Artefatos/1-Gema_da_visao.png" },
+        { id: "a2", tipo: "artefatos", nome: "A Lâmina do Limiar (A Espada Quebra-Feitiços)", efeito: "Imune aos efeitos de Tiles de Perigo", imagem: "cartas/Artefatos/2-A_Lamina_do_Limiar_carta.png", imagemMiniatura: "cartas/Artefatos/2-A_Lamina_do_Limiar.png" },
+        { id: "a3", tipo: "artefatos", nome: "O Amuleto do Eco (A Concha da Memória)", efeito: "Recupera 1 item perdido", imagem: "cartas/Artefatos/3-O_Amuleto_do_Eco_carta.png", imagemMiniatura: "cartas/Artefatos/3-O_Amuleto_do_Eco.png" },
+        { id: "a4", tipo: "artefatos", nome: "O Cálice do Tempo (O Recipiente Gotejante)", efeito: "Força de Ataque em combate aumentado", imagem: "cartas/Artefatos/4-O_Calice_do_Tempo_carta.png", imagemMiniatura: "cartas/Artefatos/4-O_Calice_do_Tempo.png" },
+        { id: "a5", tipo: "artefatos", nome: "A Coroa da Fuga (O Diadema do Vencedor)", efeito: "+1 em todos os testes", imagem: "cartas/Artefatos/5-A_Coroa_da_Fuga_carta.png", imagemMiniatura: "cartas/Artefatos/5-A_Coroa_da_Fuga.png" },
+        { id: "a6", tipo: "artefatos", nome: "O Sino da Calma (A Campainha Silenciosa)", efeito: "Recupera PA perdidos", imagem: "cartas/Artefatos/6-O_Sino_da_Calma_carta.png", imagemMiniatura: "cartas/Artefatos/6-O_Sino_da_Calma.png" },
+        { id: "a7", tipo: "artefatos", nome: "A Lamparina da Sombra (A Lanterna Desorientadora)", efeito: "Mover 1 Tile de perigo para borda", imagem: "cartas/Artefatos/7-A_Lamparina_da_Sombra_carta.png", imagemMiniatura: "cartas/Artefatos/7-A_Lamparina_da_Sombra.png" },
+        { id: "a8", tipo: "artefatos", nome: "O Anel da Gravidade (O Peso de Pedra)", efeito: "Move 1 Tile para longe da Hidra", imagem: "cartas/Artefatos/8-O_Anel_da_Gravidade_carta.png", imagemMiniatura: "cartas/Artefatos/8-O_Anel_da_Gravidade.png" },
+        { id: "a9", tipo: "artefatos", nome: "O Mapa do Espectro (A Tábua Riscada)", efeito: "Pode olhar o próximo Artefato da Pilha", imagem: "cartas/Artefatos/9-O_Mapa_do_Espectro_carta.png", imagemMiniatura: "cartas/Artefatos/9-O_Mapa_do_Espectro.png" },
+        { id: "a10", tipo: "artefatos", nome: "A Máscara do Caos (A Face da Mentira)", efeito: "Escolhe onde o próximo artefato é descartado", imagem: "cartas/Artefatos/10-A_Mascara_do_Caos_carta.png", imagemMiniatura: "cartas/Artefatos/10-A_Mascara_do_Caos.png" }
     ]
-
-    function serializarCartas() {
-    return Array.from(cartas.values()).map(c => ({
-        id: c.id,
-        tipo: c.tipo,
-        faceUp: c.faceUp,
-        zona: c.zona,
-        nome: c.nome,
-        efeito: c.efeito,
-        imagem: c.imagem
-    }))
-}
 
     
     /* =========================
@@ -1305,6 +1293,18 @@ function moverCartaParaZona(idCarta, zonaId) {
     renderizarCartas()
 }
 
+    function serializarCartas() {
+    return Array.from(cartas.values()).map(c => ({
+        id: c.id,
+        tipo: c.tipo,
+        faceUp: c.faceUp,
+        zona: c.zona,
+        nome: c.nome,
+        efeito: c.efeito,
+        imagem: c.imagem,
+        imagemMiniatura: c.imagemMiniatura
+    }))
+}
 
 // renderizarCartas() é chamado acima quando necessário
 
@@ -1715,6 +1715,7 @@ socket.on("estadoAtualizado", estado => {
 socket.emit("definirTabuleiro", tabuleiroMatriz)
 const cartasSerializadas = serializarCartas()
 socket.emit("definirCartas", cartasSerializadas)
+
 
 
 
