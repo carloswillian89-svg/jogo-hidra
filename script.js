@@ -1705,6 +1705,9 @@ socket.on("estadoAtualizado", estado => {
 })
 
 socket.emit("definirTabuleiro", tabuleiroMatriz)
+socket.emit("definirCartas", cartasSerializadas)
+
+
 
 
 
