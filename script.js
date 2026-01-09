@@ -1652,19 +1652,28 @@ socket.on("connect", () => {
     const nome = prompt("Digite seu nome:")
     socket.emit("entrarJogo", nome)
 })
+let estadoGlobal = null
 
 socket.on("estadoAtualizado", estado => {
-    console.log("Estado sincronizado:", estado)
-
-    // 🔁 substituir estado local
     estadoGlobal = estado
 
-    // 🔥 redesenhar TUDO
+    // 🔥 SE O SERVIDOR AINDA NÃO TEM TABULEIRO
+    if (!estado.tabuleiro) {
+        console.log("Servidor sem tabuleiro, gerando no cliente...")
+
+        gerarMatriz()
+        criarTabuleiro()
+
+        socket.emit("definirTabuleiro", tabuleiroMatriz)
+        return
+    }
+
+    // 🔁 redesenha com dados do servidor
     desenharTabuleiro(estado.tabuleiro)
     desenharJogadores(estado.jogadores)
-    renderizarCartas(estado.cartas)
-    atualizarTurno(estado.turnoAtual)
 })
+
+socket.emit("definirTabuleiro", tabuleiroMatriz)
 
 
     // ⚠️ aqui no futuro:
@@ -1672,5 +1681,6 @@ socket.on("estadoAtualizado", estado => {
     // sincronizar tabuleiro
     // sincronizar cartas
 })
+
 
 
