@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lobby - Labirinto da Hidra</title>
+    <link rel="stylesheet" href="style-lobby.css">
+</head>
+<body>
+    <div id="lobby-container">
+        <!-- Tela Inicial -->
+        <div id="tela-inicial" class="tela ativa">
+            <h1>🐉 Labirinto da Hidra</h1>
+            <div class="menu-principal">
+                <input type="text" id="nome-jogador" placeholder="Seu nome" maxlength="20">
+                <button id="btn-criar-sala" class="btn-primary">Criar Sala</button>
+                <div class="divisor">ou</div>
+                <input type="text" id="codigo-sala" placeholder="Código da sala" maxlength="6">
+                <button id="btn-entrar-sala" class="btn-secondary">Entrar na Sala</button>
+                <button id="btn-jogar-local" class="btn-link">Jogar Localmente (Hot-Seat)</button>
+            </div>
+        </div>
+
+        <!-- Tela de Lobby -->
+        <div id="tela-lobby" class="tela">
+            <div class="lobby-header">
+                <h2>Sala: <span id="codigo-sala-display"></span></h2>
+                <button id="btn-copiar-codigo" class="btn-icon">📋 Copiar Código</button>
+            </div>
+
+            <div class="lobby-content">
+                <!-- Seleção de Personagens -->
+                <div class="secao-personagens">
+                    <h3>Escolha seu Personagem</h3>
+                    <div class="grid-personagens">
+                        <div class="card-personagem" data-personagem="Torvin">
+                            <div class="personagem-img">⚔️</div>
+                            <h4>Torvin</h4>
+                            <p class="personagem-classe">Guerreiro</p>
+                            <button class="btn-escolher">Escolher</button>
+                            <span class="status-escolhido">✓ Escolhido</span>
+                        </div>
+                        <div class="card-personagem" data-personagem="Elara">
+                            <div class="personagem-img">🏹</div>
+                            <h4>Elara</h4>
+                            <p class="personagem-classe">Arqueira</p>
+                            <button class="btn-escolher">Escolher</button>
+                            <span class="status-escolhido">✓ Escolhido</span>
+                        </div>
+                        <div class="card-personagem" data-personagem="Zephyr">
+                            <div class="personagem-img">🔮</div>
+                            <h4>Zephyr</h4>
+                            <p class="personagem-classe">Mago</p>
+                            <button class="btn-escolher">Escolher</button>
+                            <span class="status-escolhido">✓ Escolhido</span>
+                        </div>
+                        <div class="card-personagem" data-personagem="Kaelen">
+                            <div class="personagem-img">🗡️</div>
+                            <h4>Kaelen</h4>
+                            <p class="personagem-classe">Ladino</p>
+                            <button class="btn-escolher">Escolher</button>
+                            <span class="status-escolhido">✓ Escolhido</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lista de Jogadores -->
+                <div class="secao-jogadores">
+                    <h3>Jogadores (<span id="qtd-jogadores">0</span>/4)</h3>
+                    <ul id="lista-jogadores"></ul>
+                    <button id="btn-pronto" class="btn-pronto" disabled>Estou Pronto!</button>
+                    <p class="info-texto">Aguardando outros jogadores escolherem personagens...</p>
+                </div>
+            </div>
+
+            <button id="btn-sair-lobby" class="btn-link">Sair do Lobby</button>
+        </div>
+
+        <!-- Notificações -->
+        <div id="notificacao" class="notificacao"></div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="lobby.js"></script>
+</body>
+</html>

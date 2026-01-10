@@ -1,0 +1,361 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+#lobby-container {
+    width: 100%;
+    max-width: 1000px;
+}
+
+.tela {
+    display: none;
+    background: white;
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.tela.ativa {
+    display: block;
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Tela Inicial */
+h1 {
+    text-align: center;
+    font-size: 2.5rem;
+    color: #333;
+    margin-bottom: 40px;
+}
+
+.menu-principal {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+input[type="text"] {
+    padding: 15px 20px;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    font-size: 1rem;
+    transition: all 0.3s;
+}
+
+input[type="text"]:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+button {
+    padding: 15px 30px;
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+}
+
+.btn-secondary {
+    background: #48bb78;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #38a169;
+    transform: translateY(-2px);
+}
+
+.btn-link {
+    background: transparent;
+    color: #667eea;
+    text-decoration: underline;
+}
+
+.btn-link:hover {
+    color: #764ba2;
+}
+
+.divisor {
+    text-align: center;
+    color: #999;
+    margin: 10px 0;
+    position: relative;
+}
+
+.divisor::before,
+.divisor::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 40%;
+    height: 1px;
+    background: #e0e0e0;
+}
+
+.divisor::before {
+    left: 0;
+}
+
+.divisor::after {
+    right: 0;
+}
+
+/* Tela de Lobby */
+.lobby-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.lobby-header h2 {
+    font-size: 1.8rem;
+    color: #333;
+}
+
+.btn-icon {
+    background: #667eea;
+    color: white;
+    padding: 10px 20px;
+    font-size: 0.9rem;
+}
+
+.btn-icon:hover {
+    background: #764ba2;
+}
+
+.lobby-content {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 30px;
+    margin-bottom: 30px;
+}
+
+/* Personagens */
+.secao-personagens h3,
+.secao-jogadores h3 {
+    font-size: 1.3rem;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.grid-personagens {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+}
+
+.card-personagem {
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    border-radius: 15px;
+    padding: 20px;
+    text-align: center;
+    position: relative;
+    transition: all 0.3s;
+    border: 3px solid transparent;
+}
+
+.card-personagem:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.card-personagem.selecionado {
+    border-color: #48bb78;
+    background: linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%);
+}
+
+.card-personagem.ocupado {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.card-personagem.ocupado .btn-escolher {
+    display: none;
+}
+
+.personagem-img {
+    font-size: 3rem;
+    margin-bottom: 10px;
+}
+
+.card-personagem h4 {
+    font-size: 1.2rem;
+    color: #333;
+    margin-bottom: 5px;
+}
+
+.personagem-classe {
+    color: #666;
+    font-size: 0.9rem;
+    margin-bottom: 15px;
+}
+
+.btn-escolher {
+    background: #667eea;
+    color: white;
+    padding: 8px 16px;
+    font-size: 0.9rem;
+    width: 100%;
+}
+
+.btn-escolher:hover {
+    background: #764ba2;
+}
+
+.status-escolhido {
+    display: none;
+    color: #48bb78;
+    font-weight: 600;
+    margin-top: 10px;
+}
+
+.card-personagem.selecionado .status-escolhido,
+.card-personagem.ocupado .status-escolhido {
+    display: block;
+}
+
+/* Lista de Jogadores */
+.secao-jogadores {
+    background: #f8f9fa;
+    border-radius: 15px;
+    padding: 20px;
+}
+
+#lista-jogadores {
+    list-style: none;
+    margin-bottom: 20px;
+}
+
+.item-jogador {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px;
+    background: white;
+    border-radius: 10px;
+    margin-bottom: 10px;
+}
+
+.jogador-icone {
+    font-size: 1.5rem;
+}
+
+.jogador-nome {
+    flex: 1;
+    font-weight: 500;
+    color: #333;
+}
+
+.jogador-status {
+    font-size: 1.2rem;
+}
+
+.btn-pronto {
+    background: #48bb78;
+    color: white;
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+.btn-pronto:disabled {
+    background: #cbd5e0;
+    cursor: not-allowed;
+}
+
+.btn-pronto.pronto {
+    background: #ed8936;
+}
+
+.info-texto {
+    text-align: center;
+    color: #666;
+    font-size: 0.85rem;
+    font-style: italic;
+}
+
+/* Notificações */
+.notificacao {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 15px 25px;
+    border-radius: 10px;
+    color: white;
+    font-weight: 500;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    transform: translateX(400px);
+    transition: transform 0.3s ease;
+    z-index: 1000;
+}
+
+.notificacao.ativa {
+    transform: translateX(0);
+}
+
+.notificacao.sucesso {
+    background: #48bb78;
+}
+
+.notificacao.erro {
+    background: #f56565;
+}
+
+.notificacao.info {
+    background: #4299e1;
+}
+
+/* Responsivo */
+@media (max-width: 768px) {
+    .lobby-content {
+        grid-template-columns: 1fr;
+    }
+    
+    .grid-personagens {
+        grid-template-columns: 1fr;
+    }
+    
+    h1 {
+        font-size: 1.8rem;
+    }
+}

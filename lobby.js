@@ -1,0 +1,244 @@
+const socket = io();
+
+let estadoLocal = {
+    nome: '',
+    codigoSala: '',
+    meuId: '',
+    personagemEscolhido: null,
+    pronto: false,
+    jogadores: []
+};
+
+// Elementos DOM
+const telaInicial = document.getElementById('tela-inicial');
+const telaLobby = document.getElementById('tela-lobby');
+const nomeJogadorInput = document.getElementById('nome-jogador');
+const codigoSalaInput = document.getElementById('codigo-sala');
+const btnCriarSala = document.getElementById('btn-criar-sala');
+const btnEntrarSala = document.getElementById('btn-entrar-sala');
+const btnJogarLocal = document.getElementById('btn-jogar-local');
+const codigoSalaDisplay = document.getElementById('codigo-sala-display');
+const btnCopiarCodigo = document.getElementById('btn-copiar-codigo');
+const btnPronto = document.getElementById('btn-pronto');
+const btnSairLobby = document.getElementById('btn-sair-lobby');
+const listaJogadores = document.getElementById('lista-jogadores');
+const qtdJogadores = document.getElementById('qtd-jogadores');
+
+// Funções de navegação
+function mostrarTela(tela) {
+    document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
+    tela.classList.add('ativa');
+}
+
+function mostrarNotificacao(mensagem, tipo = 'info') {
+    const notif = document.getElementById('notificacao');
+    notif.textContent = mensagem;
+    notif.className = `notificacao ${tipo} ativa`;
+    setTimeout(() => notif.classList.remove('ativa'), 3000);
+}
+
+// Criar sala
+btnCriarSala.addEventListener('click', () => {
+    const nome = nomeJogadorInput.value.trim();
+    if (!nome) {
+        mostrarNotificacao('Digite seu nome', 'erro');
+        return;
+    }
+    estadoLocal.nome = nome;
+    socket.emit('criar-sala', { nome });
+});
+
+// Entrar em sala
+btnEntrarSala.addEventListener('click', () => {
+    const nome = nomeJogadorInput.value.trim();
+    const codigo = codigoSalaInput.value.trim().toUpperCase();
+    
+    if (!nome) {
+        mostrarNotificacao('Digite seu nome', 'erro');
+        return;
+    }
+    if (!codigo) {
+        mostrarNotificacao('Digite o código da sala', 'erro');
+        return;
+    }
+    
+    estadoLocal.nome = nome;
+    socket.emit('entrar-sala', { nome, codigo });
+});
+
+// Jogar local
+btnJogarLocal.addEventListener('click', () => {
+    window.location.href = 'index.html';
+});
+
+// Copiar código da sala
+btnCopiarCodigo.addEventListener('click', () => {
+    navigator.clipboard.writeText(estadoLocal.codigoSala);
+    mostrarNotificacao('Código copiado!', 'sucesso');
+});
+
+// Escolher personagem
+document.querySelectorAll('.card-personagem').forEach(card => {
+    const btnEscolher = card.querySelector('.btn-escolher');
+    btnEscolher.addEventListener('click', () => {
+        const personagem = card.dataset.personagem;
+        
+        if (card.classList.contains('ocupado')) {
+            mostrarNotificacao('Personagem já escolhido', 'erro');
+            return;
+        }
+        
+        socket.emit('escolher-personagem', {
+            codigoSala: estadoLocal.codigoSala,
+            personagem
+        });
+    });
+});
+
+// Marcar como pronto
+btnPronto.addEventListener('click', () => {
+    socket.emit('marcar-pronto', {
+        codigoSala: estadoLocal.codigoSala
+    });
+});
+
+// Sair do lobby
+btnSairLobby.addEventListener('click', () => {
+    window.location.reload();
+});
+
+// Atualizar UI de personagens
+function atualizarPersonagens() {
+    document.querySelectorAll('.card-personagem').forEach(card => {
+        const personagem = card.dataset.personagem;
+        const ocupado = estadoLocal.jogadores.some(
+            j => j.personagem === personagem && j.id !== estadoLocal.meuId
+        );
+        const meuPersonagem = estadoLocal.personagemEscolhido === personagem;
+        
+        card.classList.toggle('ocupado', ocupado);
+        card.classList.toggle('selecionado', meuPersonagem);
+        
+        if (ocupado) {
+            const jogador = estadoLocal.jogadores.find(j => j.personagem === personagem);
+            card.querySelector('.status-escolhido').textContent = `✓ ${jogador.nome}`;
+        } else if (meuPersonagem) {
+            card.querySelector('.status-escolhido').textContent = '✓ Você';
+        }
+    });
+    
+    // Habilitar botão pronto se escolheu personagem
+    btnPronto.disabled = !estadoLocal.personagemEscolhido;
+}
+
+// Atualizar lista de jogadores
+function atualizarListaJogadores() {
+    listaJogadores.innerHTML = '';
+    qtdJogadores.textContent = estadoLocal.jogadores.length;
+    
+    estadoLocal.jogadores.forEach(jogador => {
+        const li = document.createElement('li');
+        li.className = 'item-jogador';
+        
+        const icone = jogador.personagem ? 
+            ['⚔️', '🏹', '🔮', '🗡️'][['Torvin', 'Elara', 'Zephyr', 'Kaelen'].indexOf(jogador.personagem)] : 
+            '👤';
+        
+        const status = jogador.pronto ? '✅' : '⏳';
+        const voce = jogador.id === estadoLocal.meuId ? ' (Você)' : '';
+        
+        li.innerHTML = `
+            <span class="jogador-icone">${icone}</span>
+            <span class="jogador-nome">${jogador.nome}${voce}</span>
+            <span class="jogador-status">${status}</span>
+        `;
+        
+        listaJogadores.appendChild(li);
+    });
+}
+
+// ===== EVENTOS DO SOCKET =====
+
+socket.on('sala-criada', (dados) => {
+    estadoLocal.codigoSala = dados.codigo;
+    estadoLocal.meuId = dados.jogador.id;
+    estadoLocal.jogadores = [dados.jogador];
+    
+    codigoSalaDisplay.textContent = dados.codigo;
+    mostrarTela(telaLobby);
+    mostrarNotificacao('Sala criada! Compartilhe o código com seus amigos', 'sucesso');
+    atualizarListaJogadores();
+});
+
+socket.on('entrou-na-sala', (dados) => {
+    estadoLocal.codigoSala = dados.codigo;
+    estadoLocal.meuId = dados.jogador.id;
+    estadoLocal.jogadores = dados.jogadores;
+    
+    codigoSalaDisplay.textContent = dados.codigo;
+    mostrarTela(telaLobby);
+    mostrarNotificacao('Você entrou na sala!', 'sucesso');
+    atualizarListaJogadores();
+    atualizarPersonagens();
+});
+
+socket.on('jogador-entrou', (dados) => {
+    estadoLocal.jogadores = dados.jogadores;
+    mostrarNotificacao(`${dados.jogador.nome} entrou na sala`, 'info');
+    atualizarListaJogadores();
+});
+
+socket.on('jogador-saiu', (dados) => {
+    estadoLocal.jogadores = estadoLocal.jogadores.filter(j => j.id !== dados.jogadorId);
+    mostrarNotificacao(`${dados.nome} saiu da sala`, 'info');
+    atualizarListaJogadores();
+    atualizarPersonagens();
+});
+
+socket.on('personagem-escolhido', (dados) => {
+    const jogador = estadoLocal.jogadores.find(j => j.id === dados.jogadorId);
+    if (jogador) {
+        jogador.personagem = dados.personagem;
+    }
+    
+    if (dados.jogadorId === estadoLocal.meuId) {
+        estadoLocal.personagemEscolhido = dados.personagem;
+        mostrarNotificacao(`Você escolheu ${dados.personagem}!`, 'sucesso');
+    }
+    
+    atualizarPersonagens();
+    atualizarListaJogadores();
+});
+
+socket.on('jogador-pronto', (dados) => {
+    const jogador = estadoLocal.jogadores.find(j => j.id === dados.jogadorId);
+    if (jogador) {
+        jogador.pronto = dados.pronto;
+    }
+    
+    if (dados.jogadorId === estadoLocal.meuId) {
+        estadoLocal.pronto = dados.pronto;
+        btnPronto.textContent = dados.pronto ? 'Cancelar' : 'Estou Pronto!';
+        btnPronto.classList.toggle('pronto', dados.pronto);
+    }
+    
+    atualizarListaJogadores();
+});
+
+socket.on('jogo-iniciado', (dados) => {
+    mostrarNotificacao('Jogo iniciando!', 'sucesso');
+    
+    // Salvar dados do jogo no sessionStorage
+    sessionStorage.setItem('modoMultiplayer', 'true');
+    sessionStorage.setItem('codigoSala', estadoLocal.codigoSala);
+    sessionStorage.setItem('jogadoresMultiplayer', JSON.stringify(dados.jogadores));
+    
+    // Redirecionar para o jogo
+    setTimeout(() => {
+        window.location.href = 'index.html';
+    }, 1500);
+});
+
+socket.on('erro', (dados) => {
+    mostrarNotificacao(dados.mensagem, 'erro');
+});
