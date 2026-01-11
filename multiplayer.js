@@ -802,7 +802,11 @@ function mostrarMensagemJogo(mensagem) {
 
 // Configurar botões de controle de jogo
 function configurarBotoesControle() {
-    if (!modoMultiplayer) return;
+    // Verificar se está em modo multiplayer pelo sessionStorage ou pela presença do socket
+    const emMultiplayer = sessionStorage.getItem('modoMultiplayer') === 'true' || 
+                          (typeof window.socket !== 'undefined' && window.socket && window.socket.connected);
+    
+    if (!emMultiplayer) return;
     
     const socket = window.socket;
     const controlesJogo = document.getElementById('controles-jogo');
@@ -811,6 +815,8 @@ function configurarBotoesControle() {
     const btnReiniciar = document.getElementById('btn-reiniciar-tabuleiro');
     
     if (!controlesJogo) return;
+    
+    console.log('🎮 Configurando botões de controle em modo multiplayer');
     
     // Mostrar controles apenas em multiplayer
     controlesJogo.style.display = 'flex';
