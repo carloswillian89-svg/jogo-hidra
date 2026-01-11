@@ -1,6 +1,4 @@
 
-requestAnimationFrame(desenharJogadores)
-
 const tabuleiro = document.getElementById("tabuleiro")
 
 const DIRECOES = ["N", "L", "S", "O"]
@@ -35,10 +33,52 @@ jogadores.forEach((jogador, index) => {
     jogador.ordem = index + 1
 })
 
-let jogadorAtualIndex = 0
+// Define o jogador inicial de forma aleatória
+let jogadorAtualIndex = Math.floor(Math.random() * jogadores.length);
+console.log('🎲 Jogador inicial sorteado:', jogadorAtualIndex, '(ID:', jogadores[jogadorAtualIndex].id, ')');
 
 function jogadorAtual() {
     return jogadores[jogadorAtualIndex]
+}
+
+// Funções auxiliares para validação de permissões
+function obterMeuJogadorId() {
+    const modoMultiplayer = sessionStorage.getItem('modoMultiplayer') === 'true';
+    if (modoMultiplayer) {
+        const minhaOrdem = parseInt(sessionStorage.getItem('minhaOrdem')) || 1;
+        const meuJogador = jogadores.find(j => j.ordem === minhaOrdem);
+        return meuJogador ? meuJogador.id : null;
+    }
+    // Em modo local, sempre retorna o jogador atual
+    return jogadorAtual().id;
+}
+
+function ehMinhaVez() {
+    const meuId = obterMeuJogadorId();
+    return meuId === jogadorAtual().id;
+}
+
+function meuJogadorEstaNoTile(tileId) {
+    const meuId = obterMeuJogadorId();
+    const meuJogador = jogadores.find(j => j.id === meuId);
+    return meuJogador && meuJogador.tileId === tileId;
+}
+
+function obterNomePersonagemJogador(jogadorId) {
+    const nomesPersonagens = {
+        1: 'Torvin',
+        2: 'Elara',
+        3: 'Zephyr',
+        4: 'Kaelen'
+    };
+    return nomesPersonagens[jogadorId] || `Jogador ${jogadorId}`;
+}
+
+// Verifica se o jogador possui o Amuleto do Eco ou a Gema da Visão no inventário
+function jogadorPossuiAmuletoDoEco(jogadorId) {
+    return [...cartas.values()].some(c => 
+        (c.id === "a3" || c.id === "a1") && c.dono === jogadorId
+    );
 }
 
 let entradaPosicao = null
@@ -129,6 +169,14 @@ function moverJogador(tileDestino) {
     jogador.tileId = tileDestino.dataset.id
 
     desenharJogadores()
+    
+    // Enviar movimento para outros jogadores no modo multiplayer
+    if (typeof enviarAcao === 'function') {
+        enviarAcao('mover-jogador', {
+            jogadorId: jogador.id,
+            tileId: tileDestino.dataset.id
+        });
+    }
 }
 
 const tilesEstado = new Map()
@@ -325,6 +373,22 @@ function criarTile(tipo) {
         // só gira quando a tecla Ctrl estiver pressionada
         if (!event.ctrlKey) return
         event.stopPropagation()
+        
+        // Validar se é a vez do jogador (apenas em multiplayer)
+        const modoMultiplayer = sessionStorage.getItem('modoMultiplayer') === 'true';
+        if (modoMultiplayer && !ehMinhaVez()) {
+            // Permitir se o jogador possui o Amuleto do Eco
+            const meuJogadorId = obterMeuJogadorId();
+            const possuiAmuleto = jogadorPossuiAmuletoDoEco(meuJogadorId);
+            
+            if (!possuiAmuleto) {
+                const nomePersonagem = obterNomePersonagemJogador(jogadorAtual().id);
+                alert(`Não é a sua vez! É a vez de ${nomePersonagem}.`);
+                return;
+            }
+            console.log('🎭 Usando Amuleto do Eco para girar tile fora do turno');
+        }
+        
         girarTile(tile)
     })
        
@@ -334,6 +398,22 @@ function criarTile(tipo) {
     })
 
     tile.addEventListener("dragstart", (e) => {
+        // Validar se é a vez do jogador (apenas em multiplayer)
+        const modoMultiplayer = sessionStorage.getItem('modoMultiplayer') === 'true';
+        if (modoMultiplayer && !ehMinhaVez()) {
+            // Permitir se o jogador possui o Amuleto do Eco
+            const meuJogadorId = obterMeuJogadorId();
+            const possuiAmuleto = jogadorPossuiAmuletoDoEco(meuJogadorId);
+            
+            if (!possuiAmuleto) {
+                e.preventDefault();
+                const nomePersonagem = obterNomePersonagemJogador(jogadorAtual().id);
+                alert(`Não é a sua vez! É a vez de ${nomePersonagem}.`);
+                return;
+            }
+            console.log('🎭 Usando Amuleto do Eco para mover tile fora do turno');
+        }
+        
         tileArrastado = tile
         try {
             e.dataTransfer.setData("text/tile", tile.dataset.id || "")
@@ -375,9 +455,17 @@ function criarTile(tipo) {
     tile.tipo = tipo
 
     tile.addEventListener("click", (event) => {
-     if (!event.shiftKey) return
-
-    moverJogador(tile)
+        if (!event.shiftKey) return
+        
+        // Validar se é a vez do jogador (apenas em multiplayer)
+        const modoMultiplayer = sessionStorage.getItem('modoMultiplayer') === 'true';
+        if (modoMultiplayer && !ehMinhaVez()) {
+            const nomePersonagem = obterNomePersonagemJogador(jogadorAtual().id);
+            alert(`Não é a sua vez! É a vez de ${nomePersonagem}.`);
+            return;
+        }
+        
+        moverJogador(tile)
 
 
     const index = [...tabuleiro.children].indexOf(tile)
@@ -446,14 +534,22 @@ function tornarTileDropavel(tile) {
 
 
 
-function trocarTiles(tile1, tile2) {
+function trocarTiles(tile1, tile2, sincronizar = true) {
     const temp = document.createElement("div")
 
     tile1.before(temp)
     tile2.before(tile1)
     temp.replaceWith(tile2)
 
-     desenharJogadores()
+    desenharJogadores()
+    
+    // Sincronizar troca de tiles no multiplayer (apenas se solicitado)
+    if (sincronizar && typeof enviarAcao === 'function') {
+        enviarAcao('trocar-tiles', {
+            tile1Id: tile1.dataset.id,
+            tile2Id: tile2.dataset.id
+        });
+    }
 }
 
 
@@ -565,25 +661,21 @@ function desenharJogadores() {
     )
 
     jogadoresOrdenados.forEach(jogador => {
-          if (!jogador.tile || !(jogador.tile instanceof HTMLElement)) {
+        if (!jogador.tile || !(jogador.tile instanceof HTMLElement)) {
             console.error("Jogador com tile inválido:", jogador)
             return
         }
 
-        // 🔥 ATUALIZA tileId SEM destruir o tile
-        let tileEl = null
+        // O tile já é o elemento HTML
+        const tileEl = jogador.tile;
 
-        if (jogador.tile === "entrada") {
-            tileEl = document.querySelector('.tile[data-tipo="entrada"]')
-        } else {
-            tileEl = document.querySelector(`.tile[data-id="${jogador.tile}"]`)
+        if (!tileEl) {
+            console.error("Tile não encontrado para jogador:", jogador);
+            return;
         }
 
-        if (!tileEl) return
-
-       const jogadorEl = document.createElement("div")
+        const jogadorEl = document.createElement("div")
         jogadorEl.classList.add("jogador", `jogador-${jogador.id}`)
-        jogadorEl.className = "jogador"
         jogadorEl.textContent = jogador.ordem
 
         tileEl.appendChild(jogadorEl)
@@ -630,6 +722,33 @@ document.getElementById("fimTurno").addEventListener("click", () => {
     console.log("BOTÃO ENCERRAR TURNO CLICADO")
     proximoJogador()
     atualizarInfoTurno()
+    
+    // Sincronizar mudança de turno no multiplayer
+    if (typeof enviarAcao === 'function') {
+        enviarAcao('passar-turno', {
+            jogadorAtualIndex: jogadorAtualIndex
+        });
+    }
+})
+
+document.getElementById("btn-reiniciar-tabuleiro").addEventListener("click", () => {
+    console.log("BOTÃO REINICIAR TABULEIRO CLICADO")
+    
+    // Verificar se está em modo multiplayer
+    const modoMultiplayer = sessionStorage.getItem('modoMultiplayer') === 'true';
+    
+    if (modoMultiplayer && window.socket) {
+        // Em modo multiplayer, enviar evento para servidor
+        const codigoSala = sessionStorage.getItem('codigoSala');
+        console.log("🔄 Enviando reiniciar-tabuleiro para servidor");
+        window.socket.emit('reiniciar-tabuleiro', { codigoSala });
+        // O servidor irá notificar todos os jogadores e recarregar a página
+    } else {
+        // Modo local: reiniciar diretamente
+        gerarMatriz()
+        criarTabuleiro()
+        desenharJogadores()
+    }
 })
 
 function proximoJogador() {
@@ -755,6 +874,14 @@ function girarTile(tile) {
         overlay.style.transform = `rotate(${contraRot}deg)`
         overlay.style.transformOrigin = '50% 50%'
     }
+    
+    // Sincronizar rotação no multiplayer
+    if (typeof enviarAcao === 'function') {
+        enviarAcao('girar-tile', {
+            tileId: tile.dataset.id,
+            rotacao: novaRot
+        });
+    }
 
     console.log(
         "rotAtual:", rotAtual,
@@ -803,6 +930,19 @@ function gritoHidra() {
     const ehLinha = Math.random() < 0.5
     const indiceAleatorio = Math.floor(Math.random() * TAMANHO)
 
+    // Executar o grito da hidra localmente
+    executarGritoHidra(ehLinha, indiceAleatorio)
+    
+    // Sincronizar com multiplayer
+    if (typeof enviarAcao === 'function') {
+        enviarAcao('grito-hidra', {
+            ehLinha: ehLinha,
+            indice: indiceAleatorio
+        });
+    }
+}
+
+function executarGritoHidra(ehLinha, indiceAleatorio) {
     // 2 & 3 & 4. Coleta tiles da linha/coluna e realiza rotação circular
     const tiles = []
     const indices = []
@@ -840,7 +980,7 @@ function gritoHidra() {
     const primeiroTile = tiles[0]
     
     for (let i = 0; i < tiles.length - 1; i++) {
-        trocarTiles(tiles[i], tiles[i + 1])
+        trocarTiles(tiles[i], tiles[i + 1], false) // false = não sincronizar individualmente
     }
 
     // Redesenha jogadores após a rotação
@@ -922,6 +1062,11 @@ document.addEventListener("keyup", (event) => {
 
 function atualizarInfoTurno() {
     const atual = jogadorAtual()
+    console.log('🔄 atualizarInfoTurno chamado');
+    console.log('  📍 jogadorAtualIndex:', jogadorAtualIndex);
+    console.log('  👤 Jogador atual:', atual);
+    console.log('  📋 Array jogadores:', jogadores.map((j, idx) => `[${idx}] ID:${j.id} Ordem:${j.ordem}`));
+    
     let nomeExibicao = `Jogador ${atual.ordem}`
 
     // tenta usar o nome do personagem correspondente, se disponível
@@ -929,11 +1074,14 @@ function atualizarInfoTurno() {
         if (typeof personagens !== "undefined" && Array.isArray(personagens)) {
             const p = personagens.find(pp => pp.id === atual.id)
             if (p && p.nome) nomeExibicao = p.nome
+            console.log('  🎭 Personagem encontrado:', p ? p.nome : 'não encontrado');
         }
     } catch (e) {
         // se algo falhar, mantém o fallback para jogador
+        console.error('  ❌ Erro ao buscar personagem:', e);
     }
 
+    console.log('  📝 Nome exibido:', nomeExibicao);
     document.getElementById("infoTurno").innerText = `Vez de ${nomeExibicao}`
 }
 
@@ -1205,14 +1353,53 @@ function criarCartaVisual(carta) {
 
     // virar carta
     cartaEl.addEventListener("click", (e) => {
-         if (e.altKey) return
+        if (e.altKey) return
         e.stopPropagation()
+        
+        // Verificar se a carta está em um tile (validação apenas em multiplayer)
+        const modoMultiplayer = sessionStorage.getItem('modoMultiplayer') === 'true';
+        if (modoMultiplayer && carta.zona && carta.zona.startsWith('tile-')) {
+            const tileId = carta.zona.replace('tile-', '');
+            
+            // Validar se o jogador está no tile
+            if (!meuJogadorEstaNoTile(tileId)) {
+                alert('Você só pode virar cartas no tile onde seu jogador está!');
+                return;
+            }
+        }
+        
         carta.faceUp = !carta.faceUp
         renderizarCartas()
+        
+        console.log('🃏 Virando carta:', carta.id, 'faceUp:', carta.faceUp);
+        
+        // Sincronizar virada de carta no multiplayer
+        if (typeof enviarAcao === 'function') {
+            console.log('📤 Enviando evento virar-carta');
+            enviarAcao('virar-carta', {
+                cartaId: carta.id,
+                faceUp: carta.faceUp
+            });
+        } else {
+            console.warn('⚠️ enviarAcao não disponível');
+        }
     })
 
     // drag
     cartaEl.addEventListener("dragstart", (e) => {
+        // Verificar se a carta está em um tile (validação apenas em multiplayer)
+        const modoMultiplayer = sessionStorage.getItem('modoMultiplayer') === 'true';
+        if (modoMultiplayer && carta.zona && carta.zona.startsWith('tile-')) {
+            const tileId = carta.zona.replace('tile-', '');
+            
+            // Validar se o jogador está no tile
+            if (!meuJogadorEstaNoTile(tileId)) {
+                e.preventDefault();
+                alert('Você só pode arrastar cartas do tile onde seu jogador está!');
+                return;
+            }
+        }
+        
         e.dataTransfer.setData("text/plain", carta.id)
     })
 
@@ -1272,6 +1459,14 @@ function moverCartaParaTile(idCarta, tileId) {
     carta.dono = null
 
     renderizarCartas()
+    
+    // Sincronizar movimento de carta no multiplayer
+    if (typeof enviarAcao === 'function') {
+        enviarAcao('mover-carta', {
+            idCarta,
+            destino: `tile-${tileId}`
+        });
+    }
 }
 
 
@@ -1291,6 +1486,14 @@ function moverCartaParaZona(idCarta, zonaId) {
     }
 
     renderizarCartas()
+    
+    // Sincronizar movimento de carta no multiplayer
+    if (typeof enviarAcao === 'function') {
+        enviarAcao('mover-carta', {
+            idCarta,
+            destino: zonaId
+        });
+    }
 }
 
     function serializarCartas() {
@@ -1456,6 +1659,13 @@ btnRolarD6.addEventListener("click", () => {
         const valor = rolarD6()
         document.getElementById("dado1").textContent = valor
         resultadoDado.textContent = `D6: ${valor}`
+        
+        if (typeof enviarAcao === 'function') {
+            enviarAcao('rolar-dado', {
+                tipo: 'd6',
+                resultado: valor
+            });
+        }
     })
 })
 
@@ -1465,6 +1675,13 @@ btnRolar2D6.addEventListener("click", () => {
         document.getElementById("dado1").textContent = d1
         document.getElementById("dado2").textContent = d2
         resultadoDado.textContent = `2D6: ${d1} + ${d2} = ${total}`
+        
+        if (typeof enviarAcao === 'function') {
+            enviarAcao('rolar-dado', {
+                tipo: '2d6',
+                resultado: { d1, d2, total }
+            });
+        }
     })
 })
 
@@ -1483,6 +1700,10 @@ if (rodadasIncrBtn) {
         e.stopPropagation()
         rodadaAtual++
         atualizarRodadaUI()
+        
+        if (typeof enviarAcao === 'function') {
+            enviarAcao('atualizar-rodada', { valor: rodadaAtual });
+        }
     })
 }
 
@@ -1491,6 +1712,10 @@ if (rodadasDecrBtn) {
         e.stopPropagation()
         if (rodadaAtual > 0) rodadaAtual--
         atualizarRodadaUI()
+        
+        if (typeof enviarAcao === 'function') {
+            enviarAcao('atualizar-rodada', { valor: rodadaAtual });
+        }
     })
 }
 
@@ -1521,6 +1746,14 @@ function configurarPAListeners(idJogador) {
             e.stopPropagation()
             paValores[idJogador]++
             atualizarPAUI(idJogador)
+            
+            if (typeof enviarAcao === 'function') {
+                enviarAcao('atualizar-contador', {
+                    jogadorId: idJogador,
+                    tipo: 'pa',
+                    valor: paValores[idJogador]
+                });
+            }
         })
     }
     if (decr) {
@@ -1528,6 +1761,14 @@ function configurarPAListeners(idJogador) {
             e.stopPropagation()
             if (paValores[idJogador] > 0) paValores[idJogador]--
             atualizarPAUI(idJogador)
+            
+            if (typeof enviarAcao === 'function') {
+                enviarAcao('atualizar-contador', {
+                    jogadorId: idJogador,
+                    tipo: 'pa',
+                    valor: paValores[idJogador]
+                });
+            }
         })
     }
 }
@@ -1548,6 +1789,14 @@ function configurarFAListeners(idJogador) {
             e.stopPropagation()
             faValores[idJogador]++
             atualizarFAUI(idJogador)
+            
+            if (typeof enviarAcao === 'function') {
+                enviarAcao('atualizar-contador', {
+                    jogadorId: idJogador,
+                    tipo: 'fa',
+                    valor: faValores[idJogador]
+                });
+            }
         })
     }
     if (decr) {
@@ -1555,6 +1804,14 @@ function configurarFAListeners(idJogador) {
             e.stopPropagation()
             if (faValores[idJogador] > 0) faValores[idJogador]--
             atualizarFAUI(idJogador)
+            
+            if (typeof enviarAcao === 'function') {
+                enviarAcao('atualizar-contador', {
+                    jogadorId: idJogador,
+                    tipo: 'fa',
+                    valor: faValores[idJogador]
+                });
+            }
         })
     }
 }
@@ -1607,6 +1864,7 @@ function renderizarCartasPersonagens(jogadorAtivoId = null) {
     personagens.forEach(p => {
         const carta = document.createElement("div")
         carta.classList.add("carta-personagem")
+        carta.dataset.personagemId = p.id
 
         // marcar com classe do jogador para colorir borda: jogador-1..4
         carta.classList.add(`jogador-${p.id}`)
@@ -1630,10 +1888,20 @@ function renderizarCartasPersonagens(jogadorAtivoId = null) {
         // 🔄 clique para virar (titulo aparece apenas quando virada)
         carta.addEventListener("click", () => {
             carta.classList.toggle("virada")
-            if (carta.classList.contains("virada")) {
+            const estaVirada = carta.classList.contains("virada")
+            
+            if (estaVirada) {
                 carta.title = p.nome
             } else {
                 carta.removeAttribute("title")
+            }
+            
+            // Sincronizar virada de carta de personagem no multiplayer
+            if (typeof enviarAcao === 'function') {
+                enviarAcao('virar-carta-personagem', {
+                    personagemId: p.id,
+                    virada: estaVirada
+                });
             }
         })
         // tooltip inicial somente se já estiver virada
@@ -1666,63 +1934,55 @@ atualizarDestaqueInventario()
 
 
 
+// Aguardar DOM estar pronto antes de inicializar
+document.addEventListener('DOMContentLoaded', () => {
+    // Criar socket global para uso no multiplayer.js
+    let socket = null;
 
-const socket = io("http://localhost:3000")
+    // Verificar se está em modo multiplayer
+    const emModoMultiplayer = sessionStorage.getItem('modoMultiplayer') === 'true';
 
-socket.on("connect", () => {
-    console.log("Conectado ao servidor:", socket.id)
-
-    const nome = prompt("Digite seu nome:")
-    socket.emit("entrarJogo", nome)
-})
-
-socket.on("connect_error", err => {
-    console.error("❌ Erro de conexão:", err.message)
-})
-
-let estadoGlobal = null
-
-socket.on("estadoAtualizado", estado => {
-    estadoGlobal = estado
-
-    // 🔥 SE O SERVIDOR AINDA NÃO TEM TABULEIRO
-    if (!estado.tabuleiro) {
-        console.log("Servidor sem tabuleiro, gerando no cliente...")
-
-        gerarMatriz()
-        criarTabuleiro()
-
-        socket.emit("definirTabuleiro", tabuleiroMatriz)
-        return
+    if (emModoMultiplayer) {
+        // Em modo multiplayer, conectar e aguardar conexão
+        console.log('🔌 Criando socket em modo multiplayer...');
+        socket = io();
+        
+        // Tornar socket global para multiplayer.js
+        window.socket = socket;
+        
+        socket.on('connect', () => {
+            console.log('🎮 Conectado ao servidor multiplayer:', socket.id);
+            
+            // Inicializar multiplayer SOMENTE após conexão
+            if (typeof inicializarMultiplayer === 'function') {
+                console.log('🚀 Chamando inicializarMultiplayer()...');
+                inicializarMultiplayer();
+            } else {
+                console.error('❌ Função inicializarMultiplayer não encontrada!');
+            }
+            
+            // Configurar event listener do botão Iniciar Jogo após conexão
+            setTimeout(() => {
+                const btnIniciarJogo = document.getElementById("btn-iniciar-jogo");
+                if (btnIniciarJogo) {
+                    console.log('✅ Botão Iniciar Jogo encontrado, registrando event listener');
+                    btnIniciarJogo.addEventListener("click", () => {
+                        console.log("🎮 BOTÃO INICIAR JOGO CLICADO");
+                        const codigoSala = sessionStorage.getItem('codigoSala');
+                        console.log("📤 Enviando iniciar-jogo para sala:", codigoSala);
+                        socket.emit('iniciar-jogo', { codigoSala });
+                    });
+                } else {
+                    console.error('❌ Botão Iniciar Jogo não encontrado no DOM');
+                }
+            }, 200);
+        });
+    } else {
+        console.log('🎮 Modo local - Socket desativado');
+        
+        // Em modo local, inicializar normalmente
+        gerarMatriz();
+        criarTabuleiro();
+        renderizarCartasPersonagens(jogadorAtual().id);
     }
-    
-    if (estado.tabuleiro && !jogadoresInicializados) {
-    const tileEntrada = obterTileEntrada()
-    if (tileEntrada) {
-        jogadores.forEach(j => {
-            j.tile = tileEntrada.dataset.id
-        })
-        jogadoresInicializados = true
-    }
-}
-
-
-    // 🔁 redesenha com dados do servidor
-    desenharTabuleiro(estado.tabuleiro)
-    desenharJogadores(estado.jogadores)
-})
-
-socket.emit("definirTabuleiro", tabuleiroMatriz)
-const cartasSerializadas = serializarCartas()
-socket.emit("definirCartas", cartasSerializadas)
-
-
-
-
-
-
-
-
-
-
-
+});

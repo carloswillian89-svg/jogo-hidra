@@ -9,6 +9,10 @@ let estadoLocal = {
     jogadores: []
 };
 
+// Estado do carrossel
+let carrosselIndex = 0;
+const personagensCards = [];
+
 // Elementos DOM
 const telaInicial = document.getElementById('tela-inicial');
 const telaLobby = document.getElementById('tela-lobby');
@@ -23,6 +27,53 @@ const btnPronto = document.getElementById('btn-pronto');
 const btnSairLobby = document.getElementById('btn-sair-lobby');
 const listaJogadores = document.getElementById('lista-jogadores');
 const qtdJogadores = document.getElementById('qtd-jogadores');
+
+// Inicializar carrossel
+function inicializarCarrossel() {
+    const cards = document.querySelectorAll('.card-personagem');
+    personagensCards.length = 0;
+    personagensCards.push(...cards);
+    
+    const btnPrev = document.getElementById('btn-prev');
+    const btnNext = document.getElementById('btn-next');
+    const indicadores = document.querySelectorAll('.indicador');
+    
+    btnPrev.addEventListener('click', () => navegarCarrossel(-1));
+    btnNext.addEventListener('click', () => navegarCarrossel(1));
+    
+    indicadores.forEach((indicador, index) => {
+        indicador.addEventListener('click', () => irParaSlide(index));
+    });
+    
+    mostrarSlide(0);
+}
+
+function navegarCarrossel(direcao) {
+    carrosselIndex += direcao;
+    
+    if (carrosselIndex < 0) {
+        carrosselIndex = personagensCards.length - 1;
+    } else if (carrosselIndex >= personagensCards.length) {
+        carrosselIndex = 0;
+    }
+    
+    mostrarSlide(carrosselIndex);
+}
+
+function irParaSlide(index) {
+    carrosselIndex = index;
+    mostrarSlide(carrosselIndex);
+}
+
+function mostrarSlide(index) {
+    personagensCards.forEach((card, i) => {
+        card.classList.toggle('active', i === index);
+    });
+    
+    document.querySelectorAll('.indicador').forEach((ind, i) => {
+        ind.classList.toggle('active', i === index);
+    });
+}
 
 // Funções de navegação
 function mostrarTela(tela) {
@@ -140,16 +191,35 @@ function atualizarListaJogadores() {
         const li = document.createElement('li');
         li.className = 'item-jogador';
         
+        const personagensIcones = {
+            'torvin': '⚔️',
+            'elara': '🏹',
+            'zephyr': '🔮',
+            'kaelen': '🗡️'
+        };
+        
+        const personagensNomes = {
+            'torvin': 'Torvin',
+            'elara': 'Elara',
+            'zephyr': 'Zephyr',
+            'kaelen': 'Kaelen'
+        };
+        
         const icone = jogador.personagem ? 
-            ['⚔️', '🏹', '🔮', '🗡️'][['Torvin', 'Elara', 'Zephyr', 'Kaelen'].indexOf(jogador.personagem)] : 
+            (personagensIcones[jogador.personagem.toLowerCase()] || '👤') : 
             '👤';
+        
+        const nomePersonagem = jogador.personagem ? 
+            personagensNomes[jogador.personagem.toLowerCase()] || jogador.personagem :
+            '';
         
         const status = jogador.pronto ? '✅' : '⏳';
         const voce = jogador.id === estadoLocal.meuId ? ' (Você)' : '';
+        const personagemTexto = nomePersonagem ? ` - ${nomePersonagem}` : '';
         
         li.innerHTML = `
             <span class="jogador-icone">${icone}</span>
-            <span class="jogador-nome">${jogador.nome}${voce}</span>
+            <span class="jogador-nome">${jogador.nome}${personagemTexto}${voce}</span>
             <span class="jogador-status">${status}</span>
         `;
         
@@ -166,6 +236,7 @@ socket.on('sala-criada', (dados) => {
     
     codigoSalaDisplay.textContent = dados.codigo;
     mostrarTela(telaLobby);
+    inicializarCarrossel();
     mostrarNotificacao('Sala criada! Compartilhe o código com seus amigos', 'sucesso');
     atualizarListaJogadores();
 });
@@ -177,6 +248,7 @@ socket.on('entrou-na-sala', (dados) => {
     
     codigoSalaDisplay.textContent = dados.codigo;
     mostrarTela(telaLobby);
+    inicializarCarrossel();
     mostrarNotificacao('Você entrou na sala!', 'sucesso');
     atualizarListaJogadores();
     atualizarPersonagens();
@@ -211,9 +283,11 @@ socket.on('personagem-escolhido', (dados) => {
 });
 
 socket.on('jogador-pronto', (dados) => {
+    console.log('👥 Jogador pronto:', dados);
     const jogador = estadoLocal.jogadores.find(j => j.id === dados.jogadorId);
     if (jogador) {
         jogador.pronto = dados.pronto;
+        console.log(`${jogador.nome} agora está ${dados.pronto ? 'pronto' : 'não pronto'}`);
     }
     
     if (dados.jogadorId === estadoLocal.meuId) {
@@ -222,21 +296,35 @@ socket.on('jogador-pronto', (dados) => {
         btnPronto.classList.toggle('pronto', dados.pronto);
     }
     
+    const todosProntos = estadoLocal.jogadores.every(j => j.pronto);
+    console.log(`Total de jogadores: ${estadoLocal.jogadores.length}, Todos prontos: ${todosProntos}`);
+    
     atualizarListaJogadores();
 });
 
 socket.on('jogo-iniciado', (dados) => {
-    mostrarNotificacao('Jogo iniciando!', 'sucesso');
+    console.log('🎮 Recebido evento jogo-iniciado:', dados);
+    mostrarNotificacao('Jogo iniciando em 2 segundos...', 'sucesso');
+    
+    // Desabilitar todos os botões para evitar cliques duplicados
+    btnPronto.disabled = true;
+    btnSairLobby.disabled = true;
+    
+    // Encontrar minha ordem no jogo
+    const meuJogador = dados.jogadores.find(j => j.id === estadoLocal.meuId);
     
     // Salvar dados do jogo no sessionStorage
     sessionStorage.setItem('modoMultiplayer', 'true');
     sessionStorage.setItem('codigoSala', estadoLocal.codigoSala);
     sessionStorage.setItem('jogadoresMultiplayer', JSON.stringify(dados.jogadores));
+    sessionStorage.setItem('minhaOrdem', meuJogador ? meuJogador.ordem : 1);
+    sessionStorage.setItem('socketId', socket.id); // Salvar socket ID atual
     
-    // Redirecionar para o jogo
+    // Redirecionar para o jogo após um delay
     setTimeout(() => {
+        console.log('🎮 Redirecionando para o jogo...');
         window.location.href = 'index.html';
-    }, 1500);
+    }, 2000);
 });
 
 socket.on('erro', (dados) => {

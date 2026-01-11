@@ -20,6 +20,9 @@ app.get('/', (req, res) => {
 // Estrutura de salas
 const salas = new Map();
 
+// Mapeamento de jogadores para reconexão (nome -> { sala, socketIdAntigo, timeoutId })
+const jogadoresDesconectados = new Map();
+
 // Classes para organizar dados
 class Sala {
     constructor(codigo) {
@@ -27,6 +30,11 @@ class Sala {
         this.jogadores = [];
         this.estado = 'aguardando'; // aguardando, jogando, finalizado
         this.estadoJogo = null;
+        this.tabuleiro = null; // Tabuleiro compartilhado
+        this.tilesEstado = null; // Estado dos tiles (rotações)
+        this.cartasEstado = null; // Estado das cartas
+        this.entradaPosicao = null; // Posição da entrada
+        this.jogadorAtualIndex = 0; // Índice do jogador atual
         this.maxJogadores = 4;
     }
 
@@ -181,42 +189,229 @@ io.on('connection', (socket) => {
     // Marcar como pronto
     socket.on('marcar-pronto', (dados) => {
         const sala = salas.get(dados.codigoSala);
-        if (!sala) return;
+        if (!sala) {
+            socket.emit('erro', { mensagem: 'Sala não encontrada' });
+            return;
+        }
 
         const jogador = sala.getJogador(socket.id);
-        if (!jogador || !jogador.personagem) {
+        if (!jogador) {
+            socket.emit('erro', { mensagem: 'Jogador não encontrado na sala' });
+            return;
+        }
+        
+        if (!jogador.personagem) {
             socket.emit('erro', { mensagem: 'Escolha um personagem primeiro' });
             return;
         }
 
         jogador.pronto = !jogador.pronto;
 
+        // Notificar todos sobre a mudança de status
         io.to(dados.codigoSala).emit('jogador-pronto', {
             jogadorId: socket.id,
             pronto: jogador.pronto
         });
 
-        // Verificar se todos estão prontos
-        if (sala.jogadores.length >= 2 && sala.jogadores.every(j => j.pronto)) {
-            sala.estado = 'jogando';
-            
-            // Embaralhar ordem dos jogadores
-            const jogadoresEmbaralhados = [...sala.jogadores].sort(() => Math.random() - 0.5);
-            jogadoresEmbaralhados.forEach((j, idx) => {
-                j.ordem = idx + 1;
-            });
+        console.log(`${jogador.pronto ? '✅' : '⏳'} ${jogador.nome} ${jogador.pronto ? 'está pronto' : 'cancelou'}`);
 
-            io.to(dados.codigoSala).emit('jogo-iniciado', {
-                jogadores: jogadoresEmbaralhados.map((j, idx) => ({
-                    id: j.socketId,
-                    nome: j.nome,
-                    personagem: j.personagem,
-                    ordem: idx + 1
-                }))
-            });
+        // Verificar se todos estão prontos (mínimo 2 jogadores)
+        const todosComPersonagem = sala.jogadores.every(j => j.personagem !== null);
+        const todosProntos = sala.jogadores.every(j => j.pronto);
+        
+        if (sala.jogadores.length >= 2 && todosComPersonagem && todosProntos) {
+            // Aguardar um pouco para garantir que todos receberam o status de pronto
+            setTimeout(() => {
+                // NÃO mudar estado para 'jogando' - isso será feito pelo botão Iniciar Jogo
+                // Apenas redirecionar jogadores para a tela do jogo
+                
+                // Embaralhar ordem dos jogadores
+                const jogadoresEmbaralhados = [...sala.jogadores].sort(() => Math.random() - 0.5);
+                jogadoresEmbaralhados.forEach((j, idx) => {
+                    j.ordem = idx + 1;
+                });
 
-            console.log(`🎮 Jogo iniciado na sala ${dados.codigoSala}`);
+                io.to(dados.codigoSala).emit('jogo-iniciado', {
+                    jogadores: jogadoresEmbaralhados.map((j, idx) => ({
+                        id: j.socketId,
+                        nome: j.nome,
+                        personagem: j.personagem,
+                        ordem: idx + 1
+                    }))
+                });
+
+                console.log(`🎮 Jogadores redirecionados para o jogo na sala ${dados.codigoSala} (aguardando início)`);
+            }, 500);
         }
+    });
+
+    // Reconectar jogador na sala após carregar o jogo
+    socket.on('reconectar-sala', (dados) => {
+        console.log(`🔄 Evento reconectar-sala recebido de ${socket.id}:`, dados);
+        const sala = salas.get(dados.codigoSala);
+        if (!sala) {
+            console.log(`❌ Tentativa de reconectar em sala inexistente: ${dados.codigoSala}`);
+            return;
+        }
+
+        // Procurar jogador pelo socketId antigo ou pelo nome nos desconectados
+        let jogadorReconectado = null;
+        for (const [nome, info] of jogadoresDesconectados.entries()) {
+            if (info.sala === dados.codigoSala) {
+                // Atualizar socketId do jogador
+                const jogador = sala.getJogador(info.socketIdAntigo);
+                if (jogador) {
+                    const socketIdAntigo = jogador.socketId;
+                    jogador.socketId = socket.id;
+                    jogadorReconectado = jogador;
+                    
+                    // Cancelar timeout de remoção
+                    clearTimeout(info.timeoutId);
+                    jogadoresDesconectados.delete(nome);
+                    
+                    console.log(`✅ ${nome} reconectado: ${socketIdAntigo} → ${socket.id}`);
+                    
+                    // Notificar outros jogadores sobre a reconexão
+                    socket.to(dados.codigoSala).emit('jogador-reconectou', {
+                        jogadorId: socket.id,
+                        jogadorIdAntigo: socketIdAntigo,
+                        nome: nome
+                    });
+                    
+                    break;
+                }
+            }
+        }
+
+        // Fazer socket entrar na room
+        socket.join(dados.codigoSala);
+        console.log(`🔄 Socket ${socket.id} reconectado à sala ${dados.codigoSala}`);
+
+        // Se já tiver tabuleiro, enviar para este jogador
+        if (sala.tabuleiro) {
+            socket.emit('receber-tabuleiro', {
+                tabuleiro: sala.tabuleiro,
+                tilesEstado: sala.tilesEstado,
+                cartasEstado: sala.cartasEstado,
+                entradaPosicao: sala.entradaPosicao,
+                jogadorAtualIndex: sala.jogadorAtualIndex
+            });
+            console.log(`📤 Tabuleiro existente enviado para ${socket.id}`);
+        }
+    });
+
+    // Sincronizar tabuleiro
+    socket.on('enviar-tabuleiro', (dados) => {
+        const sala = salas.get(dados.codigoSala);
+        if (!sala) return;
+
+        // Salvar o tabuleiro na sala
+        sala.tabuleiro = dados.tabuleiro;
+        sala.tilesEstado = dados.tilesEstado;
+        sala.cartasEstado = dados.cartasEstado;
+        sala.entradaPosicao = dados.entradaPosicao;
+        sala.jogadorAtualIndex = dados.jogadorAtualIndex || 0;
+        
+        console.log(`🗺️ Tabuleiro recebido do host na sala ${dados.codigoSala}`);
+        console.log(`  📍 jogadorAtualIndex recebido:`, dados.jogadorAtualIndex);
+        console.log(`  ✅ jogadorAtualIndex salvo na sala:`, sala.jogadorAtualIndex);
+        
+        // Enviar para todos os outros jogadores
+        socket.to(dados.codigoSala).emit('receber-tabuleiro', {
+            tabuleiro: dados.tabuleiro,
+            tilesEstado: dados.tilesEstado,
+            cartasEstado: dados.cartasEstado,
+            entradaPosicao: dados.entradaPosicao,
+            jogadorAtualIndex: sala.jogadorAtualIndex
+        });
+
+        console.log(`📤 Tabuleiro compartilhado com outros jogadores da sala ${dados.codigoSala}`);
+    });
+
+    // Reiniciar tabuleiro
+    socket.on('reiniciar-tabuleiro', (dados) => {
+        const sala = salas.get(dados.codigoSala);
+        if (!sala) return;
+        
+        // Limpar estado do tabuleiro (não resetar jogadorAtualIndex aqui - será definido pelo host)
+        sala.tabuleiro = null;
+        sala.tilesEstado = null;
+        sala.cartasEstado = null;
+        sala.entradaPosicao = null;
+        // Não resetar sala.jogadorAtualIndex - o host enviará um novo valor aleatório
+        
+        // Enviar lista atualizada de jogadores para todos (para garantir sincronização)
+        const jogadoresAtualizados = sala.jogadores.map((j, idx) => ({
+            id: j.socketId,
+            nome: j.nome,
+            personagem: j.personagem,
+            ordem: j.ordem
+        }));
+        
+        // Notificar todos os jogadores para reiniciar
+        io.to(dados.codigoSala).emit('tabuleiro-reiniciado', {
+            jogadores: jogadoresAtualizados
+        });
+        
+        console.log(`🔄 Tabuleiro reiniciado na sala ${dados.codigoSala}`);
+        console.log(`👥 Jogadores atualizados enviados:`, jogadoresAtualizados);
+    });
+    
+    // Iniciar jogo
+    socket.on('iniciar-jogo', (dados) => {
+        console.log(`📥 Evento iniciar-jogo recebido de ${socket.id}:`, dados);
+        const sala = salas.get(dados.codigoSala);
+        if (!sala) {
+            console.error(`❌ Sala ${dados.codigoSala} não encontrada!`);
+            return;
+        }
+        
+        console.log(`📊 Estado atual da sala ${dados.codigoSala}:`, sala.estado);
+        
+        if (sala.estado === 'jogando') {
+            console.log(`⚠️ Jogo já está em andamento na sala ${dados.codigoSala}, reenviando evento`);
+            // Reenviar o evento para garantir que o cliente receba
+            io.to(dados.codigoSala).emit('jogo-iniciado-partida');
+            return;
+        }
+        
+        // Embaralhar ordem dos jogadores
+        const jogadoresEmbaralhados = [...sala.jogadores].sort(() => Math.random() - 0.5);
+        jogadoresEmbaralhados.forEach((j, idx) => {
+            j.ordem = idx + 1;
+        });
+        
+        sala.estado = 'jogando';
+        console.log(`✅ Sala ${dados.codigoSala} mudou para estado: jogando`);
+        
+        // Emitir evento jogo-iniciado com dados dos jogadores embaralhados
+        io.to(dados.codigoSala).emit('jogo-iniciado', {
+            jogadores: jogadoresEmbaralhados.map((j, idx) => ({
+                id: j.socketId,
+                nome: j.nome,
+                personagem: j.personagem,
+                ordem: idx + 1
+            }))
+        });
+        
+        // Notificar todos os jogadores para atualizar botões de controle
+        console.log(`📤 Emitindo jogo-iniciado-partida para sala ${dados.codigoSala}`);
+        io.to(dados.codigoSala).emit('jogo-iniciado-partida');
+        
+        console.log(`🎮 Jogo iniciado na sala ${dados.codigoSala}`);
+    });
+    
+    // Encerrar jogo
+    socket.on('encerrar-jogo', (dados) => {
+        const sala = salas.get(dados.codigoSala);
+        if (!sala) return;
+        
+        sala.estado = 'aguardando';
+        
+        // Notificar todos os jogadores
+        io.to(dados.codigoSala).emit('jogo-encerrado');
+        
+        console.log(`🏁 Jogo encerrado na sala ${dados.codigoSala}`);
     });
 
     // Sincronizar ações do jogo
@@ -237,23 +432,40 @@ io.on('connection', (socket) => {
     socket.on('disconnect', () => {
         console.log(`❌ Jogador desconectou: ${socket.id}`);
 
-        // Remover jogador de todas as salas
+        // Aguardar reconexão em qualquer estado (pode estar navegando entre páginas)
         for (const [codigo, sala] of salas.entries()) {
             const jogador = sala.getJogador(socket.id);
             
             if (jogador) {
-                const salaVazia = sala.removerJogador(socket.id);
+                console.log(`⏳ Aguardando reconexão de ${jogador.nome}...`);
                 
-                if (salaVazia) {
-                    salas.delete(codigo);
-                    console.log(`🗑️ Sala ${codigo} removida (vazia)`);
-                } else {
-                    io.to(codigo).emit('jogador-saiu', {
-                        jogadorId: socket.id,
-                        nome: jogador.nome
-                    });
-                    console.log(`👋 ${jogador.nome} saiu da sala ${codigo}`);
-                }
+                const timeoutId = setTimeout(() => {
+                    // Após 10 segundos, remover de verdade
+                    const jogadorAinda = sala.getJogador(socket.id);
+                    if (jogadorAinda) {
+                        const salaVazia = sala.removerJogador(socket.id);
+                        
+                        if (salaVazia) {
+                            salas.delete(codigo);
+                            console.log(`🗑️ Sala ${codigo} removida (vazia após timeout)`);
+                        } else {
+                            io.to(codigo).emit('jogador-saiu', {
+                                jogadorId: socket.id,
+                                nome: jogadorAinda.nome
+                            });
+                            console.log(`👋 ${jogadorAinda.nome} saiu da sala ${codigo} (timeout)`);
+                        }
+                    }
+                    jogadoresDesconectados.delete(jogador.nome);
+                }, 10000);
+                
+                jogadoresDesconectados.set(jogador.nome, {
+                    sala: codigo,
+                    socketIdAntigo: socket.id,
+                    jogador: jogador,
+                    timeoutId: timeoutId
+                });
+                
                 break;
             }
         }

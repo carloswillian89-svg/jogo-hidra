@@ -179,10 +179,81 @@ button {
     margin-bottom: 20px;
 }
 
+.carrossel-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    padding: 0 60px;
+}
+
+.carrossel-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(102, 126, 234, 0.9);
+    color: white;
+    border: none;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    font-size: 2rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    line-height: 1;
+}
+
+.carrossel-btn:hover {
+    background: rgba(118, 75, 162, 1);
+    transform: translateY(-50%) scale(1.1);
+}
+
+.carrossel-btn.prev {
+    left: 0;
+}
+
+.carrossel-btn.next {
+    right: 0;
+}
+
+.carrossel-indicadores {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.indicador {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #ddd;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.indicador:hover {
+    background: #999;
+}
+
+.indicador.active {
+    background: #667eea;
+    width: 30px;
+    border-radius: 6px;
+}
+
 .grid-personagens {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 15px;
+    display: flex;
+    width: 100%;
+    max-width: 450px;
+    overflow: hidden;
+    position: relative;
 }
 
 .card-personagem {
@@ -193,11 +264,32 @@ button {
     position: relative;
     transition: all 0.3s;
     border: 3px solid transparent;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    min-height: 450px;
 }
 
-.card-personagem:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+.card-personagem.active {
+    display: flex;
+    animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.card-personagem.active:hover {
+    transform: scale(1.02);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
 }
 
 .card-personagem.selecionado {
@@ -215,8 +307,13 @@ button {
 }
 
 .personagem-img {
-    font-size: 3rem;
+    width: 100%;
+    max-width: 300px;
+    height: auto;
+    border-radius: 10px;
     margin-bottom: 10px;
+    object-fit: cover;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 .card-personagem h4 {

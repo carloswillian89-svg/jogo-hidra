@@ -32,35 +32,45 @@
                 <!-- Seleção de Personagens -->
                 <div class="secao-personagens">
                     <h3>Escolha seu Personagem</h3>
-                    <div class="grid-personagens">
-                        <div class="card-personagem" data-personagem="Torvin">
-                            <div class="personagem-img">⚔️</div>
-                            <h4>Torvin</h4>
-                            <p class="personagem-classe">Guerreiro</p>
-                            <button class="btn-escolher">Escolher</button>
-                            <span class="status-escolhido">✓ Escolhido</span>
+                    <div class="carrossel-container">
+                        <button class="carrossel-btn prev" id="btn-prev">‹</button>
+                        <div class="grid-personagens">
+                            <div class="card-personagem active" data-personagem="torvin">
+                                <img src="cartas/Personagens/1-Torvin_carta.png" alt="Torvin" class="personagem-img">
+                                <h4>Torvin Mão de Ferro</h4>
+                                <p class="personagem-classe">O Escavador (Drill Master)</p>
+                                <button class="btn-escolher">Escolher</button>
+                                <span class="status-escolhido">✓ Escolhido</span>
+                            </div>
+                            <div class="card-personagem" data-personagem="elara">
+                                <img src="cartas/Personagens/2-Elara_carta.png" alt="Elara" class="personagem-img">
+                                <h4>Elara dos Ventos</h4>
+                                <p class="personagem-classe">A Capitã (Ship Captain)</p>
+                                <button class="btn-escolher">Escolher</button>
+                                <span class="status-escolhido">✓ Escolhido</span>
+                            </div>
+                            <div class="card-personagem" data-personagem="zephyr">
+                                <img src="cartas/Personagens/3-Zephyr_carta.png" alt="Zephyr" class="personagem-img">
+                                <h4>Zephyr Eldon</h4>
+                                <p class="personagem-classe">O Arcanista (Arcanist)</p>
+                                <button class="btn-escolher">Escolher</button>
+                                <span class="status-escolhido">✓ Escolhido</span>
+                            </div>
+                            <div class="card-personagem" data-personagem="kaelen">
+                                <img src="cartas/Personagens/4-Kaelen_carta.png" alt="Kaelen" class="personagem-img">
+                                <h4>Kaelen das Sombras</h4>
+                                <p class="personagem-classe">O Ladrão (Thief)</p>
+                                <button class="btn-escolher">Escolher</button>
+                                <span class="status-escolhido">✓ Escolhido</span>
+                            </div>
                         </div>
-                        <div class="card-personagem" data-personagem="Elara">
-                            <div class="personagem-img">🏹</div>
-                            <h4>Elara</h4>
-                            <p class="personagem-classe">Arqueira</p>
-                            <button class="btn-escolher">Escolher</button>
-                            <span class="status-escolhido">✓ Escolhido</span>
-                        </div>
-                        <div class="card-personagem" data-personagem="Zephyr">
-                            <div class="personagem-img">🔮</div>
-                            <h4>Zephyr</h4>
-                            <p class="personagem-classe">Mago</p>
-                            <button class="btn-escolher">Escolher</button>
-                            <span class="status-escolhido">✓ Escolhido</span>
-                        </div>
-                        <div class="card-personagem" data-personagem="Kaelen">
-                            <div class="personagem-img">🗡️</div>
-                            <h4>Kaelen</h4>
-                            <p class="personagem-classe">Ladino</p>
-                            <button class="btn-escolher">Escolher</button>
-                            <span class="status-escolhido">✓ Escolhido</span>
-                        </div>
+                        <button class="carrossel-btn next" id="btn-next">›</button>
+                    </div>
+                    <div class="carrossel-indicadores">
+                        <span class="indicador active" data-index="0"></span>
+                        <span class="indicador" data-index="1"></span>
+                        <span class="indicador" data-index="2"></span>
+                        <span class="indicador" data-index="3"></span>
                     </div>
                 </div>
 

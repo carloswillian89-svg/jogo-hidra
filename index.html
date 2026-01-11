@@ -8,7 +8,11 @@
 <body>
 
     <h1>Labirinto da Hidra</h1>
-
+    
+    <div id="multiplayer-info" style="display: none;">
+        <span id="info-jogador"></span>
+        <span id="info-sala"></span>
+    </div>
 
     <div id="main-area">
         <aside id="left-panel">
@@ -107,6 +111,12 @@
 
             <button id="fimTurno">Encerrar Turno</button>
             <p id="infoTurno"></p>
+            
+            <div id="controles-jogo" style="display: none;">
+                <button id="btn-iniciar-jogo" class="btn-controle">Iniciar Jogo</button>
+                <button id="btn-encerrar-jogo" class="btn-controle" style="display: none;">Encerrar Jogo</button>
+                <button id="btn-reiniciar-tabuleiro" class="btn-controle">Reiniciar Tabuleiro</button>
+            </div>
 
             <button id="grito-da-hidra">🐉 Grito da Hidra</button>
 
@@ -130,8 +140,6 @@
 
     <div id="cartas-personagens" class="personagens-container"></div>
     
-    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
-
     <script src="/socket.io/socket.io.js"></script>
     <script src="multiplayer.js"></script>
     <script src="script.js"></script>
