@@ -295,6 +295,12 @@ io.on('connection', (socket) => {
         
         // Se já tiver tabuleiro, enviar para este jogador
         if (sala.tabuleiro) {
+            console.log(`📤 Enviando tabuleiro para ${socket.id} (reconexão)`);
+            console.log(`  📊 Matriz linha 0:`, sala.tabuleiro[0]);
+            console.log(`  📊 Matriz linha 1:`, sala.tabuleiro[1]);
+            console.log(`  📊 Matriz linha 2:`, sala.tabuleiro[2]);
+            console.log(`  📦 tilesEstado (primeiros 5):`, sala.tilesEstado.slice(0, 5).map(t => `${t.id}:${t.tipo}`));
+            
             socket.emit('receber-tabuleiro', {
                 tabuleiro: sala.tabuleiro,
                 tilesEstado: sala.tilesEstado,
@@ -304,7 +310,6 @@ io.on('connection', (socket) => {
                 jogadoresEstado: sala.jogadoresEstado || [],
                 estadoSala: sala.estado
             });
-            console.log(`📤 Tabuleiro existente enviado para ${socket.id} (reconexão)`);
             console.log(`  👥 Jogadores: ${sala.jogadoresEstado?.length || 0}, Índice atual: ${sala.jogadorAtualIndex}`);
             console.log(`  🎮 Estado da sala: ${sala.estado}`);
         }
