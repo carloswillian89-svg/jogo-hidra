@@ -285,9 +285,11 @@ function atualizarLabelsJogadores() {
 
 function configurarEventosSocket() {
     const socket = window.socket;
+    console.log('⚙️ [INICIO] Configurando eventos do socket...');
     
     // Receber tabuleiro do host
     socket.on('receber-tabuleiro', (dados) => {
+        console.log('🎯 [LISTENER ACIONADO] receber-tabuleiro');
         console.log('� Tabuleiro recebido do host');
         console.log('📥 Dados recebidos:', {
             tabuleiro: dados.tabuleiro ? dados.tabuleiro.length + 'x' + dados.tabuleiro[0].length : 'null',
