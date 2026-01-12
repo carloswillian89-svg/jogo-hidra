@@ -90,10 +90,9 @@ function inicializarJogoMultiplayer(jogadoresData) {
         console.log('⏱️ Timeout cancelado - tabuleiro recebido com sucesso');
         clearTimeout(timeoutEsperaServidor);
     };
-    
-    // Configurar eventos do socket
-    configurarEventosSocket();
 }
+
+function gerarTabuleiroHost() {
     console.log('🗺️ Gerando novo tabuleiro como host...');
     
     // Sempre gerar uma nova matriz para garantir aleatoriedade
