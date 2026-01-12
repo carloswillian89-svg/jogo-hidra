@@ -316,26 +316,57 @@ function configurarEventosSocket() {
         if (dados.tilesEstado) {
             console.log('🔄 Aplicando estado dos tiles (tipos e rotações)...');
             dados.tilesEstado.forEach(tileInfo => {
-                const tile = document.querySelector(`.tile[data-id="${tileInfo.id}"]`);
-                if (tile) {
-                    // Aplicar tipo do tile
-                    tile.tipo = tileInfo.tipo;
-                    tile.dataset.tipo = tileInfo.tipo;
+                const tileAntigo = document.querySelector(`.tile[data-id="${tileInfo.id}"]`);
+                if (tileAntigo) {
+                    const [linha, coluna] = tileInfo.id.split('-').map(Number);
                     
-                    // Aplicar rotação
-                    tile.rotacao = tileInfo.rotacao;
-                    tile.dataset.rotacao = String(tileInfo.rotacao);
-                    tile.style.transform = `rotate(${tileInfo.rotacao}deg)`;
-                    
-                    // Contra-rotação para overlays
-                    const contraRot = -tileInfo.rotacao;
-                    const cartasContainer = tile.querySelector('.cartas-no-tile');
-                    const overlay = tile.querySelector('.overlay-no-rotacao');
-                    if (cartasContainer) {
-                        cartasContainer.style.transform = `rotate(${contraRot}deg)`;
-                    }
-                    if (overlay) {
-                        overlay.style.transform = `rotate(${contraRot}deg)`;
+                    // Se o tipo mudou, precisamos recriar o tile completamente
+                    if (tabuleiroMatriz[linha][coluna] !== tileInfo.tipo) {
+                        console.log(`  🔄 Recriando tile ${tileInfo.id}: ${tabuleiroMatriz[linha][coluna]} → ${tileInfo.tipo}`);
+                        
+                        // Atualizar matriz
+                        tabuleiroMatriz[linha][coluna] = tileInfo.tipo;
+                        
+                        // Criar novo tile com o tipo correto
+                        const novoTile = criarTile(tileInfo.tipo);
+                        novoTile.dataset.id = tileInfo.id;
+                        
+                        // Aplicar rotação
+                        novoTile.rotacao = tileInfo.rotacao;
+                        novoTile.dataset.rotacao = String(tileInfo.rotacao);
+                        novoTile.style.transform = `rotate(${tileInfo.rotacao}deg)`;
+                        
+                        // Contra-rotação para overlays
+                        const contraRot = -tileInfo.rotacao;
+                        const cartasContainer = novoTile.querySelector('.cartas-no-tile');
+                        const overlay = novoTile.querySelector('.overlay-no-rotacao');
+                        if (cartasContainer) {
+                            cartasContainer.style.transform = `rotate(${contraRot}deg)`;
+                        }
+                        if (overlay) {
+                            overlay.style.transform = `rotate(${contraRot}deg)`;
+                        }
+                        
+                        // Tornar dropável
+                        tornarTileDropavel(novoTile);
+                        
+                        // Substituir no DOM
+                        tileAntigo.replaceWith(novoTile);
+                    } else {
+                        // Apenas aplicar rotação se o tipo não mudou
+                        tileAntigo.rotacao = tileInfo.rotacao;
+                        tileAntigo.dataset.rotacao = String(tileInfo.rotacao);
+                        tileAntigo.style.transform = `rotate(${tileInfo.rotacao}deg)`;
+                        
+                        const contraRot = -tileInfo.rotacao;
+                        const cartasContainer = tileAntigo.querySelector('.cartas-no-tile');
+                        const overlay = tileAntigo.querySelector('.overlay-no-rotacao');
+                        if (cartasContainer) {
+                            cartasContainer.style.transform = `rotate(${contraRot}deg)`;
+                        }
+                        if (overlay) {
+                            overlay.style.transform = `rotate(${contraRot}deg)`;
+                        }
                     }
                 }
             });
