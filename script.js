@@ -1242,6 +1242,17 @@ function salvarEstadoLocal() {
     const emModoMultiplayer = sessionStorage.getItem('modoMultiplayer') === 'true';
     if (emModoMultiplayer) return;
     
+    // Coletar informações atuais dos tiles
+    const tilesInfo = [];
+    const tiles = tabuleiro.querySelectorAll('.tile');
+    tiles.forEach(tile => {
+        tilesInfo.push({
+            id: tile.dataset.id,
+            tipo: tile.tipo,
+            rotacao: tile.rotacao || 0
+        });
+    });
+    
     const estado = {
         tabuleiroMatriz: tabuleiroMatriz,
         entradaPosicao: entradaPosicao,
@@ -1262,22 +1273,13 @@ function salvarEstadoLocal() {
             zona: c.zona,
             dono: c.dono
         })),
-        tilesRotacoes: [] // Array com {id, rotacao} para cada tile que foi rotacionado
+        tilesInfo: tilesInfo // Salvar informação completa de cada tile
     };
-    
-    // Salvar rotações dos tiles
-    const tiles = tabuleiro.querySelectorAll('.tile');
-    tiles.forEach(tile => {
-        if (tile.rotacao && tile.rotacao !== 0) {
-            estado.tilesRotacoes.push({
-                id: tile.dataset.id,
-                rotacao: tile.rotacao
-            });
-        }
-    });
     
     localStorage.setItem('labirinto-hidra-estado', JSON.stringify(estado));
     console.log('💾 Estado salvo no localStorage');
+    console.log('📊 Matriz salva:', tabuleiroMatriz);
+    console.log('🎲 Tiles salvos:', tilesInfo);
 }
 
 function carregarEstadoLocal() {
@@ -1291,6 +1293,8 @@ function carregarEstadoLocal() {
         // Restaurar matriz
         tabuleiroMatriz = estado.tabuleiroMatriz;
         entradaPosicao = estado.entradaPosicao;
+        
+        console.log('📊 Matriz carregada:', tabuleiroMatriz);
         
         // Restaurar jogadores
         jogadorAtualIndex = estado.jogadorAtualIndex;
@@ -1322,13 +1326,33 @@ function carregarEstadoLocal() {
         // Criar tabuleiro com o estado salvo
         criarTabuleiro();
         
-        // Restaurar rotações dos tiles
-        if (estado.tilesRotacoes && estado.tilesRotacoes.length > 0) {
+        console.log('🎲 Tabuleiro criado, verificando tiles...');
+        const tilesCarregados = tabuleiro.querySelectorAll('.tile');
+        const tiposCarregados = Array.from(tilesCarregados).map(t => ({id: t.dataset.id, tipo: t.tipo}));
+        console.log('  Tiles após criar:', tiposCarregados);
+        
+        // Restaurar rotações dos tiles se houver
+        if (estado.tilesInfo && estado.tilesInfo.length > 0) {
+            console.log('🔄 Restaurando rotações dos tiles...');
+            estado.tilesInfo.forEach(({id, rotacao}) => {
+                if (rotacao && rotacao !== 0) {
+                    const tile = document.querySelector(`.tile[data-id="${CSS.escape(id)}"]`);
+                    if (tile) {
+                        tile.rotacao = rotacao;
+                        tile.style.transform = `rotate(${rotacao}deg)`;
+                        console.log(`  Tile ${id}: rotação ${rotacao}°`);
+                    }
+                }
+            });
+        } else if (estado.tilesRotacoes && estado.tilesRotacoes.length > 0) {
+            // Suporte para formato antigo
+            console.log('🔄 Restaurando rotações dos tiles (formato antigo)...');
             estado.tilesRotacoes.forEach(({id, rotacao}) => {
                 const tile = document.querySelector(`.tile[data-id="${CSS.escape(id)}"]`);
                 if (tile) {
                     tile.rotacao = rotacao;
                     tile.style.transform = `rotate(${rotacao}deg)`;
+                    console.log(`  Tile ${id}: rotação ${rotacao}°`);
                 }
             });
         }
