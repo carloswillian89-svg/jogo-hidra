@@ -563,6 +563,71 @@ io.on('connection', (socket) => {
             }
         }
         
+        // Se for Grito da Hidra, rotacionar linha ou coluna inteira
+        if (dados.tipo === 'grito-hidra' && dados.dados) {
+            const { ehLinha, indice } = dados.dados;
+            const TAMANHO = 5;
+            
+            console.log(`🐉 Grito da Hidra! ${ehLinha ? 'Linha' : 'Coluna'} ${indice}`);
+            
+            if (!sala.tilesEstado || !sala.tabuleiro) {
+                console.log(`⚠️ Não é possível aplicar Grito da Hidra: estado não inicializado`);
+            } else {
+                // Coletar IDs dos tiles afetados
+                const tileIds = [];
+                if (ehLinha) {
+                    for (let col = 0; col < TAMANHO; col++) {
+                        tileIds.push(`${indice}-${col}`);
+                    }
+                } else {
+                    for (let lin = 0; lin < TAMANHO; lin++) {
+                        tileIds.push(`${lin}-${indice}`);
+                    }
+                }
+                
+                // Coletar estados e tipos dos tiles
+                const tilesInfo = tileIds.map(id => {
+                    const estado = sala.tilesEstado.find(t => t.id === id);
+                    const [lin, col] = id.split('-').map(Number);
+                    return {
+                        id,
+                        tipo: estado?.tipo || sala.tabuleiro[lin][col],
+                        rotacao: estado?.rotacao || 0
+                    };
+                });
+                
+                // Rotação circular: [0,1,2,3,4] → [1,2,3,4,0]
+                const primeiro = tilesInfo[0];
+                for (let i = 0; i < tilesInfo.length - 1; i++) {
+                    const atual = tileIds[i];
+                    const proximo = tilesInfo[i + 1];
+                    
+                    // Atualizar tilesEstado
+                    const estadoAtual = sala.tilesEstado.find(t => t.id === atual);
+                    if (estadoAtual) {
+                        estadoAtual.tipo = proximo.tipo;
+                        estadoAtual.rotacao = proximo.rotacao;
+                    }
+                    
+                    // Atualizar matriz
+                    const [lin, col] = atual.split('-').map(Number);
+                    sala.tabuleiro[lin][col] = proximo.tipo;
+                }
+                
+                // Último tile recebe o primeiro
+                const ultimoId = tileIds[tileIds.length - 1];
+                const estadoUltimo = sala.tilesEstado.find(t => t.id === ultimoId);
+                if (estadoUltimo) {
+                    estadoUltimo.tipo = primeiro.tipo;
+                    estadoUltimo.rotacao = primeiro.rotacao;
+                }
+                const [linUlt, colUlt] = ultimoId.split('-').map(Number);
+                sala.tabuleiro[linUlt][colUlt] = primeiro.tipo;
+                
+                console.log(`✅ Grito da Hidra aplicado: ${tileIds.length} tiles rotacionados`);
+            }
+        }
+        
         // Se for passar turno, atualizar jogadorAtualIndex
         if (dados.tipo === 'passar-turno' && dados.dados && typeof dados.dados.jogadorAtualIndex !== 'undefined') {
             sala.jogadorAtualIndex = dados.dados.jogadorAtualIndex;
