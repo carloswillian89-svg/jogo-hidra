@@ -346,6 +346,8 @@ io.on('connection', (socket) => {
         
         // 🔥 Atualizar jogadores com tileId e personagem
         if (dados.jogadoresEstado && dados.jogadoresEstado.length > 0) {
+            console.log(`  📥 jogadoresEstado recebidos do host:`, dados.jogadoresEstado.map(j => `ID:${j.id} tileId:${j.tileId}`));
+            console.log(`  👥 Jogadores na sala ANTES:`, sala.jogadores.map(j => `ID:${j.id} nome:${j.nome} tileId:${j.tileId}`));
             dados.jogadoresEstado.forEach(jogadorEstado => {
                 const jogador = sala.jogadores.find(j => j.id === jogadorEstado.id);
                 if (jogador) {
@@ -354,8 +356,11 @@ io.on('connection', (socket) => {
                         jogador.personagem = jogadorEstado.personagem;
                     }
                     console.log(`  👤 Jogador ${jogador.id} (${jogador.nome}/${jogador.personagem}): tileId inicial = ${jogador.tileId}`);
+                } else {
+                    console.warn(`  ⚠️ Jogador com ID ${jogadorEstado.id} NÃO ENCONTRADO na sala!`);
                 }
             });
+            console.log(`  👥 Jogadores na sala DEPOIS:`, sala.jogadores.map(j => `ID:${j.id} nome:${j.nome} tileId:${j.tileId}`));
         }
         
         console.log(`  ⚠️ DEPOIS: Matriz linha 1 sobrescrita:`, sala.tabuleiro[1]);
