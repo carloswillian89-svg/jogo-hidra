@@ -1031,6 +1031,59 @@ function executarGritoHidra(ehLinha, indiceAleatorio) {
         console.log(`  Coluna ${indiceAleatorio}:`, tabuleiroMatriz.map(linha => linha[indiceAleatorio]));
     }
 
+    // 🔥 ATUALIZAR IDs DOS TILES E CARTAS APÓS A ROTAÇÃO
+    console.log(`🔄 Atualizando dataset.id dos tiles e cartas...`);
+    
+    // Primeiro, criar mapeamento de IDs antigos para novos
+    const mapeamentoIds = new Map(); // antigoId → novoId
+    
+    if (ehLinha) {
+        for (let col = 0; col < TAMANHO; col++) {
+            const tile = tilesDepois[col];
+            const antigoId = tile.dataset.id;
+            const novoId = `${indiceAleatorio}-${col}`;
+            mapeamentoIds.set(antigoId, novoId);
+            console.log(`  🔖 Mapeamento: ${antigoId} → ${novoId}`);
+        }
+    } else {
+        for (let lin = 0; lin < TAMANHO; lin++) {
+            const tile = tilesDepois[lin];
+            const antigoId = tile.dataset.id;
+            const novoId = `${lin}-${indiceAleatorio}`;
+            mapeamentoIds.set(antigoId, novoId);
+            console.log(`  🔖 Mapeamento: ${antigoId} → ${novoId}`);
+        }
+    }
+    
+    // Atualizar zonas das cartas com base no mapeamento
+    let cartasAtualizadas = 0;
+    cartas.forEach((carta, cartaId) => {
+        if (carta.zona.startsWith('tile-')) {
+            const tileIdDaCarta = carta.zona.replace('tile-', '');
+            if (mapeamentoIds.has(tileIdDaCarta)) {
+                const novoTileId = mapeamentoIds.get(tileIdDaCarta);
+                const novaZona = `tile-${novoTileId}`;
+                console.log(`  📋 Carta ${cartaId}: ${carta.zona} → ${novaZona}`);
+                carta.zona = novaZona;
+                cartasAtualizadas++;
+            }
+        }
+    });
+    
+    console.log(`✅ Cartas atualizadas: ${cartasAtualizadas}`);
+    
+    // Agora atualizar os dataset.id dos tiles
+    mapeamentoIds.forEach((novoId, antigoId) => {
+        const tile = document.querySelector(`.tile[data-id="${CSS.escape(antigoId)}"]`);
+        if (tile) {
+            tile.dataset.id = novoId;
+            console.log(`  🏷️ Tile ${antigoId} → ${novoId} atualizado no DOM`);
+        }
+    });
+    
+    // Re-renderizar cartas para refletir as mudanças
+    renderizarCartas();
+
     // Redesenha jogadores após a rotação
     desenharJogadores()
 
