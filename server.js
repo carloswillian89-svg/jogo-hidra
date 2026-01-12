@@ -343,13 +343,16 @@ io.on('connection', (socket) => {
         sala.entradaPosicao = dados.entradaPosicao;
         sala.jogadorAtualIndex = dados.jogadorAtualIndex || 0;
         
-        // 🔥 Atualizar jogadores com tileId inicial (posição de entrada)
+        // 🔥 Atualizar jogadores com tileId e personagem
         if (dados.jogadoresEstado && dados.jogadoresEstado.length > 0) {
             dados.jogadoresEstado.forEach(jogadorEstado => {
                 const jogador = sala.jogadores.find(j => j.id === jogadorEstado.id);
                 if (jogador) {
                     jogador.tileId = jogadorEstado.tileId;
-                    console.log(`  👤 Jogador ${jogador.id} (${jogador.nome}): tileId inicial = ${jogador.tileId}`);
+                    if (jogadorEstado.personagem) {
+                        jogador.personagem = jogadorEstado.personagem;
+                    }
+                    console.log(`  👤 Jogador ${jogador.id} (${jogador.nome}/${jogador.personagem}): tileId inicial = ${jogador.tileId}`);
                 }
             });
         }
@@ -496,7 +499,9 @@ io.on('connection', (socket) => {
             
             console.log(`🔄 Iniciando troca de tiles: ${tile1Id} ↔ ${tile2Id}`);
             
-            // Encontrar os tiles e trocar seus tipos/rotações
+            // 🔥 NOVA LÓGICA: Trocar IDs dos tiles no tilesEstado (não trocar tipos)
+            // Após a troca no cliente, os elementos DOM trocaram de posição E os IDs foram atualizados
+            // Então precisamos trocar os IDs no tilesEstado também
             const tile1Estado = sala.tilesEstado.find(t => t.id === tile1Id);
             const tile2Estado = sala.tilesEstado.find(t => t.id === tile2Id);
             
@@ -505,19 +510,13 @@ io.on('connection', (socket) => {
                 console.log(`    ${tile1Id}: tipo="${tile1Estado.tipo}" rot=${tile1Estado.rotacao}°`);
                 console.log(`    ${tile2Id}: tipo="${tile2Estado.tipo}" rot=${tile2Estado.rotacao}°`);
                 
-                // Trocar tipos e rotações
-                const tempTipo = tile1Estado.tipo;
-                const tempRotacao = tile1Estado.rotacao;
+                // Trocar IDs (tipos e rotações ficam com os tiles)
+                tile1Estado.id = tile2Id;
+                tile2Estado.id = tile1Id;
                 
-                tile1Estado.tipo = tile2Estado.tipo;
-                tile1Estado.rotacao = tile2Estado.rotacao;
-                
-                tile2Estado.tipo = tempTipo;
-                tile2Estado.rotacao = tempRotacao;
-                
-                console.log(`  📍 Depois da troca no estado:`);
-                console.log(`    ${tile1Id}: tipo="${tile1Estado.tipo}" rot=${tile1Estado.rotacao}°`);
-                console.log(`    ${tile2Id}: tipo="${tile2Estado.tipo}" rot=${tile2Estado.rotacao}°`);
+                console.log(`  📍 Depois da troca de IDs:`);
+                console.log(`    ${tile2Id}: tipo="${tile1Estado.tipo}" rot=${tile1Estado.rotacao}°`);
+                console.log(`    ${tile1Id}: tipo="${tile2Estado.tipo}" rot=${tile2Estado.rotacao}°`);
                 
                 // TAMBÉM trocar na matriz do tabuleiro
                 if (sala.tabuleiro) {
@@ -537,40 +536,9 @@ io.on('connection', (socket) => {
                     console.log(`    [${linha2}][${coluna2}] = "${sala.tabuleiro[linha2][coluna2]}"`);
                     console.log(`✅ Tiles trocados no estado E na matriz: ${tile1Id} ↔ ${tile2Id}`);
                     
-                    // 🔥 ATUALIZAR CARTAS E JOGADORES que estão nos tiles trocados
-                    console.log(`  🔄 Atualizando cartas e jogadores nos tiles trocados...`);
-                    
-                    // Atualizar cartas
-                    if (sala.cartasEstado) {
-                        const cartasNoTile1 = sala.cartasEstado.filter(c => c.zona === `tile-${tile1Id}`);
-                        const cartasNoTile2 = sala.cartasEstado.filter(c => c.zona === `tile-${tile2Id}`);
-                        
-                        cartasNoTile1.forEach(c => {
-                            c.zona = `tile-${tile2Id}`;
-                            console.log(`    🃏 Carta ${c.id}: tile-${tile1Id} → tile-${tile2Id}`);
-                        });
-                        
-                        cartasNoTile2.forEach(c => {
-                            c.zona = `tile-${tile1Id}`;
-                            console.log(`    🃏 Carta ${c.id}: tile-${tile2Id} → tile-${tile1Id}`);
-                        });
-                    }
-                    
-                    // Atualizar jogadores
-                    const jogadoresNoTile1 = sala.jogadores.filter(j => j.tileId === tile1Id);
-                    const jogadoresNoTile2 = sala.jogadores.filter(j => j.tileId === tile2Id);
-                    
-                    jogadoresNoTile1.forEach(j => {
-                        j.tileId = tile2Id;
-                        console.log(`    👤 Jogador ${j.id}: ${tile1Id} → ${tile2Id}`);
-                    });
-                    
-                    jogadoresNoTile2.forEach(j => {
-                        j.tileId = tile1Id;
-                        console.log(`    👤 Jogador ${j.id}: ${tile2Id} → ${tile1Id}`);
-                    });
-                    
-                    console.log(`  ✅ Cartas e jogadores atualizados após troca`);
+                    // 🔥 Cartas e jogadores JÁ foram atualizados no cliente
+                    // O servidor não precisa atualizar porque as zonas/tileIds já refletem a nova posição
+                    console.log(`  ℹ️ Cartas e jogadores já atualizados no cliente (seguem os IDs dos tiles)`);
                 } else {
                     console.log(`🔄 Tiles trocados apenas no estado: ${tile1Id} ↔ ${tile2Id}`);
                 }

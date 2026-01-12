@@ -704,13 +704,17 @@ function processarTrocarTilesRemoto(dados) {
     const tile2 = document.querySelector(`.tile[data-id="${tile2Id}"]`);
     
     if (tile1 && tile2) {
+        // Trocar elementos no DOM
         const temp = document.createElement("div");
         tile1.before(temp);
         tile2.before(tile1);
         temp.replaceWith(tile2);
         
-        // 🔥 Atualizar cartas e jogadores para seguirem os tiles trocados
-        // Atualizar cartas
+        // 🔥 TROCAR OS IDs para refletir a nova posição física
+        tile1.dataset.id = tile2Id;
+        tile2.dataset.id = tile1Id;
+        
+        // 🔥 Atualizar cartas
         cartas.forEach(carta => {
             if (carta.zona === `tile-${tile1Id}`) {
                 carta.zona = `tile-${tile2Id}`;
@@ -721,15 +725,15 @@ function processarTrocarTilesRemoto(dados) {
             }
         });
         
-        // Atualizar jogadores
+        // 🔥 Atualizar jogadores - buscar tiles novamente após troca de IDs
         jogadores.forEach(jogador => {
             if (jogador.tileId === tile1Id) {
                 jogador.tileId = tile2Id;
-                jogador.tile = tile2;
+                jogador.tile = document.querySelector(`.tile[data-id="${tile2Id}"]`);
                 console.log(`  👤 Jogador ${jogador.id}: ${tile1Id} → ${tile2Id}`);
             } else if (jogador.tileId === tile2Id) {
                 jogador.tileId = tile1Id;
-                jogador.tile = tile1;
+                jogador.tile = document.querySelector(`.tile[data-id="${tile1Id}"]`);
                 console.log(`  👤 Jogador ${jogador.id}: ${tile2Id} → ${tile1Id}`);
             }
         });

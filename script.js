@@ -537,53 +537,62 @@ function tornarTileDropavel(tile) {
 
 
 function trocarTiles(tile1, tile2, sincronizar = true) {
+    // Salvar IDs originais ANTES de trocar
+    const tile1Id = tile1.dataset.id;
+    const tile2Id = tile2.dataset.id;
+    
+    console.log(`🔄 Trocando tiles fisicamente: ${tile1Id} ↔ ${tile2Id}`);
+    
+    // Trocar elementos no DOM
     const temp = document.createElement("div")
-
     tile1.before(temp)
     tile2.before(tile1)
     temp.replaceWith(tile2)
     
-    // 🔥 Atualizar cartas e jogadores para seguirem os tiles trocados
-    const tile1Id = tile1.dataset.id;
-    const tile2Id = tile2.dataset.id;
+    // 🔥 TROCAR OS IDs para refletir a nova posição física
+    tile1.dataset.id = tile2Id;
+    tile2.dataset.id = tile1Id;
     
-    console.log(`🔄 Trocando tiles: ${tile1Id} ↔ ${tile2Id}`);
+    console.log(`  🏷️ IDs atualizados: tile1 agora é ${tile1.dataset.id}, tile2 agora é ${tile2.dataset.id}`);
     
-    // Atualizar cartas
+    // 🔥 Atualizar cartas - agora seguem os tiles FISICAMENTE (não os IDs)
+    // Cartas que estavam no tile1 (fisicamente) mantêm-se nele, mas o ID mudou
     cartas.forEach(carta => {
         if (carta.zona === `tile-${tile1Id}`) {
+            // Estava no tile que tinha ID tile1Id, agora esse tile tem ID tile2Id
             carta.zona = `tile-${tile2Id}`;
             console.log(`  🃏 Carta ${carta.id}: tile-${tile1Id} → tile-${tile2Id}`);
         } else if (carta.zona === `tile-${tile2Id}`) {
+            // Estava no tile que tinha ID tile2Id, agora esse tile tem ID tile1Id
             carta.zona = `tile-${tile1Id}`;
             console.log(`  🃏 Carta ${carta.id}: tile-${tile2Id} → tile-${tile1Id}`);
         }
     });
     
-    // Atualizar jogadores
+    // 🔥 Atualizar jogadores - buscar tiles novamente após troca
     jogadores.forEach(jogador => {
         if (jogador.tileId === tile1Id) {
             jogador.tileId = tile2Id;
-            jogador.tile = tile2;
+            jogador.tile = document.querySelector(`.tile[data-id="${tile2Id}"]`);
             console.log(`  👤 Jogador ${jogador.id}: ${tile1Id} → ${tile2Id}`);
         } else if (jogador.tileId === tile2Id) {
             jogador.tileId = tile1Id;
-            jogador.tile = tile1;
+            jogador.tile = document.querySelector(`.tile[data-id="${tile1Id}"]`);
             console.log(`  👤 Jogador ${jogador.id}: ${tile2Id} → ${tile1Id}`);
         }
     });
 
     desenharJogadores()
     
-    // Sincronizar troca de tiles no multiplayer (apenas se solicitado)
+    // Sincronizar troca de tiles no multiplayer (usar IDs ORIGINAIS)
     if (sincronizar && typeof enviarAcao === 'function') {
         enviarAcao('trocar-tiles', {
-            tile1Id: tile1.dataset.id,
-            tile2Id: tile2.dataset.id
+            tile1Id: tile1Id,  // ID original do tile1
+            tile2Id: tile2Id   // ID original do tile2
         });
     }
     
-    // Salvar estado após trocar tiles (apenas se sincronizar = true, pois no Grito da Hidra já salva no final)
+    // Salvar estado após trocar tiles
     if (sincronizar) {
         salvarEstadoLocal();
     }
