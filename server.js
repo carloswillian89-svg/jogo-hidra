@@ -357,7 +357,7 @@ io.on('connection', (socket) => {
         console.log(`  ⚠️ DEPOIS: Matriz linha 1 sobrescrita:`, sala.tabuleiro[1]);
         console.log(`  📍 jogadorAtualIndex recebido:`, dados.jogadorAtualIndex);
         console.log(`  ✅ jogadorAtualIndex salvo na sala:`, sala.jogadorAtualIndex);
-        console.log(`  👥 Estado dos jogadores:`, sala.jogadoresEstado.length);
+        console.log(`  👥 Jogadores na sala:`, sala.jogadores.length);
         console.log(`  📊 Matriz do host - linha 0:`, dados.tabuleiro[0]);
         console.log(`  📊 Matriz do host - linha 1:`, dados.tabuleiro[1]);
         console.log(`  🎯 ORIGEM: Tabuleiro enviado pelo HOST (socket ${socket.id})`);
