@@ -536,6 +536,41 @@ io.on('connection', (socket) => {
                     console.log(`    [${linha1}][${coluna1}] = "${sala.tabuleiro[linha1][coluna1]}"`);
                     console.log(`    [${linha2}][${coluna2}] = "${sala.tabuleiro[linha2][coluna2]}"`);
                     console.log(`✅ Tiles trocados no estado E na matriz: ${tile1Id} ↔ ${tile2Id}`);
+                    
+                    // 🔥 ATUALIZAR CARTAS E JOGADORES que estão nos tiles trocados
+                    console.log(`  🔄 Atualizando cartas e jogadores nos tiles trocados...`);
+                    
+                    // Atualizar cartas
+                    if (sala.cartasEstado) {
+                        const cartasNoTile1 = sala.cartasEstado.filter(c => c.zona === `tile-${tile1Id}`);
+                        const cartasNoTile2 = sala.cartasEstado.filter(c => c.zona === `tile-${tile2Id}`);
+                        
+                        cartasNoTile1.forEach(c => {
+                            c.zona = `tile-${tile2Id}`;
+                            console.log(`    🃏 Carta ${c.id}: tile-${tile1Id} → tile-${tile2Id}`);
+                        });
+                        
+                        cartasNoTile2.forEach(c => {
+                            c.zona = `tile-${tile1Id}`;
+                            console.log(`    🃏 Carta ${c.id}: tile-${tile2Id} → tile-${tile1Id}`);
+                        });
+                    }
+                    
+                    // Atualizar jogadores
+                    const jogadoresNoTile1 = sala.jogadores.filter(j => j.tileId === tile1Id);
+                    const jogadoresNoTile2 = sala.jogadores.filter(j => j.tileId === tile2Id);
+                    
+                    jogadoresNoTile1.forEach(j => {
+                        j.tileId = tile2Id;
+                        console.log(`    👤 Jogador ${j.id}: ${tile1Id} → ${tile2Id}`);
+                    });
+                    
+                    jogadoresNoTile2.forEach(j => {
+                        j.tileId = tile1Id;
+                        console.log(`    👤 Jogador ${j.id}: ${tile2Id} → ${tile1Id}`);
+                    });
+                    
+                    console.log(`  ✅ Cartas e jogadores atualizados após troca`);
                 } else {
                     console.log(`🔄 Tiles trocados apenas no estado: ${tile1Id} ↔ ${tile2Id}`);
                 }

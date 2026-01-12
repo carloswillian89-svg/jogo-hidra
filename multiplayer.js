@@ -709,8 +709,33 @@ function processarTrocarTilesRemoto(dados) {
         tile2.before(tile1);
         temp.replaceWith(tile2);
         
+        // 🔥 Atualizar cartas e jogadores para seguirem os tiles trocados
+        // Atualizar cartas
+        cartas.forEach(carta => {
+            if (carta.zona === `tile-${tile1Id}`) {
+                carta.zona = `tile-${tile2Id}`;
+                console.log(`  🃏 Carta ${carta.id}: tile-${tile1Id} → tile-${tile2Id}`);
+            } else if (carta.zona === `tile-${tile2Id}`) {
+                carta.zona = `tile-${tile1Id}`;
+                console.log(`  🃏 Carta ${carta.id}: tile-${tile2Id} → tile-${tile1Id}`);
+            }
+        });
+        
+        // Atualizar jogadores
+        jogadores.forEach(jogador => {
+            if (jogador.tileId === tile1Id) {
+                jogador.tileId = tile2Id;
+                jogador.tile = tile2;
+                console.log(`  👤 Jogador ${jogador.id}: ${tile1Id} → ${tile2Id}`);
+            } else if (jogador.tileId === tile2Id) {
+                jogador.tileId = tile1Id;
+                jogador.tile = tile1;
+                console.log(`  👤 Jogador ${jogador.id}: ${tile2Id} → ${tile1Id}`);
+            }
+        });
+        
         desenharJogadores();
-        console.log('✅ Tiles trocados remotamente');
+        console.log('✅ Tiles, cartas e jogadores trocados remotamente');
     } else {
         console.warn('⚠️ Tiles não encontrados para trocar:', { tile1: !!tile1, tile2: !!tile2 });
     }
