@@ -665,8 +665,8 @@ io.on('connection', (socket) => {
                     if (ehLinha) {
                         for (let col = 0; col < TAMANHO; col++) {
                             const idAtual = `${indice}-${col}`;
-                            // Após rotação, este tile veio da posição anterior (rotação circular)
-                            const colOrigem = (col + 1) % TAMANHO;
+                            // Rotação para DIREITA: posição N recebe tile de posição (N-1)
+                            const colOrigem = (col - 1 + TAMANHO) % TAMANHO;
                             const idOriginal = `${indice}-${colOrigem}`;
                             
                             console.log(`    Col ${col}: tile que tinha ID ${idOriginal} agora tem ID ${idAtual}`);
@@ -683,8 +683,8 @@ io.on('connection', (socket) => {
                     } else {
                         for (let lin = 0; lin < TAMANHO; lin++) {
                             const idAtual = `${lin}-${indice}`;
-                            // Após rotação, este tile veio da posição anterior (rotação circular)
-                            const linOrigem = (lin + 1) % TAMANHO;
+                            // Rotação para DIREITA: posição N recebe tile de posição (N-1)
+                            const linOrigem = (lin - 1 + TAMANHO) % TAMANHO;
                             const idOriginal = `${linOrigem}-${indice}`;
                             
                             console.log(`    Lin ${lin}: tile que tinha ID ${idOriginal} agora tem ID ${idAtual}`);
