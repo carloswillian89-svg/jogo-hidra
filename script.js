@@ -925,6 +925,9 @@ function podeMover(jogador, tileDestino) {
 
 
 function gritoHidra() {
+    console.log('🐉 [INICIO] gritoHidra() chamado');
+    console.trace('Stack trace de gritoHidra()');
+    
     // 1. Escolhe aleatoriamente se rotaciona linha ou coluna
     const ehLinha = Math.random() < 0.5
     const indiceAleatorio = Math.floor(Math.random() * TAMANHO)
@@ -934,6 +937,7 @@ function gritoHidra() {
     
     // Sincronizar com multiplayer
     if (typeof enviarAcao === 'function') {
+        console.log('🐉 Enviando grito-hidra para servidor');
         enviarAcao('grito-hidra', {
             ehLinha: ehLinha,
             indice: indiceAleatorio
@@ -942,6 +946,9 @@ function gritoHidra() {
 }
 
 function executarGritoHidra(ehLinha, indiceAleatorio) {
+    console.log(`🐉 [EXEC] executarGritoHidra(${ehLinha ? 'Linha' : 'Coluna'}, ${indiceAleatorio})`);
+    console.trace('Stack trace de executarGritoHidra()');
+    
     // 2 & 3 & 4. Coleta tiles da linha/coluna e realiza rotação circular
     const tiles = []
     const indices = []
