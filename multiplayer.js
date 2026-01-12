@@ -70,14 +70,24 @@ function inicializarJogoMultiplayer(jogadoresData) {
     
     // Flag para controlar se já recebeu tabuleiro do servidor
     let tabuleiroRecebido = false;
+    let estadoSalaRecebido = null;
     
-    // Timeout: se servidor não responder, gerar novo (apenas host)
+    // Função global para atualizar estado da sala recebido
+    window.atualizarEstadoSalaRecebido = (estado) => {
+        estadoSalaRecebido = estado;
+        console.log('📥 Estado da sala atualizado:', estadoSalaRecebido);
+    };
+    
+    // Timeout: se servidor não responder E não houver jogo em andamento, gerar novo (apenas host)
     const timeoutEsperaServidor = setTimeout(() => {
         if (!tabuleiroRecebido) {
-            if (minhaOrdem === 1) {
-                console.log('⏰ Timeout (5s) - servidor sem tabuleiro, host gerando novo');
-                console.warn('⚠️ ATENÇÃO: Gerando novo tabuleiro pode sobrescrever estado salvo!');
+            // Só gerar novo tabuleiro se a sala estiver em 'aguardando' (primeiro início)
+            // Se estiver em 'jogando', significa que há estado salvo - não gerar
+            if (minhaOrdem === 1 && estadoSalaRecebido === 'aguardando') {
+                console.log('⏰ Timeout (5s) - sala nova sem tabuleiro, host gerando');
                 gerarTabuleiroHost();
+            } else if (estadoSalaRecebido === 'jogando') {
+                console.log('⏰ Timeout (5s) - mas sala está em "jogando", NÃO gerar novo (aguardar estado salvo)');
             } else {
                 console.log('⏰ Timeout (5s) - aguardando tabuleiro do host...');
             }
@@ -286,6 +296,15 @@ function atualizarLabelsJogadores() {
 function configurarEventosSocket() {
     const socket = window.socket;
     console.log('⚙️ [INICIO] Configurando eventos do socket...');
+    
+    // Receber estado da sala (enviado antes do tabuleiro)
+    socket.on('estado-sala', (dados) => {
+        console.log('📡 Estado da sala recebido:', dados.estado);
+        // Atualizar variável no escopo da reconexão
+        if (typeof window.atualizarEstadoSalaRecebido === 'function') {
+            window.atualizarEstadoSalaRecebido(dados.estado);
+        }
+    });
     
     // Receber tabuleiro do host
     socket.on('receber-tabuleiro', (dados) => {
