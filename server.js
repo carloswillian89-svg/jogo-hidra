@@ -295,11 +295,12 @@ io.on('connection', (socket) => {
         
         // Se já tiver tabuleiro, enviar para este jogador
         if (sala.tabuleiro) {
-            console.log(`📤 Enviando tabuleiro para ${socket.id} (reconexão)`);
+            console.log(`📤 [RECONEXÃO] Enviando tabuleiro salvo para ${socket.id}`);
             console.log(`  📊 Matriz linha 0:`, sala.tabuleiro[0]);
             console.log(`  📊 Matriz linha 1:`, sala.tabuleiro[1]);
             console.log(`  📊 Matriz linha 2:`, sala.tabuleiro[2]);
             console.log(`  📦 tilesEstado (primeiros 5):`, sala.tilesEstado.slice(0, 5).map(t => `${t.id}:${t.tipo}`));
+            console.log(`  🎯 ORIGEM: Estado salvo no servidor (não vem do host)`);
             
             socket.emit('receber-tabuleiro', {
                 tabuleiro: sala.tabuleiro,
@@ -328,10 +329,14 @@ io.on('connection', (socket) => {
         sala.jogadorAtualIndex = dados.jogadorAtualIndex || 0;
         sala.jogadoresEstado = dados.jogadoresEstado || [];
         
-        console.log(`🗺️ Tabuleiro recebido do host na sala ${dados.codigoSala}`);
+        console.log(`🗺️ [HOST ENVIOU] Tabuleiro recebido do host na sala ${dados.codigoSala}`);
         console.log(`  📍 jogadorAtualIndex recebido:`, dados.jogadorAtualIndex);
         console.log(`  ✅ jogadorAtualIndex salvo na sala:`, sala.jogadorAtualIndex);
         console.log(`  👥 Estado dos jogadores:`, sala.jogadoresEstado.length);
+        console.log(`  📊 Matriz do host - linha 0:`, dados.tabuleiro[0]);
+        console.log(`  📊 Matriz do host - linha 1:`, dados.tabuleiro[1]);
+        console.log(`  🎯 ORIGEM: Tabuleiro enviado pelo HOST (socket ${socket.id})`);
+        console.log(`  ⚠️ Isso VAI SOBRESCREVER o estado salvo na reconexão!`);
         
         // Enviar para todos os outros jogadores
         socket.to(dados.codigoSala).emit('receber-tabuleiro', {
