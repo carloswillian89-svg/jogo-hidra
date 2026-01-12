@@ -616,8 +616,6 @@ function configurarEventosSocket() {
             });
             
             console.log('📋 Jogadores DEPOIS de atualizar:', jogadores.map(j => `${j.nome} ID:${j.id} Socket:${j.socketId} Personagem:${j.personagem}`));
-                }
-            });
             
             // 🔥 Agora que os IDs estão corretos, host pode gerar o tabuleiro
             const minhaOrdem = parseInt(sessionStorage.getItem('minhaOrdem')) || 1;
