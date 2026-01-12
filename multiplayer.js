@@ -78,14 +78,18 @@ function inicializarJogoMultiplayer(jogadoresData) {
         console.log('📥 Estado da sala atualizado:', estadoSalaRecebido);
     };
     
-    // Timeout: se servidor não responder E não houver jogo em andamento, aguardar
+    // Timeout: se servidor não responder E não houver jogo em andamento, gerar novo (apenas host)
     const timeoutEsperaServidor = setTimeout(() => {
         if (!tabuleiroRecebido) {
-            // Não gerar tabuleiro aqui - esperar o botão "Iniciar Jogo"
-            if (estadoSalaRecebido === 'jogando') {
-                console.log('⏰ Timeout (5s) - sala está em "jogando", aguardando estado salvo...');
+            // Só gerar novo tabuleiro se a sala estiver em 'aguardando' (primeiro início)
+            // Se estiver em 'jogando', significa que há estado salvo - não gerar
+            if (minhaOrdem === 1 && estadoSalaRecebido === 'aguardando') {
+                console.log('⏰ Timeout (5s) - sala nova sem tabuleiro, host gerando');
+                gerarTabuleiroHost();
+            } else if (estadoSalaRecebido === 'jogando') {
+                console.log('⏰ Timeout (5s) - mas sala está em "jogando", NÃO gerar novo (aguardar estado salvo)');
             } else {
-                console.log('⏰ Timeout (5s) - aguardando "Iniciar Jogo"...');
+                console.log('⏰ Timeout (5s) - aguardando tabuleiro do host...');
             }
         }
     }, 5000); // Aumentado de 1000ms para 5000ms para ambientes remotos
@@ -608,30 +612,6 @@ function configurarEventosSocket() {
         console.log('📞 Chamando atualizarBotoesControle("jogando")');
         atualizarBotoesControle('jogando');
         console.log('✅ atualizarBotoesControle executado');
-    });
-    
-    // Handler para receber IDs embaralhados e gerar tabuleiro
-    socket.on('jogo-iniciado', (dados) => {
-        console.log('🎮 Evento jogo-iniciado recebido!', dados);
-        
-        // Atualizar jogadores com IDs recebidos do servidor
-        if (dados.jogadores && dados.jogadores.length > 0) {
-            dados.jogadores.forEach(jogadorServidor => {
-                const jogadorLocal = jogadores.find(j => j.socketId === jogadorServidor.socketId);
-                if (jogadorLocal) {
-                    jogadorLocal.id = jogadorServidor.id;
-                    jogadorLocal.ordem = jogadorServidor.ordem;
-                    console.log(`  ✅ Jogador ${jogadorLocal.nome}: ID=${jogadorLocal.id}, Ordem=${jogadorLocal.ordem}`);
-                }
-            });
-        }
-        
-        // Host gera e envia o tabuleiro (agora com IDs corretos)
-        const minhaOrdem = parseInt(sessionStorage.getItem('minhaOrdem')) || 1;
-        if (minhaOrdem === 1) {
-            console.log('🗺️ Host gerando tabuleiro após receber IDs...');
-            gerarTabuleiroHost();
-        }
     });
     
     socket.on('jogo-encerrado', () => {
