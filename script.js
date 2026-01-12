@@ -1079,9 +1079,9 @@ function executarGritoHidra(ehLinha, indiceAleatorio) {
             const novoId = `${indiceAleatorio}-${col}`;
             
             // Descobrir qual era o índice original deste tile ANTES da rotação
-            // Após rotação circular: posição 0 veio de posição 1, posição 1 veio de 2, etc
-            // posição N veio de (N+1) % TAMANHO
-            const indiceOriginal = (col + 1) % TAMANHO;
+            // Rotação para DIREITA: posição N recebe tile de posição (N-1)
+            // posição 0 recebe de posição 4, posição 1 recebe de 0, etc
+            const indiceOriginal = (col - 1 + TAMANHO) % TAMANHO;
             
             mapeamentoTiles.push({ tile, antigoId, novoId, indiceOriginal });
             console.log(`  📍 Posição ${col}: tile ${antigoId} → ${novoId} (veio da posição ${indiceOriginal})`);
@@ -1092,8 +1092,8 @@ function executarGritoHidra(ehLinha, indiceAleatorio) {
             const antigoId = tile.dataset.id;
             const novoId = `${lin}-${indiceAleatorio}`;
             
-            // Após rotação circular: posição 0 veio de posição 1, posição 1 veio de 2, etc
-            const indiceOriginal = (lin + 1) % TAMANHO;
+            // Rotação para DIREITA: posição N recebe tile de posição (N-1)
+            const indiceOriginal = (lin - 1 + TAMANHO) % TAMANHO;
             
             mapeamentoTiles.push({ tile, antigoId, novoId, indiceOriginal });
             console.log(`  📍 Posição ${lin}: tile ${antigoId} → ${novoId} (veio da posição ${indiceOriginal})`);
