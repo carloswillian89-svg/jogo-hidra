@@ -754,8 +754,12 @@ io.on('connection', (socket) => {
             console.log(`🎮 Jogador atual atualizado: índice ${dados.dados.jogadorAtualIndex}`);
         }
 
-        // Broadcast para outros jogadores
-        socket.to(dados.codigoSala).emit('acao-jogo', dados);
+        // Broadcast para outros jogadores com jogadores atualizados
+        const dadosParaEnviar = {
+            ...dados,
+            jogadoresAtualizados: sala.jogadores  // 🔥 Incluir jogadores atualizados
+        };
+        socket.to(dados.codigoSala).emit('acao-jogo', dadosParaEnviar);
     });
 
     // Desconexão

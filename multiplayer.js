@@ -538,6 +538,22 @@ function configurarEventosSocket() {
     // Receber ações de outros jogadores
     socket.on('acao-jogo', (dados) => {
         console.log('📨 Ação recebida:', dados);
+        
+        // Se recebeu jogadores atualizados do servidor, aplicar
+        if (dados.jogadoresAtualizados && dados.jogadoresAtualizados.length > 0) {
+            console.log('👥 Aplicando jogadores atualizados do servidor:', dados.jogadoresAtualizados);
+            dados.jogadoresAtualizados.forEach(jogadorServidor => {
+                const jogadorLocal = jogadores.find(j => j.id === jogadorServidor.id);
+                if (jogadorLocal) {
+                    jogadorLocal.tileId = jogadorServidor.tileId;
+                    console.log(`  ✅ Jogador ${jogadorLocal.id} atualizado: tileId="${jogadorLocal.tileId}"`);
+                }
+            });
+            
+            // Re-renderizar jogadores
+            desenharJogadores();
+        }
+        
         processarAcaoRemota(dados);
     });
     
