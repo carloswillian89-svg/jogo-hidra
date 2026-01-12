@@ -988,14 +988,16 @@ function executarGritoHidra(ehLinha, indiceAleatorio) {
 
     console.log(`Grito da Hidra! ${ehLinha ? "Linha" : "Coluna"} ${indiceAleatorio}:`, indices)
 
-    // 🔥 PASSO 1: SALVAR O ESTADO DAS CARTAS ANTES DE MOVER OS TILES
-    console.log(`📋 Salvando estado das cartas ANTES da rotação...`);
-    const cartasPorTile = new Map(); // tileId → [cartaIds]
+    // 🔥 PASSO 1: SALVAR O ESTADO DAS CARTAS E JOGADORES ANTES DE MOVER OS TILES
+    console.log(`📋 Salvando estado das cartas e jogadores ANTES da rotação...`);
+    const cartasPorTile = new Map(); // índice → [cartaIds]
+    const jogadoresPorTile = new Map(); // índice → [jogadorIds]
     
     tiles.forEach((tile, idx) => {
         const tileId = tile.dataset.id;
-        const cartasNoTile = [];
         
+        // Salvar cartas
+        const cartasNoTile = [];
         cartas.forEach((carta, cartaId) => {
             if (carta.zona === `tile-${tileId}`) {
                 cartasNoTile.push(cartaId);
@@ -1003,8 +1005,15 @@ function executarGritoHidra(ehLinha, indiceAleatorio) {
         });
         
         if (cartasNoTile.length > 0) {
-            cartasPorTile.set(idx, cartasNoTile); // índice na array original
+            cartasPorTile.set(idx, cartasNoTile);
             console.log(`  Posição ${idx} (tile ${tileId}): ${cartasNoTile.length} carta(s) - ${cartasNoTile.join(', ')}`);
+        }
+        
+        // Salvar jogadores
+        const jogadoresNoTile = jogadores.filter(j => j.tileId === tileId).map(j => j.id);
+        if (jogadoresNoTile.length > 0) {
+            jogadoresPorTile.set(idx, jogadoresNoTile);
+            console.log(`  Posição ${idx} (tile ${tileId}): ${jogadoresNoTile.length} jogador(es) - ${jogadoresNoTile.join(', ')}`);
         }
     });
 
@@ -1106,8 +1115,10 @@ function executarGritoHidra(ehLinha, indiceAleatorio) {
         console.log(`  🏷️ Tile atualizado: ${antigoId} → ${novoId}`);
     });
     
-    // PASSO 3: Atualizar as cartas baseado em qual posição elas vieram
+    // PASSO 3: Atualizar as cartas e jogadores baseado em qual posição eles vieram
     let cartasAtualizadas = 0;
+    let jogadoresAtualizados = 0;
+    
     mapeamentoTiles.forEach(({novoId, indiceOriginal}, posicaoAtual) => {
         // As cartas que estavam no tile da posição original agora devem estar no tile da posição atual
         if (cartasPorTile.has(indiceOriginal)) {
@@ -1122,10 +1133,24 @@ function executarGritoHidra(ehLinha, indiceAleatorio) {
                 }
             });
         }
+        
+        // Os jogadores que estavam no tile da posição original agora devem estar no tile da posição atual
+        if (jogadoresPorTile.has(indiceOriginal)) {
+            const jogadoresIds = jogadoresPorTile.get(indiceOriginal);
+            jogadoresIds.forEach(jogadorId => {
+                const jogador = jogadores.find(j => j.id === jogadorId);
+                if (jogador) {
+                    const tileIdAntigo = jogador.tileId;
+                    jogador.tileId = novoId;
+                    console.log(`    👤 Jogador ${jogadorId}: ${tileIdAntigo} → ${novoId}`);
+                    jogadoresAtualizados++;
+                }
+            });
+        }
     });
     
-    console.log(`  ✅ ${cartasAtualizadas} cartas atualizadas`);
-    console.log(`✅ IDs dos tiles e cartas atualizados`);
+    console.log(`  ✅ ${cartasAtualizadas} cartas e ${jogadoresAtualizados} jogadores atualizados`);
+    console.log(`✅ IDs dos tiles, cartas e jogadores atualizados`);
     
     // Re-renderizar cartas para refletir as mudanças
     renderizarCartas();
