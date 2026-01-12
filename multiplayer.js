@@ -353,8 +353,11 @@ function configurarEventosSocket() {
             });
         }
         
+        console.log('🏗️ Criando tabuleiro DOM baseado na matriz recebida...');
+        console.log('  📊 Matriz ANTES de criar DOM - linha 1:', tabuleiroMatriz[1]);
         criarTabuleiro();
         console.log('✅ Tabuleiro criado no DOM');
+        console.log('  📊 Matriz DEPOIS de criar DOM - linha 1:', tabuleiroMatriz[1]);
         
         // Aplicar estado completo dos tiles (tipos E rotações)
         if (dados.tilesEstado) {
@@ -373,9 +376,11 @@ function configurarEventosSocket() {
                     const tipoMatriz = tabuleiroMatriz[linha][coluna];
                     const tipoEstado = tileInfo.tipo;
                     
+                    console.log(`  🔍 Tile ${tileInfo.id}: matriz="${tipoMatriz}" estado="${tipoEstado}" DOM="${tileAntigo.tipo}"`);
+                    
                     // Se o tipo mudou, precisamos recriar o tile completamente
                     if (tipoMatriz !== tipoEstado) {
-                        console.log(`  🔄 Recriando tile ${tileInfo.id}: matriz="${tipoMatriz}" estado="${tipoEstado}"`);
+                        console.log(`  🔄 RECRIANDO tile ${tileInfo.id}: matriz="${tipoMatriz}" → estado="${tipoEstado}"`);
                         
                         // Atualizar matriz
                         tabuleiroMatriz[linha][coluna] = tileInfo.tipo;
@@ -405,8 +410,10 @@ function configurarEventosSocket() {
                         
                         // Substituir no DOM
                         tileAntigo.replaceWith(novoTile);
+                        console.log(`  ✅ Tile ${tileInfo.id} recriado com tipo "${tipoEstado}"`);
                     } else {
                         // Apenas aplicar rotação se o tipo não mudou
+                        console.log(`  🔄 Aplicando rotação no tile ${tileInfo.id}: ${tileAntigo.rotacao}° → ${tileInfo.rotacao}°`);
                         tileAntigo.rotacao = tileInfo.rotacao;
                         tileAntigo.dataset.rotacao = String(tileInfo.rotacao);
                         tileAntigo.style.transform = `rotate(${tileInfo.rotacao}deg)`;
