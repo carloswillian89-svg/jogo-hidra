@@ -33,9 +33,8 @@ jogadores.forEach((jogador, index) => {
     jogador.ordem = index + 1
 })
 
-// Define o jogador inicial de forma aleatória
-let jogadorAtualIndex = Math.floor(Math.random() * jogadores.length);
-console.log('🎲 Jogador inicial sorteado:', jogadorAtualIndex, '(ID:', jogadores[jogadorAtualIndex].id, ')');
+// Define o jogador inicial (será sobrescrito em multiplayer pelo servidor)
+let jogadorAtualIndex = 0;
 
 function jogadorAtual() {
     return jogadores[jogadorAtualIndex]
@@ -1980,7 +1979,10 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
         console.log('🎮 Modo local - Socket desativado');
         
-        // Em modo local, inicializar normalmente
+        // Em modo local, randomizar jogador inicial e inicializar
+        jogadorAtualIndex = Math.floor(Math.random() * jogadores.length);
+        console.log('🎲 Jogador inicial sorteado (modo local):', jogadorAtualIndex, '(ID:', jogadores[jogadorAtualIndex].id, ')');
+        
         gerarMatriz();
         criarTabuleiro();
         renderizarCartasPersonagens(jogadorAtual().id);
