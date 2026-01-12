@@ -658,55 +658,73 @@ io.on('connection', (socket) => {
                 
                 console.log(`  ✅ Grito da Hidra aplicado: ${tileIds.length} tiles rotacionados`);
                 
-                // 🔥 ATUALIZAR CARTAS APÓS ROTAÇÃO
-                console.log(`  🔄 Atualizando cartas...`);
+                // 🔥 ATUALIZAR CARTAS E JOGADORES APÓS ROTAÇÃO
+                console.log(`  🔄 Atualizando cartas e jogadores...`);
                 
-                // Para cada tile na nova posição após rotação, atualizar cartas que estavam nele
-                if (sala.cartasEstado && sala.cartasEstado.length > 0) {
-                    let cartasAtualizadas = 0;
-                    
-                    if (ehLinha) {
-                        for (let col = 0; col < TAMANHO; col++) {
-                            const idAtual = `${indice}-${col}`;
-                            // Rotação para DIREITA: posição N recebe tile de posição (N-1)
-                            const colOrigem = (col - 1 + TAMANHO) % TAMANHO;
-                            const idOriginal = `${indice}-${colOrigem}`;
-                            
-                            console.log(`    Col ${col}: tile que tinha ID ${idOriginal} agora tem ID ${idAtual}`);
-                            
-                            // Atualizar cartas que estavam no tile original
-                            sala.cartasEstado.forEach(carta => {
-                                if (carta.zona === `tile-${idOriginal}`) {
-                                    carta.zona = `tile-${idAtual}`;
-                                    console.log(`      📋 Carta ${carta.id}: tile-${idOriginal} → tile-${idAtual}`);
-                                    cartasAtualizadas++;
-                                }
-                            });
-                        }
-                    } else {
-                        for (let lin = 0; lin < TAMANHO; lin++) {
-                            const idAtual = `${lin}-${indice}`;
-                            // Rotação para DIREITA: posição N recebe tile de posição (N-1)
-                            const linOrigem = (lin - 1 + TAMANHO) % TAMANHO;
-                            const idOriginal = `${linOrigem}-${indice}`;
-                            
-                            console.log(`    Lin ${lin}: tile que tinha ID ${idOriginal} agora tem ID ${idAtual}`);
-                            
-                            // Atualizar cartas que estavam no tile original
-                            sala.cartasEstado.forEach(carta => {
-                                if (carta.zona === `tile-${idOriginal}`) {
-                                    carta.zona = `tile-${idAtual}`;
-                                    console.log(`      📋 Carta ${carta.id}: tile-${idOriginal} → tile-${idAtual}`);
-                                    cartasAtualizadas++;
-                                }
-                            });
+                // PASSO 1: Salvar quais cartas e jogadores estavam em cada posição ANTES da rotação
+                const cartasPorPosicao = new Map(); // posição (0-4) → [cartaIds]
+                const jogadoresPorPosicao = new Map(); // posição (0-4) → [jogadorIds]
+                
+                tileIds.forEach((tileId, posicao) => {
+                    // Salvar cartas desta posição
+                    if (sala.cartasEstado) {
+                        const cartasNesteTile = sala.cartasEstado
+                            .filter(c => c.zona === `tile-${tileId}`)
+                            .map(c => c.id);
+                        if (cartasNesteTile.length > 0) {
+                            cartasPorPosicao.set(posicao, cartasNesteTile);
+                            console.log(`    📋 Posição ${posicao} (tile ${tileId}): ${cartasNesteTile.length} carta(s)`);
                         }
                     }
                     
-                    console.log(`  ✅ Cartas atualizadas: ${cartasAtualizadas}`);
-                } else {
-                    console.log(`  ⚠️ Nenhuma carta para atualizar`);
-                }
+                    // Salvar jogadores desta posição
+                    const jogadoresNesteTile = sala.jogadores
+                        .filter(j => j.tileId === tileId)
+                        .map(j => j.id);
+                    if (jogadoresNesteTile.length > 0) {
+                        jogadoresPorPosicao.set(posicao, jogadoresNesteTile);
+                        console.log(`    👤 Posição ${posicao} (tile ${tileId}): ${jogadoresNesteTile.length} jogador(es)`);
+                    }
+                });
+                
+                // PASSO 2: Atualizar cartas e jogadores baseado na nova posição dos tiles
+                let cartasAtualizadas = 0;
+                let jogadoresAtualizados = 0;
+                
+                tileIds.forEach((tileId, posicaoAtual) => {
+                    // Rotação para DIREITA: posição N recebe tile que estava em posição (N-1)
+                    const posicaoOriginal = (posicaoAtual - 1 + TAMANHO) % TAMANHO;
+                    
+                    // Atualizar cartas que estavam na posição original
+                    if (cartasPorPosicao.has(posicaoOriginal)) {
+                        const cartasIds = cartasPorPosicao.get(posicaoOriginal);
+                        cartasIds.forEach(cartaId => {
+                            const carta = sala.cartasEstado.find(c => c.id === cartaId);
+                            if (carta) {
+                                const zonaAntiga = carta.zona;
+                                carta.zona = `tile-${tileId}`;
+                                console.log(`      📋 Carta ${cartaId}: ${zonaAntiga} → tile-${tileId}`);
+                                cartasAtualizadas++;
+                            }
+                        });
+                    }
+                    
+                    // Atualizar jogadores que estavam na posição original
+                    if (jogadoresPorPosicao.has(posicaoOriginal)) {
+                        const jogadoresIds = jogadoresPorPosicao.get(posicaoOriginal);
+                        jogadoresIds.forEach(jogadorId => {
+                            const jogador = sala.jogadores.find(j => j.id === jogadorId);
+                            if (jogador) {
+                                const tileIdAntigo = jogador.tileId;
+                                jogador.tileId = tileId;
+                                console.log(`      👤 Jogador ${jogadorId}: ${tileIdAntigo} → ${tileId}`);
+                                jogadoresAtualizados++;
+                            }
+                        });
+                    }
+                });
+                
+                console.log(`  ✅ ${cartasAtualizadas} cartas e ${jogadoresAtualizados} jogadores atualizados`);
                 
                 // Verificar resultado
                 console.log(`  📊 Estado após rotação:`);
