@@ -989,22 +989,38 @@ function executarGritoHidra(ehLinha, indiceAleatorio) {
     const tiposAntes = tiles.map(t => t.tipo);
     const rotacoesAntes = tiles.map(t => t.rotacao || 0);
     
+    console.log(`📝 ANTES das trocas - tipos:`, tiposAntes);
+    console.log(`📝 ANTES das trocas - IDs:`, tiles.map(t => t.dataset.id));
+    
     for (let i = 0; i < tiles.length - 1; i++) {
         trocarTiles(tiles[i], tiles[i + 1], false) // false = não sincronizar individualmente
     }
-
-    // Atualizar tabuleiroMatriz após a rotação circular
-    // Os elementos DOM foram movidos, então precisamos atualizar a matriz
+    
+    // Verificar ordem DEPOIS das trocas
+    console.log(`📝 DEPOIS das trocas - ordem visual no DOM:`);
+    const tilesDepois = [];
     if (ehLinha) {
         for (let col = 0; col < TAMANHO; col++) {
-            // A rotação move [0,1,2,3,4] → [1,2,3,4,0]
-            const novoIndice = (col + 1) % TAMANHO;
-            tabuleiroMatriz[indiceAleatorio][col] = tiposAntes[novoIndice];
+            const index = indiceAleatorio * TAMANHO + col;
+            tilesDepois.push(tabuleiro.children[index]);
         }
     } else {
         for (let lin = 0; lin < TAMANHO; lin++) {
-            const novoIndice = (lin + 1) % TAMANHO;
-            tabuleiroMatriz[lin][indiceAleatorio] = tiposAntes[novoIndice];
+            const index = lin * TAMANHO + indiceAleatorio;
+            tilesDepois.push(tabuleiro.children[index]);
+        }
+    }
+    console.log(`  Tipos:`, tilesDepois.map(t => t.tipo));
+    console.log(`  IDs:`, tilesDepois.map(t => t.dataset.id));
+
+    // Atualizar tabuleiroMatriz com base na ordem REAL após as trocas
+    if (ehLinha) {
+        for (let col = 0; col < TAMANHO; col++) {
+            tabuleiroMatriz[indiceAleatorio][col] = tilesDepois[col].tipo;
+        }
+    } else {
+        for (let lin = 0; lin < TAMANHO; lin++) {
+            tabuleiroMatriz[lin][indiceAleatorio] = tilesDepois[lin].tipo;
         }
     }
     
