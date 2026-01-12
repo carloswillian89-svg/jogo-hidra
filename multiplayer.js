@@ -238,17 +238,10 @@ function gerarTabuleiroHost() {
 
 
 function configurarJogadoresMultiplayer(jogadoresData) {
-    // Mapear nome do personagem para ID (case-insensitive)
-    const personagemParaId = {
-        'torvin': 1,
-        'elara': 2,
-        'zephyr': 3,
-        'kaelen': 4
-    };
-    
     // Atualizar array de jogadores com dados do lobby
+    // IDs numéricos serão atribuídos pelo servidor quando todos ficarem prontos
     jogadores = jogadoresData.map(j => ({
-        id: personagemParaId[j.personagem?.toLowerCase()] || j.ordem, // Usar ID do personagem escolhido
+        id: null,  // Será atribuído pelo servidor no evento 'jogo-iniciado'
         ordem: j.ordem,
         nome: j.nome,
         personagem: j.personagem,
@@ -256,7 +249,7 @@ function configurarJogadoresMultiplayer(jogadoresData) {
         tileId: null
     }));
     
-    console.log('👥 Jogadores configurados:', jogadores.map(j => `${j.nome} (ID: ${j.id}, Ordem: ${j.ordem}, Personagem: ${j.personagem})`));
+    console.log('👥 Jogadores configurados:', jogadores.map(j => `${j.nome} (Ordem: ${j.ordem}, Personagem: ${j.personagem}, ID: pendente)`));
     
     // Não definir jogadorAtualIndex aqui - será recebido do host via 'receber-tabuleiro'
     // O host já sorteou e enviou o jogador inicial correto
@@ -605,6 +598,23 @@ function configurarEventosSocket() {
         }
         
         mostrarMensagemJogo('Tabuleiro reiniciado!');
+    });
+    
+    // Handler para receber jogadores com IDs do servidor (após todos prontos)
+    socket.on('jogo-iniciado', (dados) => {
+        console.log('🎮 Evento jogo-iniciado recebido (jogadores com IDs):', dados);
+        
+        // Atualizar jogadores com IDs recebidos do servidor
+        if (dados.jogadores && dados.jogadores.length > 0) {
+            dados.jogadores.forEach(jogadorServidor => {
+                const jogadorLocal = jogadores.find(j => j.socketId === jogadorServidor.socketId);
+                if (jogadorLocal) {
+                    jogadorLocal.id = jogadorServidor.id;
+                    jogadorLocal.ordem = jogadorServidor.ordem;
+                    console.log(`  ✅ Jogador ${jogadorLocal.nome}: ID=${jogadorLocal.id}, Ordem=${jogadorLocal.ordem}`);
+                }
+            });
+        }
     });
     
     socket.on('jogo-iniciado-partida', () => {

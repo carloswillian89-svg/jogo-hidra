@@ -475,11 +475,11 @@ function criarTile(tipo) {
         linha: Math.floor(index / 5),
         coluna: index % 5
     }
-    const jogadorAtual = jogadores[jogadorAtualIndex]
+    const jogadorAtivo = jogadores[jogadorAtualIndex]
 
     const distancia =
-    Math.abs(destino.linha - jogadorAtual.linha) +
-    Math.abs(destino.coluna - jogadorAtual.coluna)
+    Math.abs(destino.linha - jogadorAtivo.linha) +
+    Math.abs(destino.coluna - jogadorAtivo.coluna)
 
     if (distancia !== 1) return
 
