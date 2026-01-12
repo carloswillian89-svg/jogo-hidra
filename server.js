@@ -726,6 +726,12 @@ io.on('connection', (socket) => {
                 
                 console.log(`  ✅ ${cartasAtualizadas} cartas e ${jogadoresAtualizados} jogadores atualizados`);
                 
+                // Log do estado final dos jogadores
+                console.log(`  👥 Estado final dos jogadores após Grito da Hidra:`);
+                sala.jogadores.forEach(j => {
+                    console.log(`    Jogador ${j.id} (${j.nome}): tileId="${j.tileId}"`);
+                });
+                
                 // Verificar resultado
                 console.log(`  📊 Estado após rotação:`);
                 tileIds.forEach(id => {

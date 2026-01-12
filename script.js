@@ -1152,6 +1152,12 @@ function executarGritoHidra(ehLinha, indiceAleatorio) {
     console.log(`  ✅ ${cartasAtualizadas} cartas e ${jogadoresAtualizados} jogadores atualizados`);
     console.log(`✅ IDs dos tiles, cartas e jogadores atualizados`);
     
+    // Log do estado final dos jogadores
+    console.log(`👥 Estado final dos jogadores após Grito da Hidra:`);
+    jogadores.forEach(j => {
+        console.log(`  Jogador ${j.id}: tileId="${j.tileId}"`);
+    });
+    
     // Re-renderizar cartas para refletir as mudanças
     renderizarCartas();
 
