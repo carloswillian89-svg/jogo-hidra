@@ -225,18 +225,19 @@ io.on('connection', (socket) => {
         if (sala.jogadores.length >= 2 && todosComPersonagem && todosProntos) {
             // Aguardar um pouco para garantir que todos receberam o status de pronto
             setTimeout(() => {
-                // NÃO mudar estado para 'jogando' - isso será feito pelo botão Iniciar Jogo
-                // Apenas redirecionar jogadores para a tela do jogo
-                
-                // Embaralhar ordem dos jogadores
-                const jogadoresEmbaralhados = [...sala.jogadores].sort(() => Math.random() - 0.5);
-                jogadoresEmbaralhados.forEach((j, idx) => {
-                    j.ordem = idx + 1;
+                // 🔥 Embaralhar E atribuir IDs numéricos AQUI (antes de iniciar jogo)
+                sala.jogadores.sort(() => Math.random() - 0.5);
+                sala.jogadores.forEach((j, idx) => {
+                    j.id = idx + 1;  // ID numérico (1, 2, 3, 4)
+                    j.ordem = idx + 1;  // Ordem de jogo
                 });
+                
+                console.log(`✅ Jogadores embaralhados e IDs atribuídos (todos prontos):`, sala.jogadores.map(j => `ID:${j.id} ${j.nome}`));
 
                 io.to(dados.codigoSala).emit('jogo-iniciado', {
-                    jogadores: jogadoresEmbaralhados.map((j, idx) => ({
-                        id: j.socketId,
+                    jogadores: sala.jogadores.map(j => ({
+                        id: j.id,  // ID numérico
+                        socketId: j.socketId,
                         nome: j.nome,
                         personagem: j.personagem,
                         ordem: idx + 1
@@ -432,29 +433,11 @@ io.on('connection', (socket) => {
             return;
         }
         
-        // Embaralhar ordem dos jogadores e atribuir IDs numéricos
-        // 🔥 Embaralhar DIRETAMENTE sala.jogadores (não fazer cópia)
-        sala.jogadores.sort(() => Math.random() - 0.5);
-        sala.jogadores.forEach((j, idx) => {
-            j.id = idx + 1;  // ID numérico (1, 2, 3, 4)
-            j.ordem = idx + 1;  // Ordem de jogo
-        });
-        
-        console.log(`✅ Jogadores embaralhados e IDs atribuídos:`, sala.jogadores.map(j => `ID:${j.id} ${j.nome}`));
+        // 🔥 IDs já foram atribuídos quando todos ficaram prontos
+        console.log(`✅ Jogadores com IDs:`, sala.jogadores.map(j => `ID:${j.id} ${j.nome}`));
         
         sala.estado = 'jogando';
         console.log(`✅ Sala ${dados.codigoSala} mudou para estado: jogando`);
-        
-        // Emitir evento jogo-iniciado com dados dos jogadores embaralhados
-        io.to(dados.codigoSala).emit('jogo-iniciado', {
-            jogadores: sala.jogadores.map(j => ({
-                id: j.id,  // ID numérico (1, 2, 3, 4)
-                socketId: j.socketId,  // Manter socketId também para referência
-                nome: j.nome,
-                personagem: j.personagem,
-                ordem: j.ordem
-            }))
-        });
         
         // Notificar todos os jogadores para atualizar botões de controle
         console.log(`📤 Emitindo jogo-iniciado-partida para sala ${dados.codigoSala}`);
