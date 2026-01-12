@@ -541,6 +541,35 @@ io.on('connection', (socket) => {
                     console.log(`    [${linha1}][${coluna1}] = "${sala.tabuleiro[linha1][coluna1]}"`);
                     console.log(`    [${linha2}][${coluna2}] = "${sala.tabuleiro[linha2][coluna2]}"`);
                     console.log(`✅ Tiles trocados no estado E na matriz: ${tile1Id} ↔ ${tile2Id}`);
+                    
+                    // 🔥 ATUALIZAR CARTAS E JOGADORES após trocar tiles
+                    console.log(`  🔄 Atualizando cartas e jogadores...`);
+                    
+                    // Atualizar cartas
+                    if (sala.cartasEstado) {
+                        sala.cartasEstado.forEach(carta => {
+                            if (carta.zona === `tile-${tile1Id}`) {
+                                carta.zona = `tile-${tile2Id}`;
+                                console.log(`    🃏 Carta ${carta.id}: tile-${tile1Id} → tile-${tile2Id}`);
+                            } else if (carta.zona === `tile-${tile2Id}`) {
+                                carta.zona = `tile-${tile1Id}`;
+                                console.log(`    🃏 Carta ${carta.id}: tile-${tile2Id} → tile-${tile1Id}`);
+                            }
+                        });
+                    }
+                    
+                    // Atualizar jogadores
+                    sala.jogadores.forEach(jogador => {
+                        if (jogador.tileId === tile1Id) {
+                            jogador.tileId = tile2Id;
+                            console.log(`    👤 Jogador ${jogador.id}: ${tile1Id} → ${tile2Id}`);
+                        } else if (jogador.tileId === tile2Id) {
+                            jogador.tileId = tile1Id;
+                            console.log(`    👤 Jogador ${jogador.id}: ${tile2Id} → ${tile1Id}`);
+                        }
+                    });
+                    
+                    console.log(`  ✅ Cartas e jogadores atualizados`);
                 } else {
                     console.log(`🔄 Tiles trocados apenas no estado: ${tile1Id} ↔ ${tile2Id}`);
                 }
