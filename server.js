@@ -69,6 +69,9 @@ class Jogador {
         this.nome = nome;
         this.personagem = null; // será escolhido depois
         this.pronto = false;
+        this.id = null; // ID numérico será atribuído quando o jogo iniciar
+        this.ordem = null; // Ordem de jogo
+        this.tileId = null; // Posição atual no tabuleiro
     }
 }
 
@@ -339,7 +342,17 @@ io.on('connection', (socket) => {
         sala.cartasEstado = dados.cartasEstado;
         sala.entradaPosicao = dados.entradaPosicao;
         sala.jogadorAtualIndex = dados.jogadorAtualIndex || 0;
-        sala.jogadoresEstado = dados.jogadoresEstado || [];
+        
+        // 🔥 Atualizar jogadores com tileId inicial (posição de entrada)
+        if (dados.jogadoresEstado && dados.jogadoresEstado.length > 0) {
+            dados.jogadoresEstado.forEach(jogadorEstado => {
+                const jogador = sala.jogadores.find(j => j.id === jogadorEstado.id);
+                if (jogador) {
+                    jogador.tileId = jogadorEstado.tileId;
+                    console.log(`  👤 Jogador ${jogador.id} (${jogador.nome}): tileId inicial = ${jogador.tileId}`);
+                }
+            });
+        }
         
         console.log(`  ⚠️ DEPOIS: Matriz linha 1 sobrescrita:`, sala.tabuleiro[1]);
         console.log(`  📍 jogadorAtualIndex recebido:`, dados.jogadorAtualIndex);
@@ -357,7 +370,7 @@ io.on('connection', (socket) => {
             cartasEstado: dados.cartasEstado,
             entradaPosicao: dados.entradaPosicao,
             jogadorAtualIndex: sala.jogadorAtualIndex,
-            jogadoresEstado: sala.jogadoresEstado
+            jogadoresEstado: sala.jogadores  // 🔥 Enviar sala.jogadores completo
         });
 
         console.log(`📤 Tabuleiro compartilhado com outros jogadores da sala ${dados.codigoSala}`);
@@ -410,10 +423,11 @@ io.on('connection', (socket) => {
             return;
         }
         
-        // Embaralhar ordem dos jogadores
+        // Embaralhar ordem dos jogadores e atribuir IDs numéricos
         const jogadoresEmbaralhados = [...sala.jogadores].sort(() => Math.random() - 0.5);
         jogadoresEmbaralhados.forEach((j, idx) => {
-            j.ordem = idx + 1;
+            j.id = idx + 1;  // ID numérico (1, 2, 3, 4)
+            j.ordem = idx + 1;  // Ordem de jogo
         });
         
         sala.estado = 'jogando';
@@ -421,11 +435,12 @@ io.on('connection', (socket) => {
         
         // Emitir evento jogo-iniciado com dados dos jogadores embaralhados
         io.to(dados.codigoSala).emit('jogo-iniciado', {
-            jogadores: jogadoresEmbaralhados.map((j, idx) => ({
-                id: j.socketId,
+            jogadores: jogadoresEmbaralhados.map(j => ({
+                id: j.id,  // ID numérico (1, 2, 3, 4)
+                socketId: j.socketId,  // Manter socketId também para referência
                 nome: j.nome,
                 personagem: j.personagem,
-                ordem: idx + 1
+                ordem: j.ordem
             }))
         });
         
@@ -461,22 +476,13 @@ io.on('connection', (socket) => {
         
         // Se for movimento de jogador, atualizar posição salva
         if (dados.tipo === 'mover-jogador' && dados.dados) {
-            if (!sala.jogadoresEstado) {
-                sala.jogadoresEstado = [];
-            }
-            
-            // Encontrar e atualizar o jogador no estado salvo
-            const jogadorEstado = sala.jogadoresEstado.find(j => j.id === dados.dados.jogadorId);
-            if (jogadorEstado) {
-                jogadorEstado.tileId = dados.dados.tileId;
-                console.log(`📍 Posição atualizada: Jogador ${dados.dados.jogadorId} → Tile ${dados.dados.tileId}`);
+            // Atualizar tileId diretamente no jogador
+            const jogador = sala.jogadores.find(j => j.id === dados.dados.jogadorId);
+            if (jogador) {
+                jogador.tileId = dados.dados.tileId;
+                console.log(`📍 Posição atualizada: Jogador ${jogador.id} (${jogador.nome}) → Tile ${jogador.tileId}`);
             } else {
-                // Se não existe, adicionar (não deveria acontecer, mas é um fallback)
-                sala.jogadoresEstado.push({
-                    id: dados.dados.jogadorId,
-                    tileId: dados.dados.tileId
-                });
-                console.log(`📍 Posição adicionada: Jogador ${dados.dados.jogadorId} → Tile ${dados.dados.tileId}`);
+                console.warn(`⚠️ Jogador ${dados.dados.jogadorId} não encontrado para atualizar posição`);
             }
         }
         
