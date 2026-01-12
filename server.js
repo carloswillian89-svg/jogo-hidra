@@ -308,10 +308,10 @@ io.on('connection', (socket) => {
                 cartasEstado: sala.cartasEstado,
                 entradaPosicao: sala.entradaPosicao,
                 jogadorAtualIndex: sala.jogadorAtualIndex,
-                jogadoresEstado: sala.jogadoresEstado || [],
+                jogadoresEstado: sala.jogadores,  // 🔥 CORRIGIDO: usar sala.jogadores ao invés de jogadoresEstado
                 estadoSala: sala.estado
             });
-            console.log(`  👥 Jogadores: ${sala.jogadoresEstado?.length || 0}, Índice atual: ${sala.jogadorAtualIndex}`);
+            console.log(`  👥 Jogadores: ${sala.jogadores?.length || 0}, Índice atual: ${sala.jogadorAtualIndex}`);
             console.log(`  🎮 Estado da sala: ${sala.estado}`);
         }
     });
