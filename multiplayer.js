@@ -714,7 +714,7 @@ function processarTrocarTilesRemoto(dados) {
         tile1.dataset.id = tile2Id;
         tile2.dataset.id = tile1Id;
         
-        // 🔥 Atualizar cartas
+        // 🔥 Atualizar cartas (servidor não envia estado de cartas, então fazemos local)
         cartas.forEach(carta => {
             if (carta.zona === `tile-${tile1Id}`) {
                 carta.zona = `tile-${tile2Id}`;
@@ -725,21 +725,22 @@ function processarTrocarTilesRemoto(dados) {
             }
         });
         
-        // 🔥 Atualizar jogadores - buscar tiles novamente após troca de IDs
+        // 🔥 NÃO atualizar jogadores aqui - o servidor já enviou as posições corretas
+        // Os jogadores foram atualizados via 'jogadoresAtualizados' antes desta função ser chamada
+        console.log(`  ℹ️ Jogadores já foram atualizados pelo servidor, pulando atualização local`);
+        
+        // Re-buscar tiles após troca de IDs para atualizar referências de jogadores
         jogadores.forEach(jogador => {
-            if (jogador.tileId === tile1Id) {
-                jogador.tileId = tile2Id;
-                jogador.tile = document.querySelector(`.tile[data-id="${tile2Id}"]`);
-                console.log(`  👤 Jogador ${jogador.id}: ${tile1Id} → ${tile2Id}`);
-            } else if (jogador.tileId === tile2Id) {
-                jogador.tileId = tile1Id;
-                jogador.tile = document.querySelector(`.tile[data-id="${tile1Id}"]`);
-                console.log(`  👤 Jogador ${jogador.id}: ${tile2Id} → ${tile1Id}`);
+            if (jogador.tileId) {
+                const tileAtualizado = document.querySelector(`.tile[data-id="${jogador.tileId}"]`);
+                if (tileAtualizado) {
+                    jogador.tile = tileAtualizado;
+                }
             }
         });
         
         desenharJogadores();
-        console.log('✅ Tiles, cartas e jogadores trocados remotamente');
+        console.log('✅ Tiles e cartas trocados remotamente');
     } else {
         console.warn('⚠️ Tiles não encontrados para trocar:', { tile1: !!tile1, tile2: !!tile2 });
     }
