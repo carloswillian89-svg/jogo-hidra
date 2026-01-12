@@ -481,7 +481,19 @@ io.on('connection', (socket) => {
                 tile2Estado.tipo = tempTipo;
                 tile2Estado.rotacao = tempRotacao;
                 
-                console.log(`🔄 Tiles trocados: ${tile1Id} ↔ ${tile2Id}`);
+                // TAMBÉM trocar na matriz do tabuleiro
+                if (sala.tabuleiro) {
+                    const [linha1, coluna1] = tile1Id.split('-').map(Number);
+                    const [linha2, coluna2] = tile2Id.split('-').map(Number);
+                    
+                    const tempMatriz = sala.tabuleiro[linha1][coluna1];
+                    sala.tabuleiro[linha1][coluna1] = sala.tabuleiro[linha2][coluna2];
+                    sala.tabuleiro[linha2][coluna2] = tempMatriz;
+                    
+                    console.log(`🔄 Tiles trocados no estado E na matriz: ${tile1Id} ↔ ${tile2Id}`);
+                } else {
+                    console.log(`🔄 Tiles trocados apenas no estado: ${tile1Id} ↔ ${tile2Id}`);
+                }
             }
         }
         
@@ -532,6 +544,12 @@ io.on('connection', (socket) => {
                 tileEstado.rotacao = dados.dados.rotacao;
                 console.log(`🔄 Tile ${dados.dados.tileId} girado: ${dados.dados.rotacao}°`);
             }
+        }
+        
+        // Se for passar turno, atualizar jogadorAtualIndex
+        if (dados.tipo === 'passar-turno' && dados.dados && typeof dados.dados.jogadorAtualIndex !== 'undefined') {
+            sala.jogadorAtualIndex = dados.dados.jogadorAtualIndex;
+            console.log(`🎮 Jogador atual atualizado: índice ${dados.dados.jogadorAtualIndex}`);
         }
 
         // Broadcast para outros jogadores

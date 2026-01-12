@@ -312,12 +312,17 @@ function configurarEventosSocket() {
         criarTabuleiro();
         console.log('✅ Tabuleiro criado no DOM');
         
-        // Aplicar rotações dos tiles
+        // Aplicar estado completo dos tiles (tipos E rotações)
         if (dados.tilesEstado) {
-            console.log('🔄 Aplicando rotações dos tiles...');
+            console.log('🔄 Aplicando estado dos tiles (tipos e rotações)...');
             dados.tilesEstado.forEach(tileInfo => {
                 const tile = document.querySelector(`.tile[data-id="${tileInfo.id}"]`);
                 if (tile) {
+                    // Aplicar tipo do tile
+                    tile.tipo = tileInfo.tipo;
+                    tile.dataset.tipo = tileInfo.tipo;
+                    
+                    // Aplicar rotação
                     tile.rotacao = tileInfo.rotacao;
                     tile.dataset.rotacao = String(tileInfo.rotacao);
                     tile.style.transform = `rotate(${tileInfo.rotacao}deg)`;
@@ -334,7 +339,7 @@ function configurarEventosSocket() {
                     }
                 }
             });
-            console.log('✅ Rotações aplicadas');
+            console.log('✅ Tipos e rotações dos tiles aplicados');
         }
         
         // Inicializar jogadores
@@ -676,6 +681,7 @@ function processarMoverJogadorRemoto(dados) {
 
 function processarPassarTurnoRemoto(dados) {
     if (dados && typeof dados.jogadorAtualIndex !== 'undefined') {
+        console.log('🎮 Passar turno remoto recebido - Jogador atual:', dados.jogadorAtualIndex);
         jogadorAtualIndex = dados.jogadorAtualIndex;
         desenharJogadores();
         if (typeof renderizarCartasPersonagens === 'function') {
