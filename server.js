@@ -297,6 +297,21 @@ io.on('connection', (socket) => {
         });
         console.log(`📤 Estado da sala enviado: ${sala.estado}`);
         
+        // 🔥 Se jogadores já têm IDs atribuídos, reenviar jogo-iniciado
+        const todosTemId = sala.jogadores.every(j => j.id !== null);
+        if (todosTemId) {
+            console.log(`📤 Reenviando jogo-iniciado com IDs para ${socket.id}`);
+            socket.emit('jogo-iniciado', {
+                jogadores: sala.jogadores.map(j => ({
+                    id: j.id,
+                    socketId: j.socketId,
+                    nome: j.nome,
+                    personagem: j.personagem,
+                    ordem: j.ordem
+                }))
+            });
+        }
+        
         // Se já tiver tabuleiro, enviar para este jogador
         if (sala.tabuleiro) {
             console.log(`📤 [RECONEXÃO] Enviando tabuleiro salvo para ${socket.id}`);
