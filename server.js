@@ -585,22 +585,27 @@ io.on('connection', (socket) => {
                     }
                 }
                 
-                // Coletar estados e tipos dos tiles
+                console.log(`  📍 Tiles afetados:`, tileIds);
+                
+                // Coletar estados e tipos dos tiles ANTES da rotação
                 const tilesInfo = tileIds.map(id => {
                     const estado = sala.tilesEstado.find(t => t.id === id);
                     const [lin, col] = id.split('-').map(Number);
-                    return {
-                        id,
-                        tipo: estado?.tipo || sala.tabuleiro[lin][col],
-                        rotacao: estado?.rotacao || 0
-                    };
+                    const tipo = estado?.tipo || sala.tabuleiro[lin][col];
+                    const rotacao = estado?.rotacao || 0;
+                    console.log(`    ${id}: tipo="${tipo}" rot=${rotacao}°`);
+                    return { id, tipo, rotacao };
                 });
+                
+                console.log(`  🔄 Iniciando rotação circular...`);
                 
                 // Rotação circular: [0,1,2,3,4] → [1,2,3,4,0]
                 const primeiro = tilesInfo[0];
                 for (let i = 0; i < tilesInfo.length - 1; i++) {
                     const atual = tileIds[i];
                     const proximo = tilesInfo[i + 1];
+                    
+                    console.log(`    ${atual} ← ${proximo.id}: tipo="${proximo.tipo}" rot=${proximo.rotacao}°`);
                     
                     // Atualizar tilesEstado
                     const estadoAtual = sala.tilesEstado.find(t => t.id === atual);
@@ -616,6 +621,8 @@ io.on('connection', (socket) => {
                 
                 // Último tile recebe o primeiro
                 const ultimoId = tileIds[tileIds.length - 1];
+                console.log(`    ${ultimoId} ← ${primeiro.id}: tipo="${primeiro.tipo}" rot=${primeiro.rotacao}°`);
+                
                 const estadoUltimo = sala.tilesEstado.find(t => t.id === ultimoId);
                 if (estadoUltimo) {
                     estadoUltimo.tipo = primeiro.tipo;
@@ -624,7 +631,15 @@ io.on('connection', (socket) => {
                 const [linUlt, colUlt] = ultimoId.split('-').map(Number);
                 sala.tabuleiro[linUlt][colUlt] = primeiro.tipo;
                 
-                console.log(`✅ Grito da Hidra aplicado: ${tileIds.length} tiles rotacionados`);
+                console.log(`  ✅ Grito da Hidra aplicado: ${tileIds.length} tiles rotacionados`);
+                
+                // Verificar resultado
+                console.log(`  📊 Estado após rotação:`);
+                tileIds.forEach(id => {
+                    const estado = sala.tilesEstado.find(t => t.id === id);
+                    const [lin, col] = id.split('-').map(Number);
+                    console.log(`    ${id}: tipo="${estado?.tipo || sala.tabuleiro[lin][col]}" rot=${estado?.rotacao || 0}°`);
+                });
             }
         }
         
