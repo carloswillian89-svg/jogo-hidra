@@ -294,9 +294,11 @@ io.on('connection', (socket) => {
                 tilesEstado: sala.tilesEstado,
                 cartasEstado: sala.cartasEstado,
                 entradaPosicao: sala.entradaPosicao,
-                jogadorAtualIndex: sala.jogadorAtualIndex
+                jogadorAtualIndex: sala.jogadorAtualIndex,
+                jogadoresEstado: sala.jogadoresEstado || []
             });
-            console.log(`📤 Tabuleiro existente enviado para ${socket.id}`);
+            console.log(`📤 Tabuleiro existente enviado para ${socket.id} (reconexão)`);
+            console.log(`  👥 Jogadores: ${sala.jogadoresEstado?.length || 0}, Índice atual: ${sala.jogadorAtualIndex}`);
         }
     });
 
@@ -311,10 +313,12 @@ io.on('connection', (socket) => {
         sala.cartasEstado = dados.cartasEstado;
         sala.entradaPosicao = dados.entradaPosicao;
         sala.jogadorAtualIndex = dados.jogadorAtualIndex || 0;
+        sala.jogadoresEstado = dados.jogadoresEstado || [];
         
         console.log(`🗺️ Tabuleiro recebido do host na sala ${dados.codigoSala}`);
         console.log(`  📍 jogadorAtualIndex recebido:`, dados.jogadorAtualIndex);
         console.log(`  ✅ jogadorAtualIndex salvo na sala:`, sala.jogadorAtualIndex);
+        console.log(`  👥 Estado dos jogadores:`, sala.jogadoresEstado.length);
         
         // Enviar para todos os outros jogadores
         socket.to(dados.codigoSala).emit('receber-tabuleiro', {
@@ -322,7 +326,8 @@ io.on('connection', (socket) => {
             tilesEstado: dados.tilesEstado,
             cartasEstado: dados.cartasEstado,
             entradaPosicao: dados.entradaPosicao,
-            jogadorAtualIndex: sala.jogadorAtualIndex
+            jogadorAtualIndex: sala.jogadorAtualIndex,
+            jogadoresEstado: sala.jogadoresEstado
         });
 
         console.log(`📤 Tabuleiro compartilhado com outros jogadores da sala ${dados.codigoSala}`);

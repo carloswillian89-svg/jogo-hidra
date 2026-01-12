@@ -68,35 +68,31 @@ function inicializarJogoMultiplayer(jogadoresData) {
     console.log('👤 Minha ordem:', minhaOrdem);
     console.log('📊 Estado atual tabuleiroMatriz:', tabuleiroMatriz ? 'existe' : 'null');
     
-    if (minhaOrdem === 1) {
-        // Host: verificar se já existe tabuleiro no servidor (reconexão)
-        // ou gerar um novo (primeira vez)
-        console.log('🗺️ Você é o host - gerando tabuleiro...');
-        
-        // Flag para controlar se já recebeu tabuleiro do servidor
-        let tabuleiroRecebido = false;
-        
-        // Timeout para gerar tabuleiro se servidor não responder
-        const timeoutEsperaServidor = setTimeout(() => {
-            if (!tabuleiroRecebido) {
-                console.log('⏰ Timeout - gerando novo tabuleiro');
+    // Flag para controlar se já recebeu tabuleiro do servidor
+    let tabuleiroRecebido = false;
+    
+    // TODOS os jogadores aguardam tabuleiro do servidor primeiro (para reconexão)
+    const verificarTabuleiroServidor = (dados) => {
+        tabuleiroRecebido = true;
+        console.log('📥 Tabuleiro recebido do servidor');
+        clearTimeout(timeoutEsperaServidor);
+        // O evento será processado pelo listener normal em configurarEventosSocket
+    };
+    
+    socket.once('receber-tabuleiro', verificarTabuleiroServidor);
+    
+    // Timeout: se servidor não responder, gerar novo (apenas host)
+    const timeoutEsperaServidor = setTimeout(() => {
+        if (!tabuleiroRecebido) {
+            if (minhaOrdem === 1) {
+                console.log('⏰ Timeout - servidor sem tabuleiro, host gerando novo');
                 gerarTabuleiroHost();
+            } else {
+                console.log('⏰ Timeout - aguardando tabuleiro do host...');
+                // Cliente continua aguardando - host vai gerar e enviar
             }
-        }, 500); // Esperar 500ms por resposta do servidor
-        
-        // Verificar se servidor tem tabuleiro antes de gerar novo
-        const verificarTabuleiro = (dados) => {
-            clearTimeout(timeoutEsperaServidor);
-            tabuleiroRecebido = true;
-            console.log('📥 Tabuleiro já existe no servidor, usando existente');
-            // O evento já foi processado pelo listener normal configurarEventosSocket
-        };
-        
-        socket.once('receber-tabuleiro', verificarTabuleiro);
-        
-    } else {
-        console.log('⏳ Aguardando tabuleiro do host...');
-    }
+        }
+    }, 1000); // Aguardar 1 segundo por resposta do servidor
 }
 
 function gerarTabuleiroHost() {
@@ -201,12 +197,28 @@ function gerarTabuleiroHost() {
     
     // Enviar tabuleiro para outros jogadores
     const socket = window.socket;
+    
+    // Capturar posições dos jogadores
+    const jogadoresEstado = jogadores.map(j => ({
+        id: j.id,
+        ordem: j.ordem,
+        tileId: j.tileId,
+        nome: j.nome,
+        personagem: j.personagem
+    }));
+    
     socket.emit('enviar-tabuleiro', {
         codigoSala: codigoSala,
         tabuleiro: tabuleiroMatriz,
         tilesEstado: tilesEstadoCompleto,
         cartasEstado: cartasEstado,
         entradaPosicao: entradaPosicao,
+        jogadorAtualIndex: jogadorAtualIndex,
+        jogadoresEstado: jogadoresEstado
+    });
+    
+    console.log('📤 Estado completo enviado:', {
+        jogadores: jogadoresEstado.length,
         jogadorAtualIndex: jogadorAtualIndex
     });
 }
@@ -325,40 +337,64 @@ function configurarEventosSocket() {
             console.log('✅ Rotações aplicadas');
         }
         
-        // Inicializar jogadores na entrada
+        // Inicializar jogadores
         const tiles = document.querySelectorAll('.tile');
         console.log('📍 Total de tiles no DOM:', tiles.length);
         
-        // Buscar tile de entrada pela posição na matriz
-        let tileEntrada = null;
-        if (entradaPosicao) {
-            const entradaId = `${entradaPosicao.linha}-${entradaPosicao.coluna}`;
-            tileEntrada = document.querySelector(`.tile[data-id="${entradaId}"]`);
-            console.log('🚪 Buscando tile de entrada pela posição:', entradaId);
-        }
-        
-        // Fallback: buscar por tipo
-        if (!tileEntrada) {
-            tileEntrada = Array.from(tiles).find(t => t.tipo === 'entrada');
-            console.log('🚪 Fallback - Buscando tile de entrada por tipo');
-        }
-        
-        console.log('🚪 Tile de entrada encontrado?', tileEntrada ? 'SIM - ' + tileEntrada.dataset.id : 'NÃO');
-        
-        if (tileEntrada) {
-            console.log('✅ Tile de entrada encontrado:', tileEntrada.dataset.id);
-            console.log('👥 Jogadores antes de atribuir tile:', jogadores);
+        // Se recebeu estado dos jogadores, aplicar posições salvas
+        if (dados.jogadoresEstado && dados.jogadoresEstado.length > 0) {
+            console.log('👥 Aplicando estado dos jogadores recebido:', dados.jogadoresEstado);
+            
             jogadores.forEach(j => {
-                j.tile = tileEntrada;
-                j.tileId = tileEntrada.dataset.id;
-                console.log(`  ➡️ Jogador ${j.id} atribuído ao tile ${j.tileId}`);
+                const estadoSalvo = dados.jogadoresEstado.find(ej => ej.id === j.id || ej.ordem === j.ordem);
+                if (estadoSalvo && estadoSalvo.tileId) {
+                    const tile = document.querySelector(`.tile[data-id="${estadoSalvo.tileId}"]`);
+                    if (tile) {
+                        j.tile = tile;
+                        j.tileId = estadoSalvo.tileId;
+                        console.log(`  ➡️ Jogador ${j.id} posicionado em ${j.tileId} (estado salvo)`);
+                    } else {
+                        console.warn(`  ⚠️ Tile ${estadoSalvo.tileId} não encontrado para jogador ${j.id}`);
+                    }
+                }
             });
-            console.log('👥 Jogadores após atribuir tile:', jogadores);
+            
             desenharJogadores();
-            console.log('✅ Jogadores desenhados');
+            console.log('✅ Jogadores desenhados com posições salvas');
         } else {
-            console.error('❌ Tile de entrada não encontrado!');
-            console.log('🔍 Tipos de tiles disponíveis:', Array.from(tiles).map(t => ({id: t.dataset.id, tipo: t.tipo})));
+            // Fallback: posicionar na entrada
+            console.log('👥 Nenhum estado de jogadores recebido, posicionando na entrada');
+            
+            let tileEntrada = null;
+            if (entradaPosicao) {
+                const entradaId = `${entradaPosicao.linha}-${entradaPosicao.coluna}`;
+                tileEntrada = document.querySelector(`.tile[data-id="${entradaId}"]`);
+                console.log('🚪 Buscando tile de entrada pela posição:', entradaId);
+            }
+            
+            // Fallback: buscar por tipo
+            if (!tileEntrada) {
+                tileEntrada = Array.from(tiles).find(t => t.tipo === 'entrada');
+                console.log('🚪 Fallback - Buscando tile de entrada por tipo');
+            }
+            
+            console.log('🚪 Tile de entrada encontrado?', tileEntrada ? 'SIM - ' + tileEntrada.dataset.id : 'NÃO');
+            
+            if (tileEntrada) {
+                console.log('✅ Tile de entrada encontrado:', tileEntrada.dataset.id);
+                console.log('👥 Jogadores antes de atribuir tile:', jogadores);
+                jogadores.forEach(j => {
+                    j.tile = tileEntrada;
+                    j.tileId = tileEntrada.dataset.id;
+                    console.log(`  ➡️ Jogador ${j.id} atribuído ao tile ${j.tileId}`);
+                });
+                console.log('👥 Jogadores após atribuir tile:', jogadores);
+                desenharJogadores();
+                console.log('✅ Jogadores desenhados');
+            } else {
+                console.error('❌ Tile de entrada não encontrado!');
+                console.log('🔍 Tipos de tiles disponíveis:', Array.from(tiles).map(t => ({id: t.dataset.id, tipo: t.tipo})));
+            }
         }
         
         // Receber e aplicar estado das cartas
