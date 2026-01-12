@@ -452,6 +452,22 @@ function configurarEventosSocket() {
                     } else {
                         console.warn(`  ⚠️ Tile ${estadoSalvo.tileId} não encontrado para jogador ${j.id}`);
                     }
+                } else {
+                    console.warn(`  ⚠️ Jogador ${j.id} não tem tileId salvo, tentando fallback para entrada`);
+                    // Fallback: posicionar na entrada se não tiver tileId
+                    let tileEntrada = null;
+                    if (entradaPosicao) {
+                        const entradaId = `${entradaPosicao.linha}-${entradaPosicao.coluna}`;
+                        tileEntrada = document.querySelector(`.tile[data-id="${entradaId}"]`);
+                    }
+                    if (!tileEntrada) {
+                        tileEntrada = Array.from(tiles).find(t => t.tipo === 'entrada');
+                    }
+                    if (tileEntrada) {
+                        j.tile = tileEntrada;
+                        j.tileId = tileEntrada.dataset.id;
+                        console.log(`  ➡️ Jogador ${j.id} posicionado na entrada ${j.tileId} (fallback)`);
+                    }
                 }
             });
             
