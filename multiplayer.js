@@ -599,15 +599,23 @@ function configurarEventosSocket() {
     // Handler para receber jogadores com IDs do servidor (após todos prontos)
     socket.on('jogo-iniciado', (dados) => {
         console.log('🎮 Evento jogo-iniciado recebido (jogadores com IDs):', dados);
+        console.log('📋 Jogadores ANTES de atualizar:', jogadores.map(j => `${j.nome} ID:${j.id} Socket:${j.socketId} Personagem:${j.personagem}`));
         
         // Atualizar jogadores com IDs recebidos do servidor
         if (dados.jogadores && dados.jogadores.length > 0) {
             dados.jogadores.forEach(jogadorServidor => {
+                console.log(`  🔍 Procurando jogador com socketId ${jogadorServidor.socketId}`);
                 const jogadorLocal = jogadores.find(j => j.socketId === jogadorServidor.socketId);
                 if (jogadorLocal) {
                     jogadorLocal.id = jogadorServidor.id;
                     jogadorLocal.ordem = jogadorServidor.ordem;
-                    console.log(`  ✅ Jogador ${jogadorLocal.nome}: ID=${jogadorLocal.id}, Ordem=${jogadorLocal.ordem}`);
+                    console.log(`  ✅ Jogador ${jogadorLocal.nome}: ID=${jogadorLocal.id}, Ordem=${jogadorLocal.ordem}, Personagem=${jogadorLocal.personagem}`);
+                } else {
+                    console.error(`  ❌ Jogador não encontrado para socketId ${jogadorServidor.socketId}`);
+                }
+            });
+            
+            console.log('📋 Jogadores DEPOIS de atualizar:', jogadores.map(j => `${j.nome} ID:${j.id} Socket:${j.socketId} Personagem:${j.personagem}`));
                 }
             });
             

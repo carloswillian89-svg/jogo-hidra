@@ -64,13 +64,21 @@ function meuJogadorEstaNoTile(tileId) {
 }
 
 function obterNomePersonagemJogador(jogadorId) {
+    // Encontrar o jogador pelo ID
+    const jogador = jogadores.find(j => j.id === jogadorId);
+    if (!jogador || !jogador.personagem) {
+        return `Jogador ${jogadorId}`;
+    }
+    
+    // Mapear personagem escolhido para nome completo
     const nomesPersonagens = {
-        1: 'Torvin',
-        2: 'Elara',
-        3: 'Zephyr',
-        4: 'Kaelen'
+        'torvin': 'Torvin Mão de Ferro',
+        'elara': 'Elara dos Símbolos',
+        'zephyr': 'Zephyr',
+        'kaelen': 'Kaelen'
     };
-    return nomesPersonagens[jogadorId] || `Jogador ${jogadorId}`;
+    
+    return nomesPersonagens[jogador.personagem.toLowerCase()] || jogador.personagem;
 }
 
 // Verifica se o jogador possui o Amuleto do Eco ou a Gema da Visão no inventário
@@ -1291,8 +1299,16 @@ function atualizarInfoTurno() {
 
     // tenta usar o nome do personagem correspondente, se disponível
     try {
-        if (typeof personagens !== "undefined" && Array.isArray(personagens)) {
-            const p = personagens.find(pp => pp.id === atual.id)
+        if (atual.personagem && typeof personagens !== "undefined" && Array.isArray(personagens)) {
+            // Mapear nome do personagem para ID
+            const personagemMap = {
+                'torvin': 1,
+                'elara': 2,
+                'zephyr': 3,
+                'kaelen': 4
+            };
+            const personagemId = personagemMap[atual.personagem.toLowerCase()];
+            const p = personagens.find(pp => pp.id === personagemId);
             if (p && p.nome) nomeExibicao = p.nome
             console.log('  🎭 Personagem encontrado:', p ? p.nome : 'não encontrado');
         }
