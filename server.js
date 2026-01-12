@@ -457,6 +457,82 @@ io.on('connection', (socket) => {
                 console.log(`📍 Posição adicionada: Jogador ${dados.dados.jogadorId} → Tile ${dados.dados.tileId}`);
             }
         }
+        
+        // Se for troca de tiles, atualizar estado dos tiles
+        if (dados.tipo === 'trocar-tiles' && dados.dados) {
+            if (!sala.tilesEstado) {
+                sala.tilesEstado = [];
+            }
+            
+            const { tile1Id, tile2Id } = dados.dados;
+            
+            // Encontrar os tiles e trocar seus tipos/rotações
+            const tile1Estado = sala.tilesEstado.find(t => t.id === tile1Id);
+            const tile2Estado = sala.tilesEstado.find(t => t.id === tile2Id);
+            
+            if (tile1Estado && tile2Estado) {
+                // Trocar tipos e rotações
+                const tempTipo = tile1Estado.tipo;
+                const tempRotacao = tile1Estado.rotacao;
+                
+                tile1Estado.tipo = tile2Estado.tipo;
+                tile1Estado.rotacao = tile2Estado.rotacao;
+                
+                tile2Estado.tipo = tempTipo;
+                tile2Estado.rotacao = tempRotacao;
+                
+                console.log(`🔄 Tiles trocados: ${tile1Id} ↔ ${tile2Id}`);
+            }
+        }
+        
+        // Se for virar carta, atualizar estado da carta
+        if ((dados.tipo === 'virar-carta' || dados.tipo === 'virar-carta-personagem') && dados.dados) {
+            if (!sala.cartasEstado) {
+                sala.cartasEstado = [];
+            }
+            
+            const cartaEstado = sala.cartasEstado.find(c => c.id === dados.dados.cartaId);
+            if (cartaEstado) {
+                cartaEstado.faceUp = dados.dados.faceUp;
+                console.log(`🃏 Carta ${dados.dados.cartaId} virada: ${dados.dados.faceUp ? 'face up' : 'face down'}`);
+            }
+        }
+        
+        // Se for mover carta para zona (inventário, descarte, etc)
+        if (dados.tipo === 'mover-carta' && dados.dados) {
+            if (!sala.cartasEstado) {
+                sala.cartasEstado = [];
+            }
+            
+            const cartaEstado = sala.cartasEstado.find(c => c.id === dados.dados.idCarta);
+            if (cartaEstado) {
+                cartaEstado.zona = dados.dados.destino;
+                
+                // Se moveu para inventário de jogador, atualizar dono
+                if (dados.dados.destino.startsWith('jogador-')) {
+                    cartaEstado.dono = Number(dados.dados.destino.split('-')[1]);
+                    cartaEstado.faceUp = true;
+                } else {
+                    cartaEstado.dono = null;
+                    cartaEstado.faceUp = false;
+                }
+                
+                console.log(`🃏 Carta ${dados.dados.idCarta} movida para: ${dados.dados.destino}`);
+            }
+        }
+        
+        // Se for girar tile, atualizar rotação
+        if (dados.tipo === 'girar-tile' && dados.dados) {
+            if (!sala.tilesEstado) {
+                sala.tilesEstado = [];
+            }
+            
+            const tileEstado = sala.tilesEstado.find(t => t.id === dados.dados.tileId);
+            if (tileEstado) {
+                tileEstado.rotacao = dados.dados.rotacao;
+                console.log(`🔄 Tile ${dados.dados.tileId} girado: ${dados.dados.rotacao}°`);
+            }
+        }
 
         // Broadcast para outros jogadores
         socket.to(dados.codigoSala).emit('acao-jogo', dados);
