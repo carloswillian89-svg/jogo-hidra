@@ -309,20 +309,37 @@ function configurarEventosSocket() {
         console.log('  🎭 Personagem:', personagens ? personagens.find(p => p.id === jogadores[jogadorAtualIndex].id) : 'não carregado');
         console.log('  📋 Array completo de jogadores:', jogadores.map((j, idx) => `[${idx}] ID:${j.id} Ordem:${j.ordem} Personagem:${j.personagem || 'N/A'}`));
         
+        // Log da matriz recebida para debug
+        console.log('📊 Matriz recebida (primeiros tiles):');
+        if (tabuleiroMatriz && tabuleiroMatriz.length > 0) {
+            for (let i = 0; i < Math.min(3, tabuleiroMatriz.length); i++) {
+                console.log(`  Linha ${i}:`, tabuleiroMatriz[i].slice(0, 5));
+            }
+        }
+        
         criarTabuleiro();
         console.log('✅ Tabuleiro criado no DOM');
         
         // Aplicar estado completo dos tiles (tipos E rotações)
         if (dados.tilesEstado) {
             console.log('🔄 Aplicando estado dos tiles (tipos e rotações)...');
+            console.log(`  📦 Total de tiles no estado: ${dados.tilesEstado.length}`);
+            
+            // Log de alguns exemplos
+            dados.tilesEstado.slice(0, 5).forEach(t => {
+                console.log(`  📍 Exemplo: Tile ${t.id} = tipo:"${t.tipo}" rot:${t.rotacao}°`);
+            });
+            
             dados.tilesEstado.forEach(tileInfo => {
                 const tileAntigo = document.querySelector(`.tile[data-id="${tileInfo.id}"]`);
                 if (tileAntigo) {
                     const [linha, coluna] = tileInfo.id.split('-').map(Number);
+                    const tipoMatriz = tabuleiroMatriz[linha][coluna];
+                    const tipoEstado = tileInfo.tipo;
                     
                     // Se o tipo mudou, precisamos recriar o tile completamente
-                    if (tabuleiroMatriz[linha][coluna] !== tileInfo.tipo) {
-                        console.log(`  🔄 Recriando tile ${tileInfo.id}: ${tabuleiroMatriz[linha][coluna]} → ${tileInfo.tipo}`);
+                    if (tipoMatriz !== tipoEstado) {
+                        console.log(`  🔄 Recriando tile ${tileInfo.id}: matriz="${tipoMatriz}" estado="${tipoEstado}"`);
                         
                         // Atualizar matriz
                         tabuleiroMatriz[linha][coluna] = tileInfo.tipo;

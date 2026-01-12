@@ -466,11 +466,17 @@ io.on('connection', (socket) => {
             
             const { tile1Id, tile2Id } = dados.dados;
             
+            console.log(`🔄 Iniciando troca de tiles: ${tile1Id} ↔ ${tile2Id}`);
+            
             // Encontrar os tiles e trocar seus tipos/rotações
             const tile1Estado = sala.tilesEstado.find(t => t.id === tile1Id);
             const tile2Estado = sala.tilesEstado.find(t => t.id === tile2Id);
             
             if (tile1Estado && tile2Estado) {
+                console.log(`  📍 Antes da troca:`);
+                console.log(`    ${tile1Id}: tipo="${tile1Estado.tipo}" rot=${tile1Estado.rotacao}°`);
+                console.log(`    ${tile2Id}: tipo="${tile2Estado.tipo}" rot=${tile2Estado.rotacao}°`);
+                
                 // Trocar tipos e rotações
                 const tempTipo = tile1Estado.tipo;
                 const tempRotacao = tile1Estado.rotacao;
@@ -481,16 +487,27 @@ io.on('connection', (socket) => {
                 tile2Estado.tipo = tempTipo;
                 tile2Estado.rotacao = tempRotacao;
                 
+                console.log(`  📍 Depois da troca no estado:`);
+                console.log(`    ${tile1Id}: tipo="${tile1Estado.tipo}" rot=${tile1Estado.rotacao}°`);
+                console.log(`    ${tile2Id}: tipo="${tile2Estado.tipo}" rot=${tile2Estado.rotacao}°`);
+                
                 // TAMBÉM trocar na matriz do tabuleiro
                 if (sala.tabuleiro) {
                     const [linha1, coluna1] = tile1Id.split('-').map(Number);
                     const [linha2, coluna2] = tile2Id.split('-').map(Number);
                     
+                    console.log(`  📊 Antes da troca na matriz:`);
+                    console.log(`    [${linha1}][${coluna1}] = "${sala.tabuleiro[linha1][coluna1]}"`);
+                    console.log(`    [${linha2}][${coluna2}] = "${sala.tabuleiro[linha2][coluna2]}"`);
+                    
                     const tempMatriz = sala.tabuleiro[linha1][coluna1];
                     sala.tabuleiro[linha1][coluna1] = sala.tabuleiro[linha2][coluna2];
                     sala.tabuleiro[linha2][coluna2] = tempMatriz;
                     
-                    console.log(`🔄 Tiles trocados no estado E na matriz: ${tile1Id} ↔ ${tile2Id}`);
+                    console.log(`  📊 Depois da troca na matriz:`);
+                    console.log(`    [${linha1}][${coluna1}] = "${sala.tabuleiro[linha1][coluna1]}"`);
+                    console.log(`    [${linha2}][${coluna2}] = "${sala.tabuleiro[linha2][coluna2]}"`);
+                    console.log(`✅ Tiles trocados no estado E na matriz: ${tile1Id} ↔ ${tile2Id}`);
                 } else {
                     console.log(`🔄 Tiles trocados apenas no estado: ${tile1Id} ↔ ${tile2Id}`);
                 }
