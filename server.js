@@ -433,18 +433,21 @@ io.on('connection', (socket) => {
         }
         
         // Embaralhar ordem dos jogadores e atribuir IDs numéricos
-        const jogadoresEmbaralhados = [...sala.jogadores].sort(() => Math.random() - 0.5);
-        jogadoresEmbaralhados.forEach((j, idx) => {
+        // 🔥 Embaralhar DIRETAMENTE sala.jogadores (não fazer cópia)
+        sala.jogadores.sort(() => Math.random() - 0.5);
+        sala.jogadores.forEach((j, idx) => {
             j.id = idx + 1;  // ID numérico (1, 2, 3, 4)
             j.ordem = idx + 1;  // Ordem de jogo
         });
+        
+        console.log(`✅ Jogadores embaralhados e IDs atribuídos:`, sala.jogadores.map(j => `ID:${j.id} ${j.nome}`));
         
         sala.estado = 'jogando';
         console.log(`✅ Sala ${dados.codigoSala} mudou para estado: jogando`);
         
         // Emitir evento jogo-iniciado com dados dos jogadores embaralhados
         io.to(dados.codigoSala).emit('jogo-iniciado', {
-            jogadores: jogadoresEmbaralhados.map(j => ({
+            jogadores: sala.jogadores.map(j => ({
                 id: j.id,  // ID numérico (1, 2, 3, 4)
                 socketId: j.socketId,  // Manter socketId também para referência
                 nome: j.nome,
