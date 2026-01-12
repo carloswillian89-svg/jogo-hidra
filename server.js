@@ -621,37 +621,40 @@ io.on('connection', (socket) => {
                 
                 console.log(`  🔄 Iniciando rotação circular...`);
                 
-                // Rotação circular: [0,1,2,3,4] → [1,2,3,4,0]
-                const primeiro = tilesInfo[0];
-                for (let i = 0; i < tilesInfo.length - 1; i++) {
+                // Rotação circular para DIREITA: [0,1,2,3,4] → [4,0,1,2,3]
+                // Posição 0 recebe o último, posição 1 recebe 0, posição 2 recebe 1, etc
+                const ultimo = tilesInfo[tilesInfo.length - 1];
+                
+                // Atualizar do final para o início (evita sobrescrever valores)
+                for (let i = tilesInfo.length - 1; i > 0; i--) {
                     const atual = tileIds[i];
-                    const proximo = tilesInfo[i + 1];
+                    const anterior = tilesInfo[i - 1];
                     
-                    console.log(`    ${atual} ← ${proximo.id}: tipo="${proximo.tipo}" rot=${proximo.rotacao}°`);
+                    console.log(`    ${atual} ← ${anterior.id}: tipo="${anterior.tipo}" rot=${anterior.rotacao}°`);
                     
                     // Atualizar tilesEstado
                     const estadoAtual = sala.tilesEstado.find(t => t.id === atual);
                     if (estadoAtual) {
-                        estadoAtual.tipo = proximo.tipo;
-                        estadoAtual.rotacao = proximo.rotacao;
+                        estadoAtual.tipo = anterior.tipo;
+                        estadoAtual.rotacao = anterior.rotacao;
                     }
                     
                     // Atualizar matriz
                     const [lin, col] = atual.split('-').map(Number);
-                    sala.tabuleiro[lin][col] = proximo.tipo;
+                    sala.tabuleiro[lin][col] = anterior.tipo;
                 }
                 
-                // Último tile recebe o primeiro
-                const ultimoId = tileIds[tileIds.length - 1];
-                console.log(`    ${ultimoId} ← ${primeiro.id}: tipo="${primeiro.tipo}" rot=${primeiro.rotacao}°`);
+                // Primeiro tile recebe o último
+                const primeiroId = tileIds[0];
+                console.log(`    ${primeiroId} ← ${ultimo.id}: tipo="${ultimo.tipo}" rot=${ultimo.rotacao}°`);
                 
-                const estadoUltimo = sala.tilesEstado.find(t => t.id === ultimoId);
-                if (estadoUltimo) {
-                    estadoUltimo.tipo = primeiro.tipo;
-                    estadoUltimo.rotacao = primeiro.rotacao;
+                const estadoPrimeiro = sala.tilesEstado.find(t => t.id === primeiroId);
+                if (estadoPrimeiro) {
+                    estadoPrimeiro.tipo = ultimo.tipo;
+                    estadoPrimeiro.rotacao = ultimo.rotacao;
                 }
-                const [linUlt, colUlt] = ultimoId.split('-').map(Number);
-                sala.tabuleiro[linUlt][colUlt] = primeiro.tipo;
+                const [linPri, colPri] = primeiroId.split('-').map(Number);
+                sala.tabuleiro[linPri][colPri] = ultimo.tipo;
                 
                 console.log(`  ✅ Grito da Hidra aplicado: ${tileIds.length} tiles rotacionados`);
                 
