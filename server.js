@@ -436,6 +436,27 @@ io.on('connection', (socket) => {
         if (dados.estado) {
             sala.estadoJogo = dados.estado;
         }
+        
+        // Se for movimento de jogador, atualizar posição salva
+        if (dados.tipo === 'mover-jogador' && dados.dados) {
+            if (!sala.jogadoresEstado) {
+                sala.jogadoresEstado = [];
+            }
+            
+            // Encontrar e atualizar o jogador no estado salvo
+            const jogadorEstado = sala.jogadoresEstado.find(j => j.id === dados.dados.jogadorId);
+            if (jogadorEstado) {
+                jogadorEstado.tileId = dados.dados.tileId;
+                console.log(`📍 Posição atualizada: Jogador ${dados.dados.jogadorId} → Tile ${dados.dados.tileId}`);
+            } else {
+                // Se não existe, adicionar (não deveria acontecer, mas é um fallback)
+                sala.jogadoresEstado.push({
+                    id: dados.dados.jogadorId,
+                    tileId: dados.dados.tileId
+                });
+                console.log(`📍 Posição adicionada: Jogador ${dados.dados.jogadorId} → Tile ${dados.dados.tileId}`);
+            }
+        }
 
         // Broadcast para outros jogadores
         socket.to(dados.codigoSala).emit('acao-jogo', dados);
