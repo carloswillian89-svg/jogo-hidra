@@ -75,6 +75,7 @@ function inicializarJogoMultiplayer(jogadoresData) {
     const verificarTabuleiroServidor = (dados) => {
         tabuleiroRecebido = true;
         console.log('📥 Tabuleiro recebido do servidor');
+        console.log('⏱️ Timeout cancelado - não vai gerar novo tabuleiro');
         clearTimeout(timeoutEsperaServidor);
         // O evento será processado pelo listener normal em configurarEventosSocket
     };
@@ -85,14 +86,14 @@ function inicializarJogoMultiplayer(jogadoresData) {
     const timeoutEsperaServidor = setTimeout(() => {
         if (!tabuleiroRecebido) {
             if (minhaOrdem === 1) {
-                console.log('⏰ Timeout - servidor sem tabuleiro, host gerando novo');
+                console.log('⏰ Timeout (5s) - servidor sem tabuleiro, host gerando novo');
+                console.warn('⚠️ ATENÇÃO: Gerando novo tabuleiro pode sobrescrever estado salvo!');
                 gerarTabuleiroHost();
             } else {
-                console.log('⏰ Timeout - aguardando tabuleiro do host...');
-                // Cliente continua aguardando - host vai gerar e enviar
+                console.log('⏰ Timeout (5s) - aguardando tabuleiro do host...');
             }
         }
-    }, 1000); // Aguardar 1 segundo por resposta do servidor
+    }, 5000); // Aumentado de 1000ms para 5000ms para ambientes remotos
 }
 
 function gerarTabuleiroHost() {
