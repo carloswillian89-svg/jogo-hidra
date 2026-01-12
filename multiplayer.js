@@ -78,18 +78,14 @@ function inicializarJogoMultiplayer(jogadoresData) {
         console.log('📥 Estado da sala atualizado:', estadoSalaRecebido);
     };
     
-    // Timeout: se servidor não responder E não houver jogo em andamento, gerar novo (apenas host)
+    // Timeout: se servidor não responder E não houver jogo em andamento, aguardar
     const timeoutEsperaServidor = setTimeout(() => {
         if (!tabuleiroRecebido) {
-            // Só gerar novo tabuleiro se a sala estiver em 'aguardando' (primeiro início)
-            // Se estiver em 'jogando', significa que há estado salvo - não gerar
-            if (minhaOrdem === 1 && estadoSalaRecebido === 'aguardando') {
-                console.log('⏰ Timeout (5s) - sala nova sem tabuleiro, host gerando');
-                gerarTabuleiroHost();
-            } else if (estadoSalaRecebido === 'jogando') {
-                console.log('⏰ Timeout (5s) - mas sala está em "jogando", NÃO gerar novo (aguardar estado salvo)');
+            // NÃO gerar tabuleiro aqui - esperar o evento 'jogo-iniciado' após todos prontos
+            if (estadoSalaRecebido === 'jogando') {
+                console.log('⏰ Timeout (5s) - sala em "jogando", aguardando estado salvo...');
             } else {
-                console.log('⏰ Timeout (5s) - aguardando tabuleiro do host...');
+                console.log('⏰ Timeout (5s) - aguardando evento "jogo-iniciado" para gerar tabuleiro...');
             }
         }
     }, 5000); // Aumentado de 1000ms para 5000ms para ambientes remotos
@@ -614,6 +610,15 @@ function configurarEventosSocket() {
                     console.log(`  ✅ Jogador ${jogadorLocal.nome}: ID=${jogadorLocal.id}, Ordem=${jogadorLocal.ordem}`);
                 }
             });
+            
+            // 🔥 Agora que os IDs estão corretos, host pode gerar o tabuleiro
+            const minhaOrdem = parseInt(sessionStorage.getItem('minhaOrdem')) || 1;
+            if (minhaOrdem === 1) {
+                console.log('🗺️ Host gerando tabuleiro após receber IDs do servidor...');
+                setTimeout(() => {
+                    gerarTabuleiroHost();
+                }, 500); // Pequeno delay para garantir que todos receberam os IDs
+            }
         }
     });
     
