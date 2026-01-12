@@ -303,6 +303,7 @@ io.on('connection', (socket) => {
             console.log(`  📊 Matriz linha 1:`, sala.tabuleiro[1]);
             console.log(`  📊 Matriz linha 2:`, sala.tabuleiro[2]);
             console.log(`  📦 tilesEstado (primeiros 5):`, sala.tilesEstado.slice(0, 5).map(t => `${t.id}:${t.tipo}`));
+            console.log(`  👥 Jogadores enviados:`, sala.jogadores.map(j => `ID:${j.id} tileId:"${j.tileId}"`));
             console.log(`  🎯 ORIGEM: Estado salvo no servidor (não vem do host)`);
             
             socket.emit('receber-tabuleiro', {
@@ -544,6 +545,10 @@ io.on('connection', (socket) => {
                     
                     // 🔥 ATUALIZAR CARTAS E JOGADORES após trocar tiles
                     console.log(`  🔄 Atualizando cartas e jogadores...`);
+                    console.log(`  👥 Estado dos jogadores ANTES:`);
+                    sala.jogadores.forEach(j => {
+                        console.log(`    Jogador ${j.id}: tileId="${j.tileId}"`);
+                    });
                     
                     // Atualizar cartas
                     if (sala.cartasEstado) {
@@ -569,6 +574,10 @@ io.on('connection', (socket) => {
                         }
                     });
                     
+                    console.log(`  👥 Estado dos jogadores DEPOIS:`);
+                    sala.jogadores.forEach(j => {
+                        console.log(`    Jogador ${j.id}: tileId="${j.tileId}"`);
+                    });
                     console.log(`  ✅ Cartas e jogadores atualizados`);
                 } else {
                     console.log(`🔄 Tiles trocados apenas no estado: ${tile1Id} ↔ ${tile2Id}`);
