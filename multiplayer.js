@@ -318,6 +318,14 @@ function configurarEventosSocket() {
             }
         }
         
+        // Log do tilesEstado recebido
+        console.log('📦 tilesEstado recebido (primeiros 10):');
+        if (dados.tilesEstado && dados.tilesEstado.length > 0) {
+            dados.tilesEstado.slice(0, 10).forEach(t => {
+                console.log(`  ${t.id}: tipo="${t.tipo}" rot=${t.rotacao}°`);
+            });
+        }
+        
         criarTabuleiro();
         console.log('✅ Tabuleiro criado no DOM');
         
