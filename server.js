@@ -658,44 +658,48 @@ io.on('connection', (socket) => {
                 // 🔥 ATUALIZAR CARTAS APÓS ROTAÇÃO
                 console.log(`  🔄 Atualizando cartas...`);
                 
-                // Criar mapeamento: ID antigo → ID novo baseado na nova posição
-                const mapeamentoIds = new Map();
-                
-                if (ehLinha) {
-                    for (let col = 0; col < TAMANHO; col++) {
-                        const idAtual = `${indice}-${col}`;
-                        // Após rotação circular: posição 0 tem o tile que estava na posição 1
-                        const indiceOrigem = (col + 1) % TAMANHO;
-                        const idOriginal = `${indice}-${indiceOrigem}`;
-                        mapeamentoIds.set(idOriginal, idAtual);
-                        console.log(`    Mapeamento: ${idOriginal} → ${idAtual}`);
-                    }
-                } else {
-                    for (let lin = 0; lin < TAMANHO; lin++) {
-                        const idAtual = `${lin}-${indice}`;
-                        // Após rotação circular: posição 0 tem o tile que estava na posição 1
-                        const indiceOrigem = (lin + 1) % TAMANHO;
-                        const idOriginal = `${indiceOrigem}-${indice}`;
-                        mapeamentoIds.set(idOriginal, idAtual);
-                        console.log(`    Mapeamento: ${idOriginal} → ${idAtual}`);
-                    }
-                }
-                
-                // Atualizar zonas das cartas
+                // Para cada tile na nova posição após rotação, atualizar cartas que estavam nele
                 if (sala.cartasEstado && sala.cartasEstado.length > 0) {
                     let cartasAtualizadas = 0;
-                    sala.cartasEstado.forEach(carta => {
-                        if (carta.zona && carta.zona.startsWith('tile-')) {
-                            const tileIdDaCarta = carta.zona.replace('tile-', '');
-                            if (mapeamentoIds.has(tileIdDaCarta)) {
-                                const novoTileId = mapeamentoIds.get(tileIdDaCarta);
-                                const novaZona = `tile-${novoTileId}`;
-                                console.log(`    📋 Carta ${carta.id}: ${carta.zona} → ${novaZona}`);
-                                carta.zona = novaZona;
-                                cartasAtualizadas++;
-                            }
+                    
+                    if (ehLinha) {
+                        for (let col = 0; col < TAMANHO; col++) {
+                            const idAtual = `${indice}-${col}`;
+                            // Após rotação, este tile veio da posição anterior (rotação circular)
+                            const colOrigem = (col + 1) % TAMANHO;
+                            const idOriginal = `${indice}-${colOrigem}`;
+                            
+                            console.log(`    Col ${col}: tile que tinha ID ${idOriginal} agora tem ID ${idAtual}`);
+                            
+                            // Atualizar cartas que estavam no tile original
+                            sala.cartasEstado.forEach(carta => {
+                                if (carta.zona === `tile-${idOriginal}`) {
+                                    carta.zona = `tile-${idAtual}`;
+                                    console.log(`      📋 Carta ${carta.id}: tile-${idOriginal} → tile-${idAtual}`);
+                                    cartasAtualizadas++;
+                                }
+                            });
                         }
-                    });
+                    } else {
+                        for (let lin = 0; lin < TAMANHO; lin++) {
+                            const idAtual = `${lin}-${indice}`;
+                            // Após rotação, este tile veio da posição anterior (rotação circular)
+                            const linOrigem = (lin + 1) % TAMANHO;
+                            const idOriginal = `${linOrigem}-${indice}`;
+                            
+                            console.log(`    Lin ${lin}: tile que tinha ID ${idOriginal} agora tem ID ${idAtual}`);
+                            
+                            // Atualizar cartas que estavam no tile original
+                            sala.cartasEstado.forEach(carta => {
+                                if (carta.zona === `tile-${idOriginal}`) {
+                                    carta.zona = `tile-${idAtual}`;
+                                    console.log(`      📋 Carta ${carta.id}: tile-${idOriginal} → tile-${idAtual}`);
+                                    cartasAtualizadas++;
+                                }
+                            });
+                        }
+                    }
+                    
                     console.log(`  ✅ Cartas atualizadas: ${cartasAtualizadas}`);
                 } else {
                     console.log(`  ⚠️ Nenhuma carta para atualizar`);

@@ -1034,52 +1034,48 @@ function executarGritoHidra(ehLinha, indiceAleatorio) {
     // 🔥 ATUALIZAR IDs DOS TILES E CARTAS APÓS A ROTAÇÃO
     console.log(`🔄 Atualizando dataset.id dos tiles e cartas...`);
     
-    // Primeiro, criar mapeamento de IDs antigos para novos
-    const mapeamentoIds = new Map(); // antigoId → novoId
-    
+    // PASSO 1: Para cada tile na nova posição, atualizar seu dataset.id E as cartas que estão nele
     if (ehLinha) {
         for (let col = 0; col < TAMANHO; col++) {
             const tile = tilesDepois[col];
             const antigoId = tile.dataset.id;
             const novoId = `${indiceAleatorio}-${col}`;
-            mapeamentoIds.set(antigoId, novoId);
-            console.log(`  🔖 Mapeamento: ${antigoId} → ${novoId}`);
+            
+            console.log(`  🔖 Tile na posição col=${col}: ${antigoId} → ${novoId}`);
+            
+            // Atualizar TODAS as cartas que estavam neste tile específico
+            cartas.forEach((carta, cartaId) => {
+                if (carta.zona === `tile-${antigoId}`) {
+                    carta.zona = `tile-${novoId}`;
+                    console.log(`    📋 Carta ${cartaId} acompanha: tile-${antigoId} → tile-${novoId}`);
+                }
+            });
+            
+            // Atualizar o ID do tile
+            tile.dataset.id = novoId;
         }
     } else {
         for (let lin = 0; lin < TAMANHO; lin++) {
             const tile = tilesDepois[lin];
             const antigoId = tile.dataset.id;
             const novoId = `${lin}-${indiceAleatorio}`;
-            mapeamentoIds.set(antigoId, novoId);
-            console.log(`  🔖 Mapeamento: ${antigoId} → ${novoId}`);
+            
+            console.log(`  🔖 Tile na posição lin=${lin}: ${antigoId} → ${novoId}`);
+            
+            // Atualizar TODAS as cartas que estavam neste tile específico
+            cartas.forEach((carta, cartaId) => {
+                if (carta.zona === `tile-${antigoId}`) {
+                    carta.zona = `tile-${novoId}`;
+                    console.log(`    📋 Carta ${cartaId} acompanha: tile-${antigoId} → tile-${novoId}`);
+                }
+            });
+            
+            // Atualizar o ID do tile
+            tile.dataset.id = novoId;
         }
     }
     
-    // Atualizar zonas das cartas com base no mapeamento
-    let cartasAtualizadas = 0;
-    cartas.forEach((carta, cartaId) => {
-        if (carta.zona.startsWith('tile-')) {
-            const tileIdDaCarta = carta.zona.replace('tile-', '');
-            if (mapeamentoIds.has(tileIdDaCarta)) {
-                const novoTileId = mapeamentoIds.get(tileIdDaCarta);
-                const novaZona = `tile-${novoTileId}`;
-                console.log(`  📋 Carta ${cartaId}: ${carta.zona} → ${novaZona}`);
-                carta.zona = novaZona;
-                cartasAtualizadas++;
-            }
-        }
-    });
-    
-    console.log(`✅ Cartas atualizadas: ${cartasAtualizadas}`);
-    
-    // Agora atualizar os dataset.id dos tiles
-    mapeamentoIds.forEach((novoId, antigoId) => {
-        const tile = document.querySelector(`.tile[data-id="${CSS.escape(antigoId)}"]`);
-        if (tile) {
-            tile.dataset.id = novoId;
-            console.log(`  🏷️ Tile ${antigoId} → ${novoId} atualizado no DOM`);
-        }
-    });
+    console.log(`✅ IDs dos tiles e cartas atualizados`);
     
     // Re-renderizar cartas para refletir as mudanças
     renderizarCartas();
