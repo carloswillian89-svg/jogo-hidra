@@ -321,7 +321,19 @@ io.on('connection', (socket) => {
         const sala = salas.get(dados.codigoSala);
         if (!sala) return;
 
+        // 🔒 PROTEÇÃO: Só aceitar envio de tabuleiro se estiver em 'aguardando' (primeiro início)
+        // Se já estiver em 'jogando', ignorar para não sobrescrever estado salvo
+        if (sala.estado === 'jogando') {
+            console.log(`⛔ [BLOQUEADO] Host tentou enviar tabuleiro mas sala já está em 'jogando'`);
+            console.log(`  ➡️ Ignorando para preservar estado salvo (Grito da Hidra, trocas, etc.)`);
+            console.log(`  📊 Matriz salva - linha 1:`, sala.tabuleiro ? sala.tabuleiro[1] : 'null');
+            return;
+        }
+
         // Salvar o tabuleiro na sala
+        console.log(`🗺️ [HOST ENVIOU] Tabuleiro recebido do host na sala ${dados.codigoSala}`);
+        console.log(`  ⚠️ ANTES: Matriz linha 1 na sala:`, sala.tabuleiro ? sala.tabuleiro[1] : 'null');
+        
         sala.tabuleiro = dados.tabuleiro;
         sala.tilesEstado = dados.tilesEstado;
         sala.cartasEstado = dados.cartasEstado;
@@ -329,7 +341,7 @@ io.on('connection', (socket) => {
         sala.jogadorAtualIndex = dados.jogadorAtualIndex || 0;
         sala.jogadoresEstado = dados.jogadoresEstado || [];
         
-        console.log(`🗺️ [HOST ENVIOU] Tabuleiro recebido do host na sala ${dados.codigoSala}`);
+        console.log(`  ⚠️ DEPOIS: Matriz linha 1 sobrescrita:`, sala.tabuleiro[1]);
         console.log(`  📍 jogadorAtualIndex recebido:`, dados.jogadorAtualIndex);
         console.log(`  ✅ jogadorAtualIndex salvo na sala:`, sala.jogadorAtualIndex);
         console.log(`  👥 Estado dos jogadores:`, sala.jogadoresEstado.length);
