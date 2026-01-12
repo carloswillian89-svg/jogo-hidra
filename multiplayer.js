@@ -217,7 +217,8 @@ function gerarTabuleiroHost() {
     console.log('🚀 [ENVIANDO TABULEIRO] Host está enviando tabuleiro para o servidor');
     console.log('  📊 Matriz linha 0:', tabuleiroMatriz[0]);
     console.log('  📊 Matriz linha 1:', tabuleiroMatriz[1]);
-    console.log('  📍 Chamado de:', new Error().stack.split('\n')[2]); // Ver quem chamou
+    console.log('  � Jogadores sendo enviados:', jogadoresEstado.map(j => `ID:${j.id} tileId:${j.tileId}`));
+    console.log('  �📍 Chamado de:', new Error().stack.split('\n')[2]); // Ver quem chamou
     
     socket.emit('enviar-tabuleiro', {
         codigoSala: codigoSala,
