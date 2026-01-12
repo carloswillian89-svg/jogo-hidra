@@ -240,7 +240,7 @@ io.on('connection', (socket) => {
                         socketId: j.socketId,
                         nome: j.nome,
                         personagem: j.personagem,
-                        ordem: idx + 1
+                        ordem: j.ordem  // Usar j.ordem (já atribuído acima)
                     }))
                 });
 
