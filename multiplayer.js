@@ -425,6 +425,18 @@ function configurarEventosSocket() {
         if (typeof atualizarDestaqueInventario === 'function') {
             atualizarDestaqueInventario();
         }
+        
+        // Atualizar botões conforme estado da sala
+        if (dados.estadoSala) {
+            console.log('🎮 Atualizando botões para estado:', dados.estadoSala);
+            atualizarBotoesControle(dados.estadoSala);
+        }
+    });
+    
+    // Receber estado da sala (ao reconectar)
+    socket.on('estado-sala', (dados) => {
+        console.log('📥 Estado da sala recebido:', dados.estado);
+        atualizarBotoesControle(dados.estado);
     });
     
     // Receber ações de outros jogadores

@@ -287,6 +287,12 @@ io.on('connection', (socket) => {
         socket.join(dados.codigoSala);
         console.log(`🔄 Socket ${socket.id} reconectado à sala ${dados.codigoSala}`);
 
+        // Enviar estado da sala para o jogador reconectado
+        socket.emit('estado-sala', {
+            estado: sala.estado
+        });
+        console.log(`📤 Estado da sala enviado: ${sala.estado}`);
+        
         // Se já tiver tabuleiro, enviar para este jogador
         if (sala.tabuleiro) {
             socket.emit('receber-tabuleiro', {
@@ -295,10 +301,12 @@ io.on('connection', (socket) => {
                 cartasEstado: sala.cartasEstado,
                 entradaPosicao: sala.entradaPosicao,
                 jogadorAtualIndex: sala.jogadorAtualIndex,
-                jogadoresEstado: sala.jogadoresEstado || []
+                jogadoresEstado: sala.jogadoresEstado || [],
+                estadoSala: sala.estado
             });
             console.log(`📤 Tabuleiro existente enviado para ${socket.id} (reconexão)`);
             console.log(`  👥 Jogadores: ${sala.jogadoresEstado?.length || 0}, Índice atual: ${sala.jogadorAtualIndex}`);
+            console.log(`  🎮 Estado da sala: ${sala.estado}`);
         }
     });
 
