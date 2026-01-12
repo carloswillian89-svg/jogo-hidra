@@ -802,6 +802,7 @@ io.on('connection', (socket) => {
             ...dados,
             jogadoresAtualizados: sala.jogadores  // 🔥 Incluir jogadores atualizados
         };
+        console.log('📤 Enviando jogadoresAtualizados:', sala.jogadores.map(j => `ID:${j.id} tileId:${j.tileId}`));
         socket.to(dados.codigoSala).emit('acao-jogo', dadosParaEnviar);
     });
 
