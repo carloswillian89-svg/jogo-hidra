@@ -985,8 +985,34 @@ function executarGritoHidra(ehLinha, indiceAleatorio) {
     // Rotate: [t0, t1, t2, t3, t4] → [t1, t2, t3, t4, t0]
     const primeiroTile = tiles[0]
     
+    // Guardar tipos e rotações ANTES da troca
+    const tiposAntes = tiles.map(t => t.tipo);
+    const rotacoesAntes = tiles.map(t => t.rotacao || 0);
+    
     for (let i = 0; i < tiles.length - 1; i++) {
         trocarTiles(tiles[i], tiles[i + 1], false) // false = não sincronizar individualmente
+    }
+
+    // Atualizar tabuleiroMatriz após a rotação circular
+    // Os elementos DOM foram movidos, então precisamos atualizar a matriz
+    if (ehLinha) {
+        for (let col = 0; col < TAMANHO; col++) {
+            // A rotação move [0,1,2,3,4] → [1,2,3,4,0]
+            const novoIndice = (col + 1) % TAMANHO;
+            tabuleiroMatriz[indiceAleatorio][col] = tiposAntes[novoIndice];
+        }
+    } else {
+        for (let lin = 0; lin < TAMANHO; lin++) {
+            const novoIndice = (lin + 1) % TAMANHO;
+            tabuleiroMatriz[lin][indiceAleatorio] = tiposAntes[novoIndice];
+        }
+    }
+    
+    console.log(`📊 Matriz atualizada após Grito da Hidra`);
+    if (ehLinha) {
+        console.log(`  Linha ${indiceAleatorio}:`, tabuleiroMatriz[indiceAleatorio]);
+    } else {
+        console.log(`  Coluna ${indiceAleatorio}:`, tabuleiroMatriz.map(linha => linha[indiceAleatorio]));
     }
 
     // Redesenha jogadores após a rotação
