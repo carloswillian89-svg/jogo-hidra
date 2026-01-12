@@ -71,17 +71,6 @@ function inicializarJogoMultiplayer(jogadoresData) {
     // Flag para controlar se já recebeu tabuleiro do servidor
     let tabuleiroRecebido = false;
     
-    // TODOS os jogadores aguardam tabuleiro do servidor primeiro (para reconexão)
-    const verificarTabuleiroServidor = (dados) => {
-        tabuleiroRecebido = true;
-        console.log('📥 Tabuleiro recebido do servidor');
-        console.log('⏱️ Timeout cancelado - não vai gerar novo tabuleiro');
-        clearTimeout(timeoutEsperaServidor);
-        // O evento será processado pelo listener normal em configurarEventosSocket
-    };
-    
-    socket.once('receber-tabuleiro', verificarTabuleiroServidor);
-    
     // Timeout: se servidor não responder, gerar novo (apenas host)
     const timeoutEsperaServidor = setTimeout(() => {
         if (!tabuleiroRecebido) {
@@ -94,9 +83,17 @@ function inicializarJogoMultiplayer(jogadoresData) {
             }
         }
     }, 5000); // Aumentado de 1000ms para 5000ms para ambientes remotos
+    
+    // Função global para cancelar timeout
+    window.marcarTabuleiroRecebido = () => {
+        tabuleiroRecebido = true;
+        console.log('⏱️ Timeout cancelado - tabuleiro recebido com sucesso');
+        clearTimeout(timeoutEsperaServidor);
+    };
+    
+    // Configurar eventos do socket
+    configurarEventosSocket();
 }
-
-function gerarTabuleiroHost() {
     console.log('🗺️ Gerando novo tabuleiro como host...');
     
     // Sempre gerar uma nova matriz para garantir aleatoriedade
@@ -298,6 +295,11 @@ function configurarEventosSocket() {
             tiles: dados.tilesEstado ? dados.tilesEstado.length : 0,
             cartas: dados.cartasEstado ? dados.cartasEstado.length : 0
         });
+        
+        // Cancelar timeout se existir
+        if (typeof window.marcarTabuleiroRecebido === 'function') {
+            window.marcarTabuleiroRecebido();
+        }
         
         tabuleiroMatriz = dados.tabuleiro;
         entradaPosicao = dados.entradaPosicao;
