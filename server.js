@@ -499,9 +499,9 @@ io.on('connection', (socket) => {
             
             console.log(`🔄 Iniciando troca de tiles: ${tile1Id} ↔ ${tile2Id}`);
             
-            // 🔥 NOVA LÓGICA: Trocar IDs dos tiles no tilesEstado (não trocar tipos)
-            // Após a troca no cliente, os elementos DOM trocaram de posição E os IDs foram atualizados
-            // Então precisamos trocar os IDs no tilesEstado também
+            // 🔥 LÓGICA CORRETA: Trocar tipos e rotações (não IDs)
+            // No cliente, tiles trocaram de posição E seus IDs foram atualizados
+            // Então precisamos trocar tipos/rotações no tilesEstado
             const tile1Estado = sala.tilesEstado.find(t => t.id === tile1Id);
             const tile2Estado = sala.tilesEstado.find(t => t.id === tile2Id);
             
@@ -510,13 +510,19 @@ io.on('connection', (socket) => {
                 console.log(`    ${tile1Id}: tipo="${tile1Estado.tipo}" rot=${tile1Estado.rotacao}°`);
                 console.log(`    ${tile2Id}: tipo="${tile2Estado.tipo}" rot=${tile2Estado.rotacao}°`);
                 
-                // Trocar IDs (tipos e rotações ficam com os tiles)
-                tile1Estado.id = tile2Id;
-                tile2Estado.id = tile1Id;
+                // Trocar tipos e rotações (IDs permanecem fixos nas posições)
+                const tempTipo = tile1Estado.tipo;
+                const tempRotacao = tile1Estado.rotacao;
                 
-                console.log(`  📍 Depois da troca de IDs:`);
-                console.log(`    ${tile2Id}: tipo="${tile1Estado.tipo}" rot=${tile1Estado.rotacao}°`);
-                console.log(`    ${tile1Id}: tipo="${tile2Estado.tipo}" rot=${tile2Estado.rotacao}°`);
+                tile1Estado.tipo = tile2Estado.tipo;
+                tile1Estado.rotacao = tile2Estado.rotacao;
+                
+                tile2Estado.tipo = tempTipo;
+                tile2Estado.rotacao = tempRotacao;
+                
+                console.log(`  📍 Depois da troca:`);
+                console.log(`    ${tile1Id}: tipo="${tile1Estado.tipo}" rot=${tile1Estado.rotacao}°`);
+                console.log(`    ${tile2Id}: tipo="${tile2Estado.tipo}" rot=${tile2Estado.rotacao}°`);
                 
                 // TAMBÉM trocar na matriz do tabuleiro
                 if (sala.tabuleiro) {
@@ -535,10 +541,6 @@ io.on('connection', (socket) => {
                     console.log(`    [${linha1}][${coluna1}] = "${sala.tabuleiro[linha1][coluna1]}"`);
                     console.log(`    [${linha2}][${coluna2}] = "${sala.tabuleiro[linha2][coluna2]}"`);
                     console.log(`✅ Tiles trocados no estado E na matriz: ${tile1Id} ↔ ${tile2Id}`);
-                    
-                    // 🔥 Cartas e jogadores JÁ foram atualizados no cliente
-                    // O servidor não precisa atualizar porque as zonas/tileIds já refletem a nova posição
-                    console.log(`  ℹ️ Cartas e jogadores já atualizados no cliente (seguem os IDs dos tiles)`);
                 } else {
                     console.log(`🔄 Tiles trocados apenas no estado: ${tile1Id} ↔ ${tile2Id}`);
                 }
