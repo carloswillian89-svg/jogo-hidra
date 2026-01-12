@@ -176,6 +176,9 @@ function moverJogador(tileDestino) {
             tileId: tileDestino.dataset.id
         });
     }
+    
+    // Salvar estado após mover jogador
+    salvarEstadoLocal();
 }
 
 const tilesEstado = new Map()
@@ -549,6 +552,11 @@ function trocarTiles(tile1, tile2, sincronizar = true) {
             tile2Id: tile2.dataset.id
         });
     }
+    
+    // Salvar estado após trocar tiles (apenas se sincronizar = true, pois no Grito da Hidra já salva no final)
+    if (sincronizar) {
+        salvarEstadoLocal();
+    }
 }
 
 
@@ -728,6 +736,9 @@ document.getElementById("fimTurno").addEventListener("click", () => {
             jogadorAtualIndex: jogadorAtualIndex
         });
     }
+    
+    // Salvar estado após passar turno
+    salvarEstadoLocal();
 })
 
 document.getElementById("btn-reiniciar-tabuleiro").addEventListener("click", () => {
@@ -743,10 +754,11 @@ document.getElementById("btn-reiniciar-tabuleiro").addEventListener("click", () 
         window.socket.emit('reiniciar-tabuleiro', { codigoSala });
         // O servidor irá notificar todos os jogadores e recarregar a página
     } else {
-        // Modo local: reiniciar diretamente
-        gerarMatriz()
-        criarTabuleiro()
-        desenharJogadores()
+        // Modo local: confirmar antes de reiniciar
+        if (confirm('Deseja realmente reiniciar o jogo? Todo o progresso será perdido.')) {
+            limparEstadoLocal();
+            location.reload();
+        }
     }
 })
 
@@ -881,6 +893,9 @@ function girarTile(tile) {
             rotacao: novaRot
         });
     }
+    
+    // Salvar estado após girar tile
+    salvarEstadoLocal();
 
     console.log(
         "rotAtual:", rotAtual,
@@ -1082,6 +1097,9 @@ function executarGritoHidra(ehLinha, indiceAleatorio) {
 
     // Redesenha jogadores após a rotação
     desenharJogadores()
+    
+    // Salvar estado após Grito da Hidra
+    salvarEstadoLocal();
 
     // Remove o destaque após 2 segundos
     setTimeout(() => {
@@ -1180,6 +1198,123 @@ function atualizarInfoTurno() {
 
     console.log('  📝 Nome exibido:', nomeExibicao);
     document.getElementById("infoTurno").innerText = `Vez de ${nomeExibicao}`
+}
+
+// ==================== PERSISTÊNCIA LOCAL ====================
+
+function salvarEstadoLocal() {
+    // Só salvar em modo local
+    const emModoMultiplayer = sessionStorage.getItem('modoMultiplayer') === 'true';
+    if (emModoMultiplayer) return;
+    
+    const estado = {
+        tabuleiroMatriz: tabuleiroMatriz,
+        entradaPosicao: entradaPosicao,
+        jogadorAtualIndex: jogadorAtualIndex,
+        jogadores: jogadores.map(j => ({
+            id: j.id,
+            ordem: j.ordem,
+            tileId: j.tileId
+        })),
+        cartas: Array.from(cartas.values()).map(c => ({
+            id: c.id,
+            tipo: c.tipo,
+            nome: c.nome,
+            efeito: c.efeito,
+            imagem: c.imagem,
+            imagemMiniatura: c.imagemMiniatura,
+            faceUp: c.faceUp,
+            zona: c.zona,
+            dono: c.dono
+        })),
+        tilesRotacoes: [] // Array com {id, rotacao} para cada tile que foi rotacionado
+    };
+    
+    // Salvar rotações dos tiles
+    const tiles = tabuleiro.querySelectorAll('.tile');
+    tiles.forEach(tile => {
+        if (tile.rotacao && tile.rotacao !== 0) {
+            estado.tilesRotacoes.push({
+                id: tile.dataset.id,
+                rotacao: tile.rotacao
+            });
+        }
+    });
+    
+    localStorage.setItem('labirinto-hidra-estado', JSON.stringify(estado));
+    console.log('💾 Estado salvo no localStorage');
+}
+
+function carregarEstadoLocal() {
+    const estadoSalvo = localStorage.getItem('labirinto-hidra-estado');
+    if (!estadoSalvo) return false;
+    
+    try {
+        const estado = JSON.parse(estadoSalvo);
+        console.log('📂 Carregando estado salvo:', estado);
+        
+        // Restaurar matriz
+        tabuleiroMatriz = estado.tabuleiroMatriz;
+        entradaPosicao = estado.entradaPosicao;
+        
+        // Restaurar jogadores
+        jogadorAtualIndex = estado.jogadorAtualIndex;
+        jogadores.forEach((j, idx) => {
+            const salvo = estado.jogadores[idx];
+            if (salvo) {
+                j.id = salvo.id;
+                j.ordem = salvo.ordem;
+                j.tileId = salvo.tileId;
+            }
+        });
+        
+        // Restaurar cartas
+        cartas.clear();
+        estado.cartas.forEach(c => {
+            cartas.set(c.id, {
+                id: c.id,
+                tipo: c.tipo,
+                nome: c.nome,
+                efeito: c.efeito,
+                imagem: c.imagem,
+                imagemMiniatura: c.imagemMiniatura,
+                faceUp: c.faceUp,
+                zona: c.zona,
+                dono: c.dono
+            });
+        });
+        
+        // Criar tabuleiro com o estado salvo
+        criarTabuleiro();
+        
+        // Restaurar rotações dos tiles
+        if (estado.tilesRotacoes && estado.tilesRotacoes.length > 0) {
+            estado.tilesRotacoes.forEach(({id, rotacao}) => {
+                const tile = document.querySelector(`.tile[data-id="${CSS.escape(id)}"]`);
+                if (tile) {
+                    tile.rotacao = rotacao;
+                    tile.style.transform = `rotate(${rotacao}deg)`;
+                }
+            });
+        }
+        
+        // Renderizar cartas e jogadores
+        renderizarCartas();
+        desenharJogadores();
+        atualizarInfoTurno();
+        atualizarDestaqueInventario();
+        
+        console.log('✅ Estado restaurado com sucesso');
+        return true;
+    } catch (erro) {
+        console.error('❌ Erro ao carregar estado:', erro);
+        return false;
+    }
+}
+
+function limparEstadoLocal() {
+    localStorage.removeItem('labirinto-hidra-estado');
+    console.log('🗑️ Estado local removido');
 }
 
 // atualiza destaque do slot de inventário do jogador ativo
@@ -1480,6 +1615,9 @@ function criarCartaVisual(carta) {
         } else {
             console.warn('⚠️ enviarAcao não disponível');
         }
+        
+        // Salvar estado após virar carta
+        salvarEstadoLocal();
     })
 
     // drag
@@ -1564,6 +1702,9 @@ function moverCartaParaTile(idCarta, tileId) {
             destino: `tile-${tileId}`
         });
     }
+    
+    // Salvar estado após mover carta
+    salvarEstadoLocal();
 }
 
 
@@ -1591,6 +1732,9 @@ function moverCartaParaZona(idCarta, zonaId) {
             destino: zonaId
         });
     }
+    
+    // Salvar estado após mover carta
+    salvarEstadoLocal();
 }
 
     function serializarCartas() {
@@ -2077,12 +2221,24 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
         console.log('🎮 Modo local - Socket desativado');
         
-        // Em modo local, randomizar jogador inicial e inicializar
-        jogadorAtualIndex = Math.floor(Math.random() * jogadores.length);
-        console.log('🎲 Jogador inicial sorteado (modo local):', jogadorAtualIndex, '(ID:', jogadores[jogadorAtualIndex].id, ')');
+        // Tentar carregar estado salvo
+        const estadoCarregado = carregarEstadoLocal();
         
-        gerarMatriz();
-        criarTabuleiro();
-        renderizarCartasPersonagens(jogadorAtual().id);
+        if (!estadoCarregado) {
+            // Se não há estado salvo, inicializar novo jogo
+            // Em modo local, randomizar jogador inicial e inicializar
+            jogadorAtualIndex = Math.floor(Math.random() * jogadores.length);
+            console.log('🎲 Jogador inicial sorteado (modo local):', jogadorAtualIndex, '(ID:', jogadores[jogadorAtualIndex].id, ')');
+            
+            gerarMatriz();
+            criarTabuleiro();
+            renderizarCartasPersonagens(jogadorAtual().id);
+            
+            // Salvar estado inicial
+            salvarEstadoLocal();
+        } else {
+            console.log('✅ Jogo retomado do estado salvo');
+            renderizarCartasPersonagens(jogadorAtual().id);
+        }
     }
 });
