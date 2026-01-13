@@ -868,16 +868,17 @@ console.log(jogadores.map(j => ({
 
 document.getElementById("fimTurno").addEventListener("click", () => {
     console.log("BOTÃO ENCERRAR TURNO CLICADO")
-    console.log('🔍 DEBUG: jogadorAtualIndex =', jogadorAtualIndex);
-    console.log('🔍 DEBUG: jogadores.length =', jogadores.length);
-    console.log('🔍 DEBUG: jogadores =', jogadores);
-    console.log('🔍 DEBUG: jogadorAtual =', jogadorAtual());
     
     tocarSom('encerrarTurno');
     
-    // Verificar se o jogador atual é o último ANTES de passar o turno
-    const eraUltimoJogador = jogadorAtualIndex === jogadores.length - 1;
-    console.log('🔍 DEBUG: eraUltimoJogador =', eraUltimoJogador);
+    // Verificar se o jogador atual tem a MAIOR ordemJogada (último a jogar na rodada)
+    const jogadorAtualObj = jogadorAtual();
+    const maxOrdemJogada = Math.max(...jogadores.map(j => j.ordemJogada || j.ordem));
+    const eraUltimoAJogar = jogadorAtualObj.ordemJogada === maxOrdemJogada || jogadorAtualObj.ordem === maxOrdemJogada;
+    
+    console.log('🔍 DEBUG: jogadorAtual =', jogadorAtualObj.nome, '| ordemJogada =', jogadorAtualObj.ordemJogada || jogadorAtualObj.ordem);
+    console.log('🔍 DEBUG: maxOrdemJogada =', maxOrdemJogada);
+    console.log('🔍 DEBUG: eraUltimoAJogar =', eraUltimoAJogar);
     
     proximoJogador()
     atualizarInfoTurno(true) // Mostrar notificação ao encerrar turno
@@ -889,9 +890,9 @@ document.getElementById("fimTurno").addEventListener("click", () => {
         });
     }
     
-    // Se era o último jogador, incrementar rodada e executar Grito da Hidra
-    if (eraUltimoJogador) {
-        console.log('🔄 Último jogador encerrou turno - Nova rodada!');
+    // Se era o último jogador a jogar na rodada, incrementar rodada e executar Grito da Hidra
+    if (eraUltimoAJogar) {
+        console.log('🔄 Último jogador da rodada encerrou turno - Nova rodada!');
         
         // Incrementar contador de rodadas
         rodadaAtual++;
