@@ -592,13 +592,14 @@ function configurarEventosSocket() {
         console.log('🔄 Tabuleiro reiniciado - regenerando...');
         console.log('  📋 Dados recebidos:', dados);
         
-        // Atualizar array de jogadores com dados atualizados do servidor
-        if (dados && dados.jogadores) {
-            console.log('  👥 Atualizando jogadores com dados do servidor...');
-            configurarJogadoresMultiplayer(dados.jogadores);
-        }
+        // NÃO reconfigurar jogadores - apenas resetar tileId para null
+        // Os IDs numéricos devem ser mantidos
+        jogadores.forEach(j => {
+            j.tileId = null;
+            j.tile = null;
+        });
         
-        console.log('  📋 Array jogadores APÓS atualizar:', jogadores.map((j, idx) => `[${idx}] ID:${j.id} Ordem:${j.ordem} Personagem:${j.personagem || 'N/A'}`));
+        console.log('  📋 Array jogadores APÓS resetar tileId:', jogadores.map((j, idx) => `[${idx}] ID:${j.id} Ordem:${j.ordem} Personagem:${j.personagem || 'N/A'}`));
         
         const minhaOrdem = parseInt(sessionStorage.getItem('minhaOrdem')) || 1;
         
