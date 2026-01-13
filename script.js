@@ -868,10 +868,16 @@ console.log(jogadores.map(j => ({
 
 document.getElementById("fimTurno").addEventListener("click", () => {
     console.log("BOTÃO ENCERRAR TURNO CLICADO")
+    console.log('🔍 DEBUG: jogadorAtualIndex =', jogadorAtualIndex);
+    console.log('🔍 DEBUG: jogadores.length =', jogadores.length);
+    console.log('🔍 DEBUG: jogadores =', jogadores);
+    console.log('🔍 DEBUG: jogadorAtual =', jogadorAtual());
+    
     tocarSom('encerrarTurno');
     
     // Verificar se o jogador atual é o último ANTES de passar o turno
     const eraUltimoJogador = jogadorAtualIndex === jogadores.length - 1;
+    console.log('🔍 DEBUG: eraUltimoJogador =', eraUltimoJogador);
     
     proximoJogador()
     atualizarInfoTurno(true) // Mostrar notificação ao encerrar turno
