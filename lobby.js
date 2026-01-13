@@ -6,7 +6,7 @@ musicaLobby.loop = true;
 
 // Aplicar volume salvo ou usar 30% como padrão para música de fundo
 const volumeSalvo = parseFloat(localStorage.getItem('volumeJogo'));
-musicaLobby.volume = volumeSalvo !== null ? volumeSalvo * 0.6 : 0.3; // Música de fundo um pouco mais baixa
+musicaLobby.volume = (!isNaN(volumeSalvo) && volumeSalvo >= 0 && volumeSalvo <= 1) ? volumeSalvo * 0.6 : 0.3; // Música de fundo um pouco mais baixa
 
 // Iniciar música do lobby quando a página carregar
 window.addEventListener('load', () => {
