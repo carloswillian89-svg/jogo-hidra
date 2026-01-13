@@ -60,30 +60,12 @@ function obterMeuJogadorId() {
 
 function ehMinhaVez() {
     const meuId = obterMeuJogadorId();
-    const jogadorAtualId = jogadorAtual().id;
-    const resultado = meuId === jogadorAtualId;
-    
-    console.log('🎯 ehMinhaVez:');
-    console.log('  👤 meuId:', meuId);
-    console.log('  📍 jogadorAtualIndex:', jogadorAtualIndex);
-    console.log('  👤 jogadorAtual():', jogadorAtual());
-    console.log('  🆔 jogadorAtual().id:', jogadorAtualId);
-    console.log('  ✅ Resultado:', resultado);
-    
-    return resultado;
+    return meuId === jogadorAtual().id;
 }
 
 function meuJogadorEstaNoTile(tileId) {
     const meuId = obterMeuJogadorId();
     const meuJogador = jogadores.find(j => j.id === meuId);
-    
-    console.log('🔍 meuJogadorEstaNoTile:');
-    console.log('  📌 tileId procurado:', tileId, typeof tileId);
-    console.log('  👤 meuId:', meuId);
-    console.log('  👤 meuJogador:', meuJogador);
-    console.log('  📍 meuJogador.tileId:', meuJogador?.tileId, typeof meuJogador?.tileId);
-    console.log('  ✅ Resultado:', meuJogador && meuJogador.tileId === tileId);
-    
     return meuJogador && meuJogador.tileId === tileId;
 }
 
@@ -744,12 +726,9 @@ function desenharJogadores() {
         const jogadorEl = document.createElement("div")
         jogadorEl.classList.add("jogador", classePersonagem)
         
-        // Calcular ordem relativa ao jogador atual
-        // Se jogadorAtualIndex = 1 e temos 2 jogadores, quem está em [1] é o 1º a jogar
-        const indexNoArrayOriginal = jogadores.findIndex(j => j.id === jogador.id);
-        let ordemRelativa = indexNoArrayOriginal - jogadorAtualIndex;
-        if (ordemRelativa < 0) ordemRelativa += jogadores.length;
-        const ordemAtual = ordemRelativa + 1;
+        // Usar a ordem inicial do jogador (definida quando o jogo inicia)
+        // Este número é fixo e não muda durante o jogo
+        const ordemAtual = jogador.ordem;
         
         jogadorEl.textContent = ordemAtual
 
@@ -1311,11 +1290,6 @@ document.addEventListener("keyup", (event) => {
 
 function atualizarInfoTurno() {
     const atual = jogadorAtual()
-    console.log('🔄 atualizarInfoTurno chamado');
-    console.log('  📍 jogadorAtualIndex:', jogadorAtualIndex);
-    console.log('  👤 Jogador atual:', atual);
-    console.log('  📋 Array jogadores:', jogadores.map((j, idx) => `[${idx}] ID:${j.id} Ordem:${j.ordem}`));
-    
     let nomeExibicao = `Jogador ${atual.ordem}`
 
     // tenta usar o nome do personagem correspondente, se disponível
@@ -1331,14 +1305,11 @@ function atualizarInfoTurno() {
             const personagemId = personagemMap[atual.personagem.toLowerCase()];
             const p = personagens.find(pp => pp.id === personagemId);
             if (p && p.nome) nomeExibicao = p.nome
-            console.log('  🎭 Personagem encontrado:', p ? p.nome : 'não encontrado');
         }
     } catch (e) {
         // se algo falhar, mantém o fallback para jogador
-        console.error('  ❌ Erro ao buscar personagem:', e);
     }
 
-    console.log('  📝 Nome exibido:', nomeExibicao);
     document.getElementById("infoTurno").innerText = `Vez de ${nomeExibicao}`
 }
 
