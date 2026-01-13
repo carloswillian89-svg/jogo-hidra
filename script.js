@@ -1469,14 +1469,26 @@ function limparEstadoLocal() {
 // atualiza destaque do slot de inventário do jogador ativo
 function atualizarDestaqueInventario() {
     // limpa todos
-    for (let i = 1; i <= jogadores.length; i++) {
+    for (let i = 1; i <= 4; i++) {
         const el = document.getElementById(`jogador-${i}`)
         if (el) el.classList.remove("ativo")
     }
 
     const atual = jogadorAtual()
-    const ativoEl = document.getElementById(`jogador-${atual.id}`)
-    if (ativoEl) ativoEl.classList.add("ativo")
+    
+    // Mapear personagem para slot de inventário no HTML
+    const personagemParaSlot = {
+        'torvin': 1,
+        'elara': 2,
+        'zephyr': 3,
+        'kaelen': 4
+    };
+    
+    const slotId = personagemParaSlot[atual.personagem?.toLowerCase()];
+    if (slotId) {
+        const ativoEl = document.getElementById(`jogador-${slotId}`);
+        if (ativoEl) ativoEl.classList.add("ativo");
+    }
 }
 
 function tornarZonaDropavel(zona) {
@@ -2250,6 +2262,22 @@ const personagens = [
 function renderizarCartasPersonagens(jogadorAtivoId = null) {
     const container = document.getElementById("cartas-personagens")
     container.innerHTML = ""
+    
+    // Encontrar personagem do jogador ativo (se fornecido)
+    let personagemAtivo = null;
+    if (jogadorAtivoId !== null) {
+        const jogadorAtivo = jogadores.find(j => j.id === jogadorAtivoId);
+        if (jogadorAtivo && jogadorAtivo.personagem) {
+            // Mapear nome do personagem para ID no array personagens
+            const personagemMap = {
+                'torvin': 1,
+                'elara': 2,
+                'zephyr': 3,
+                'kaelen': 4
+            };
+            personagemAtivo = personagemMap[jogadorAtivo.personagem.toLowerCase()];
+        }
+    }
 
     personagens.forEach(p => {
         const carta = document.createElement("div")
@@ -2259,7 +2287,8 @@ function renderizarCartasPersonagens(jogadorAtivoId = null) {
         // marcar com classe do jogador para colorir borda: jogador-1..4
         carta.classList.add(`jogador-${p.id}`)
 
-        if (p.id === jogadorAtivoId) {
+        // Destacar se este personagem é o do jogador ativo
+        if (p.id === personagemAtivo) {
             carta.classList.add("ativo")
         }
 
