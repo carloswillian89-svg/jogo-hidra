@@ -60,7 +60,17 @@ function obterMeuJogadorId() {
 
 function ehMinhaVez() {
     const meuId = obterMeuJogadorId();
-    return meuId === jogadorAtual().id;
+    const jogadorAtualId = jogadorAtual().id;
+    const resultado = meuId === jogadorAtualId;
+    
+    console.log('🎯 ehMinhaVez:');
+    console.log('  👤 meuId:', meuId);
+    console.log('  📍 jogadorAtualIndex:', jogadorAtualIndex);
+    console.log('  👤 jogadorAtual():', jogadorAtual());
+    console.log('  🆔 jogadorAtual().id:', jogadorAtualId);
+    console.log('  ✅ Resultado:', resultado);
+    
+    return resultado;
 }
 
 function meuJogadorEstaNoTile(tileId) {
