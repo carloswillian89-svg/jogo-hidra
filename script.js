@@ -743,12 +743,16 @@ function desenharJogadores() {
 
         const jogadorEl = document.createElement("div")
         jogadorEl.classList.add("jogador", classePersonagem)
-        jogadorEl.textContent = jogador.ordem
+        
+        // Encontrar a posição atual deste jogador na ordem de jogo
+        const ordemAtual = jogadoresOrdenados.findIndex(j => j.id === jogador.id) + 1;
+        
+        jogadorEl.textContent = ordemAtual
 
         tileEl.appendChild(jogadorEl)
 
         const numero = document.createElement("div")
-        numero.innerText = jogador.ordem
+        numero.innerText = ordemAtual
         numero.style.position = "absolute"
         numero.style.top = "-6px"
         numero.style.right = "-6px"
