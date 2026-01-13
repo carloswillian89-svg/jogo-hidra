@@ -44,6 +44,12 @@ function jogadorAtual() {
 function obterMeuJogadorId() {
     const modoMultiplayer = sessionStorage.getItem('modoMultiplayer') === 'true';
     if (modoMultiplayer) {
+        // Tentar usar o ID numérico salvo diretamente
+        const meuJogadorId = parseInt(sessionStorage.getItem('meuJogadorId'));
+        if (meuJogadorId) {
+            return meuJogadorId;
+        }
+        // Fallback: buscar por ordem
         const minhaOrdem = parseInt(sessionStorage.getItem('minhaOrdem')) || 1;
         const meuJogador = jogadores.find(j => j.ordem === minhaOrdem);
         return meuJogador ? meuJogador.id : null;
@@ -466,6 +472,7 @@ function criarTile(tipo) {
 
     tile.addEventListener("click", (event) => {
         if (!event.shiftKey) return
+        event.stopPropagation()
         
         // Validar se é a vez do jogador (apenas em multiplayer)
         const modoMultiplayer = sessionStorage.getItem('modoMultiplayer') === 'true';
@@ -476,28 +483,7 @@ function criarTile(tipo) {
         }
         
         moverJogador(tile)
-
-
-    const index = [...tabuleiro.children].indexOf(tile)
-    const destino = {
-        linha: Math.floor(index / 5),
-        coluna: index % 5
-    }
-    const jogadorAtivo = jogadores[jogadorAtualIndex]
-
-    const distancia =
-    Math.abs(destino.linha - jogadorAtivo.linha) +
-    Math.abs(destino.coluna - jogadorAtivo.coluna)
-
-    if (distancia !== 1) return
-
-    if (podeMover(jogadorAtual(), tileDestino)) {
-    jogadorAtual().tile = tileDestino
-    jogadorAtual().tileId = tileDestino.dataset.id
-    desenharJogadores()
-   }
-
-})
+    })
 
        return tile   
 

@@ -310,14 +310,17 @@ socket.on('jogo-iniciado', (dados) => {
     btnPronto.disabled = true;
     btnSairLobby.disabled = true;
     
-    // Encontrar minha ordem no jogo
-    const meuJogador = dados.jogadores.find(j => j.id === estadoLocal.meuId);
+    // Encontrar minha ordem no jogo (match por socketId)
+    const meuJogador = dados.jogadores.find(j => j.socketId === estadoLocal.meuId);
+    console.log('🔍 Procurando meu jogador:', { meuSocketId: estadoLocal.meuId, jogadores: dados.jogadores });
+    console.log('✅ Meu jogador encontrado:', meuJogador);
     
     // Salvar dados do jogo no sessionStorage
     sessionStorage.setItem('modoMultiplayer', 'true');
     sessionStorage.setItem('codigoSala', estadoLocal.codigoSala);
     sessionStorage.setItem('jogadoresMultiplayer', JSON.stringify(dados.jogadores));
     sessionStorage.setItem('minhaOrdem', meuJogador ? meuJogador.ordem : 1);
+    sessionStorage.setItem('meuJogadorId', meuJogador ? meuJogador.id : 1); // Salvar ID numérico também
     sessionStorage.setItem('socketId', socket.id); // Salvar socket ID atual
     
     // Redirecionar para o jogo após um delay
