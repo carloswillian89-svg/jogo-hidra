@@ -602,7 +602,7 @@ function tornarTileDropavel(tile) {
 
 
 
-function trocarTiles(tile1, tile2, sincronizar = true) {
+function trocarTiles(tile1, tile2, sincronizar = true, atualizarJogadores = true) {
     // Salvar IDs originais ANTES de trocar
     const tile1Id = tile1.dataset.id;
     const tile2Id = tile2.dataset.id;
@@ -635,20 +635,22 @@ function trocarTiles(tile1, tile2, sincronizar = true) {
         }
     });
     
-    // 🔥 Atualizar jogadores - buscar tiles novamente após troca
-    jogadores.forEach(jogador => {
-        if (jogador.tileId === tile1Id) {
-            jogador.tileId = tile2Id;
-            jogador.tile = document.querySelector(`.tile[data-id="${tile2Id}"]`);
-            console.log(`  👤 Jogador ${jogador.id}: ${tile1Id} → ${tile2Id}`);
-        } else if (jogador.tileId === tile2Id) {
-            jogador.tileId = tile1Id;
-            jogador.tile = document.querySelector(`.tile[data-id="${tile1Id}"]`);
-            console.log(`  👤 Jogador ${jogador.id}: ${tile2Id} → ${tile1Id}`);
-        }
-    });
+    // 🔥 Atualizar jogadores SOMENTE se permitido (desabilitado durante Grito da Hidra)
+    if (atualizarJogadores) {
+        jogadores.forEach(jogador => {
+            if (jogador.tileId === tile1Id) {
+                jogador.tileId = tile2Id;
+                jogador.tile = document.querySelector(`.tile[data-id="${tile2Id}"]`);
+                console.log(`  👤 Jogador ${jogador.id}: ${tile1Id} → ${tile2Id}`);
+            } else if (jogador.tileId === tile2Id) {
+                jogador.tileId = tile1Id;
+                jogador.tile = document.querySelector(`.tile[data-id="${tile1Id}"]`);
+                console.log(`  👤 Jogador ${jogador.id}: ${tile2Id} → ${tile1Id}`);
+            }
+        });
 
-    desenharJogadores()
+        desenharJogadores()
+    }
     
     // Sincronizar troca de tiles no multiplayer (usar IDs ORIGINAIS)
     if (sincronizar && typeof enviarAcao === 'function') {
@@ -1167,7 +1169,7 @@ function executarGritoHidra(ehLinha, indiceAleatorio) {
     console.log(`📝 ANTES das trocas - IDs:`, tiles.map(t => t.dataset.id));
     
     for (let i = 0; i < tiles.length - 1; i++) {
-        trocarTiles(tiles[i], tiles[i + 1], false) // false = não sincronizar individualmente
+        trocarTiles(tiles[i], tiles[i + 1], false, false) // false = não sincronizar, false = não atualizar jogadores durante trocas
     }
     
     // Verificar ordem DEPOIS das trocas
@@ -1291,7 +1293,7 @@ function executarGritoHidra(ehLinha, indiceAleatorio) {
     // Re-renderizar cartas para refletir as mudanças
     renderizarCartas();
 
-    // Redesenha jogadores após a rotação
+    // Redesenha jogadores após a rotação (e atualização de posições)
     desenharJogadores()
     
     // Salvar estado após Grito da Hidra
