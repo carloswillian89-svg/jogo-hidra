@@ -819,13 +819,29 @@ io.on('connection', (socket) => {
             console.log(`🎮 Jogador atual atualizado: índice ${dados.dados.jogadorAtualIndex}`);
         }
 
-        // Broadcast apenas para OUTROS jogadores (não para quem enviou) com jogadores atualizados
+        // Decidir se envia para TODOS ou apenas para OUTROS
+        // Ações que devem ser vistas por TODOS (incluindo quem enviou):
+        // - grito-hidra, passar-turno, atualizar-rodada, rolar-dado (eventos automáticos/globais)
+        // Ações que devem ir apenas para OUTROS (não duplicar no cliente que enviou):
+        // - trocar-tiles, mover-jogador, girar-tile, mover-carta (ações manuais já executadas localmente)
+        const acoesParaTodos = ['grito-hidra', 'passar-turno', 'atualizar-rodada', 'rolar-dado', 'atualizar-contador'];
+        const enviarParaTodos = acoesParaTodos.includes(dados.tipo);
+        
         const dadosParaEnviar = {
             ...dados,
             jogadoresAtualizados: sala.jogadores  // 🔥 Incluir jogadores atualizados
         };
-        console.log('📤 Enviando jogadoresAtualizados:', sala.jogadores.map(j => `ID:${j.id} tileId:${j.tileId}`));
-        socket.broadcast.to(dados.codigoSala).emit('acao-jogo', dadosParaEnviar);
+        
+        console.log(`📤 Enviando ${dados.tipo} para ${enviarParaTodos ? 'TODOS' : 'OUTROS'} na sala ${dados.codigoSala}`);
+        console.log('   jogadoresAtualizados:', sala.jogadores.map(j => `ID:${j.id} tileId:${j.tileId}`));
+        
+        if (enviarParaTodos) {
+            // Enviar para TODOS (incluindo quem enviou)
+            io.to(dados.codigoSala).emit('acao-jogo', dadosParaEnviar);
+        } else {
+            // Enviar apenas para OUTROS (não para quem enviou)
+            socket.broadcast.to(dados.codigoSala).emit('acao-jogo', dadosParaEnviar);
+        }
     });
 
     // Desconexão
