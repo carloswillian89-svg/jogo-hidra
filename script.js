@@ -744,8 +744,12 @@ function desenharJogadores() {
         const jogadorEl = document.createElement("div")
         jogadorEl.classList.add("jogador", classePersonagem)
         
-        // O número é a posição no array ordenado (index + 1)
-        const ordemAtual = index + 1;
+        // Calcular ordem relativa ao jogador atual
+        // Se jogadorAtualIndex = 1 e temos 2 jogadores, quem está em [1] é o 1º a jogar
+        const indexNoArrayOriginal = jogadores.findIndex(j => j.id === jogador.id);
+        let ordemRelativa = indexNoArrayOriginal - jogadorAtualIndex;
+        if (ordemRelativa < 0) ordemRelativa += jogadores.length;
+        const ordemAtual = ordemRelativa + 1;
         
         jogadorEl.textContent = ordemAtual
 
