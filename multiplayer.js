@@ -461,6 +461,7 @@ function configurarEventosSocket() {
     
     // Handler para receber jogadores com IDs do servidor (após todos prontos)
     socket.on('jogo-iniciado', (dados) => {
+        console.log('🎮 Evento jogo-iniciado recebido com jogadores:', dados.jogadores);
         // Atualizar jogadores com IDs recebidos do servidor
         if (dados.jogadores && dados.jogadores.length > 0) {
             dados.jogadores.forEach(jogadorServidor => {
@@ -469,8 +470,11 @@ function configurarEventosSocket() {
                     jogadorLocal.id = jogadorServidor.id;
                     jogadorLocal.ordem = jogadorServidor.ordem;
                     jogadorLocal.socketId = jogadorServidor.socketId;
+                    console.log(`✅ Jogador ${jogadorLocal.nome} atualizado: ID=${jogadorLocal.id}, Ordem=${jogadorLocal.ordem}`);
                 }
             });
+            
+            console.log('📋 Array jogadores final:', jogadores.map(j => `${j.nome} ID:${j.id} Ordem:${j.ordem}`));
             
             const minhaOrdem = parseInt(sessionStorage.getItem('minhaOrdem')) || 1;
             if (minhaOrdem === 1) {

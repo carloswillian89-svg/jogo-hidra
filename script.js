@@ -726,8 +726,7 @@ function desenharJogadores() {
         const jogadorEl = document.createElement("div")
         jogadorEl.classList.add("jogador", classePersonagem)
         
-        // Usar a ordem inicial do jogador (definida quando o jogo inicia)
-        // Este número é fixo e não muda durante o jogo
+        // Usar ordem fixa do embaralhamento inicial (1, 2, 3, 4)
         const ordemAtual = jogador.ordem;
         
         jogadorEl.textContent = ordemAtual
