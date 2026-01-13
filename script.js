@@ -12,6 +12,19 @@ const sons = {
     passos: new Audio('som/passos.mp3')
 };
 
+// Carregar volume salvo ou usar 50% como padrão
+let volumeGlobal = parseFloat(localStorage.getItem('volumeJogo')) || 0.5;
+
+// Aplicar volume a todos os sons
+function atualizarVolumeTodos() {
+    Object.values(sons).forEach(som => {
+        som.volume = volumeGlobal;
+    });
+}
+
+// Inicializar volume
+atualizarVolumeTodos();
+
 function tocarSom(nomeSom) {
     if (sons[nomeSom]) {
         sons[nomeSom].currentTime = 0;
@@ -115,7 +128,16 @@ function ehMinhaVez() {
 function meuJogadorEstaNoTile(tileId) {
     const meuId = obterMeuJogadorId();
     const meuJogador = jogadores.find(j => j.id === meuId);
-    return meuJogador && meuJogador.tileId === tileId;
+    const resultado = meuJogador && meuJogador.tileId === tileId;
+    
+    console.log('🔍 [meuJogadorEstaNoTile] Verificando:', {
+        tileId,
+        meuId,
+        meuJogadorTileId: meuJogador?.tileId,
+        resultado
+    });
+    
+    return resultado;
 }
 
 function obterNomePersonagemJogador(jogadorId) {
@@ -1843,6 +1865,12 @@ function criarCartaVisual(carta) {
         if (modoMultiplayer && carta.zona && carta.zona.startsWith('tile-')) {
             const tileId = carta.zona.replace('tile-', '');
             
+            console.log('🃏 [DRAGSTART] Tentando arrastar carta:', {
+                cartaId: carta.id,
+                cartaZona: carta.zona,
+                tileIdExtraido: tileId
+            });
+            
             // Validar se o jogador está no tile
             if (!meuJogadorEstaNoTile(tileId)) {
                 e.preventDefault();
@@ -2407,6 +2435,47 @@ renderizarCartasPersonagens(jogadorAtual().id)
 // garante que o nome do personagem apareça ao iniciar, após a definição de `personagens`
 atualizarInfoTurno()
 atualizarDestaqueInventario()
+
+// Configurar controle de volume
+const volumeSlider = document.getElementById('volume-slider');
+const volumeValue = document.getElementById('volume-value');
+const volumeIcon = document.getElementById('volume-icon');
+
+if (volumeSlider && volumeValue) {
+    // Definir valor inicial do slider
+    volumeSlider.value = Math.round(volumeGlobal * 100);
+    volumeValue.textContent = `${Math.round(volumeGlobal * 100)}%`;
+    
+    // Atualizar ícone baseado no volume
+    function atualizarIconeVolume(volume) {
+        if (volume === 0) {
+            volumeIcon.textContent = '🔇'; // Mudo
+        } else if (volume < 0.3) {
+            volumeIcon.textContent = '🔈'; // Baixo
+        } else if (volume < 0.7) {
+            volumeIcon.textContent = '🔉'; // Médio
+        } else {
+            volumeIcon.textContent = '🔊'; // Alto
+        }
+    }
+    
+    atualizarIconeVolume(volumeGlobal);
+    
+    volumeSlider.addEventListener('input', (e) => {
+        const valor = parseInt(e.target.value);
+        volumeGlobal = valor / 100;
+        volumeValue.textContent = `${valor}%`;
+        
+        // Atualizar volume de todos os sons
+        atualizarVolumeTodos();
+        
+        // Salvar preferência
+        localStorage.setItem('volumeJogo', volumeGlobal);
+        
+        // Atualizar ícone
+        atualizarIconeVolume(volumeGlobal);
+    });
+}
 
 
 

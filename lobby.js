@@ -3,7 +3,10 @@ const socket = io();
 // Sistema de Áudio do Lobby
 const musicaLobby = new Audio('som/lobby.mp3');
 musicaLobby.loop = true;
-musicaLobby.volume = 0.3;
+
+// Aplicar volume salvo ou usar 30% como padrão para música de fundo
+const volumeSalvo = parseFloat(localStorage.getItem('volumeJogo'));
+musicaLobby.volume = volumeSalvo !== null ? volumeSalvo * 0.6 : 0.3; // Música de fundo um pouco mais baixa
 
 // Iniciar música do lobby quando a página carregar
 window.addEventListener('load', () => {
