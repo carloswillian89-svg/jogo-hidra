@@ -141,6 +141,12 @@ function gerarTabuleiroHost() {
     jogadorAtualIndex = Math.floor(Math.random() * jogadores.length);
     console.log(`🎲 Jogador inicial sorteado: índice ${jogadorAtualIndex} - ${jogadores[jogadorAtualIndex]?.nome} (${jogadores[jogadorAtualIndex]?.personagem})`);
     
+    // 🔢 Calcular e salvar ordem de jogada FIXA para cada jogador
+    jogadores.forEach((jogador, indice) => {
+        jogador.ordemJogada = ((indice - jogadorAtualIndex + jogadores.length) % jogadores.length) + 1;
+        console.log(`  ${jogador.nome}: ordemJogada = ${jogador.ordemJogada}`);
+    });
+    
     // Atualizar UI do turno
     if (typeof atualizarInfoTurno === 'function') {
         atualizarInfoTurno();
@@ -259,6 +265,11 @@ function configurarEventosSocket() {
         tabuleiroMatriz = dados.tabuleiro;
         entradaPosicao = dados.entradaPosicao;
         jogadorAtualIndex = dados.jogadorAtualIndex || 0;
+        
+        // 🔢 Calcular e salvar ordem de jogada FIXA para cada jogador
+        jogadores.forEach((jogador, indice) => {
+            jogador.ordemJogada = ((indice - jogadorAtualIndex + jogadores.length) % jogadores.length) + 1;
+        });
         
         criarTabuleiro();
         

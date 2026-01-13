@@ -691,6 +691,11 @@ function inicializarJogadores() {
 */
 jogadorAtualIndex = 0
 
+// 🔢 Inicializar ordem de jogada fixa para cada jogador (modo local)
+jogadores.forEach((jogador, indice) => {
+    jogador.ordemJogada = indice + 1; // No modo local, ordem é simplesmente 1, 2, 3, 4
+});
+
 //Jogadores
 
 function desenharJogadores() {
@@ -726,17 +731,15 @@ function desenharJogadores() {
         const jogadorEl = document.createElement("div")
         jogadorEl.classList.add("jogador", classePersonagem)
         
-        // Calcular ordem de jogada baseada na posição a partir de jogadorAtualIndex
-        // Se jogadorAtualIndex = 1, então jogadores[1] é 1º, jogadores[2] é 2º, etc
-        const indiceJogador = jogadores.indexOf(jogador);
-        const ordemJogada = ((indiceJogador - jogadorAtualIndex + jogadores.length) % jogadores.length) + 1;
+        // Usar ordem de jogada fixa (calculada uma vez no início)
+        const ordemAtual = jogador.ordemJogada || jogador.ordem || (index + 1);
         
-        jogadorEl.textContent = ordemJogada
+        jogadorEl.textContent = ordemAtual
 
         tileEl.appendChild(jogadorEl)
 
         const numero = document.createElement("div")
-        numero.innerText = ordemJogada
+        numero.innerText = ordemAtual
         numero.style.position = "absolute"
         numero.style.top = "-6px"
         numero.style.right = "-6px"
