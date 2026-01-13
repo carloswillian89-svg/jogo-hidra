@@ -869,6 +869,10 @@ console.log(jogadores.map(j => ({
 document.getElementById("fimTurno").addEventListener("click", () => {
     console.log("BOTÃO ENCERRAR TURNO CLICADO")
     tocarSom('encerrarTurno');
+    
+    // Verificar se o jogador atual é o último ANTES de passar o turno
+    const eraUltimoJogador = jogadorAtualIndex === jogadores.length - 1;
+    
     proximoJogador()
     atualizarInfoTurno(true) // Mostrar notificação ao encerrar turno
     
@@ -877,6 +881,27 @@ document.getElementById("fimTurno").addEventListener("click", () => {
         enviarAcao('passar-turno', {
             jogadorAtualIndex: jogadorAtualIndex
         });
+    }
+    
+    // Se era o último jogador, incrementar rodada e executar Grito da Hidra
+    if (eraUltimoJogador) {
+        console.log('🔄 Último jogador encerrou turno - Nova rodada!');
+        
+        // Incrementar contador de rodadas
+        rodadaAtual++;
+        atualizarRodadaUI();
+        
+        // Sincronizar atualização de rodada no multiplayer
+        if (typeof enviarAcao === 'function') {
+            enviarAcao('atualizar-rodada', { valor: rodadaAtual });
+        }
+        
+        // Executar Grito da Hidra após um pequeno delay
+        setTimeout(() => {
+            console.log('🐉 Executando Grito da Hidra automaticamente');
+            tocarSom('hidra');
+            gritoHidra();
+        }, 800);
     }
     
     // Salvar estado após passar turno
@@ -907,9 +932,6 @@ document.getElementById("btn-reiniciar-tabuleiro").addEventListener("click", () 
 })
 
 function proximoJogador() {
-    // Verificar se o jogador atual é o último antes de mudar
-    const eraUltimoJogador = jogadorAtualIndex === jogadores.length - 1;
-    
     jogadorAtualIndex =
         (jogadorAtualIndex + 1) % jogadores.length
         
@@ -920,27 +942,6 @@ function proximoJogador() {
     }
     // atualizar destaque do inventario
     atualizarDestaqueInventario()
-    
-    // Se era o último jogador, incrementar rodada e executar Grito da Hidra
-    if (eraUltimoJogador) {
-        console.log('🔄 Último jogador finalizou turno - Nova rodada!');
-        
-        // Incrementar contador de rodadas
-        rodadaAtual++;
-        atualizarRodadaUI();
-        
-        // Sincronizar atualização de rodada no multiplayer
-        if (typeof enviarAcao === 'function') {
-            enviarAcao('atualizar-rodada', { valor: rodadaAtual });
-        }
-        
-        // Executar Grito da Hidra após um pequeno delay para o jogador ver a mudança de rodada
-        setTimeout(() => {
-            console.log('🐉 Executando Grito da Hidra automaticamente');
-            tocarSom('hidra');
-            gritoHidra();
-        }, 800);
-    }
 }
 
 
