@@ -604,14 +604,16 @@ function configurarEventosSocket() {
         // Atualizar jogadores com IDs recebidos do servidor
         if (dados.jogadores && dados.jogadores.length > 0) {
             dados.jogadores.forEach(jogadorServidor => {
-                console.log(`  🔍 Procurando jogador com socketId ${jogadorServidor.socketId}`);
-                const jogadorLocal = jogadores.find(j => j.socketId === jogadorServidor.socketId);
+                console.log(`  🔍 Procurando jogador ${jogadorServidor.nome} (socketId ${jogadorServidor.socketId})`);
+                // Fazer match por NOME em vez de socketId (socketId muda após reconexão)
+                const jogadorLocal = jogadores.find(j => j.nome === jogadorServidor.nome);
                 if (jogadorLocal) {
                     jogadorLocal.id = jogadorServidor.id;
                     jogadorLocal.ordem = jogadorServidor.ordem;
+                    jogadorLocal.socketId = jogadorServidor.socketId; // Atualizar socketId também
                     console.log(`  ✅ Jogador ${jogadorLocal.nome}: ID=${jogadorLocal.id}, Ordem=${jogadorLocal.ordem}, Personagem=${jogadorLocal.personagem}`);
                 } else {
-                    console.error(`  ❌ Jogador não encontrado para socketId ${jogadorServidor.socketId}`);
+                    console.error(`  ❌ Jogador ${jogadorServidor.nome} não encontrado localmente`);
                 }
             });
             
