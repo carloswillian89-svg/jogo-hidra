@@ -907,17 +907,41 @@ document.getElementById("btn-reiniciar-tabuleiro").addEventListener("click", () 
 })
 
 function proximoJogador() {
+    // Verificar se o jogador atual é o último antes de mudar
+    const eraUltimoJogador = jogadorAtualIndex === jogadores.length - 1;
+    
     jogadorAtualIndex =
         (jogadorAtualIndex + 1) % jogadores.length
         
-         desenharJogadores()
-   // atualizar destaque das cartas-personagem
-   if (typeof renderizarCartasPersonagens === 'function') {
-       renderizarCartasPersonagens(jogadorAtual().id)
-   }
-   // atualizar destaque do inventario
-   atualizarDestaqueInventario()
-   }
+    desenharJogadores()
+    // atualizar destaque das cartas-personagem
+    if (typeof renderizarCartasPersonagens === 'function') {
+        renderizarCartasPersonagens(jogadorAtual().id)
+    }
+    // atualizar destaque do inventario
+    atualizarDestaqueInventario()
+    
+    // Se era o último jogador, incrementar rodada e executar Grito da Hidra
+    if (eraUltimoJogador) {
+        console.log('🔄 Último jogador finalizou turno - Nova rodada!');
+        
+        // Incrementar contador de rodadas
+        rodadaAtual++;
+        atualizarRodadaUI();
+        
+        // Sincronizar atualização de rodada no multiplayer
+        if (typeof enviarAcao === 'function') {
+            enviarAcao('atualizar-rodada', { valor: rodadaAtual });
+        }
+        
+        // Executar Grito da Hidra após um pequeno delay para o jogador ver a mudança de rodada
+        setTimeout(() => {
+            console.log('🐉 Executando Grito da Hidra automaticamente');
+            tocarSom('hidra');
+            gritoHidra();
+        }, 800);
+    }
+}
 
 
 // Direção dos Tiles
