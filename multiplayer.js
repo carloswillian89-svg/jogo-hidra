@@ -411,7 +411,7 @@ function configurarEventosSocket() {
         // Atualizar UI do turno após receber o estado inicial
         console.log('🎮 Atualizando UI do turno inicial');
         if (typeof atualizarInfoTurno === 'function') {
-            atualizarInfoTurno();
+            atualizarInfoTurno(true); // Mostrar notificação ao iniciar jogo
         }
         if (typeof renderizarCartasPersonagens === 'function') {
             renderizarCartasPersonagens(jogadorAtual().id);
@@ -675,6 +675,11 @@ function processarMoverJogadorRemoto(dados) {
             jogador.tile = tile;
         }
         
+        // Tocar som de passos
+        if (typeof tocarSom === 'function') {
+            tocarSom('passos');
+        }
+        
         // Atualizar posição visual
         desenharJogadores();
     }
@@ -691,7 +696,7 @@ function processarPassarTurnoRemoto(dados) {
             atualizarDestaqueInventario();
         }
         if (typeof atualizarInfoTurno === 'function') {
-            atualizarInfoTurno();
+            atualizarInfoTurno(true); // Mostrar notificação ao passar turno
         }
         // Tocar som de mudança de turno
         if (typeof tocarSom === 'function') {
@@ -886,6 +891,9 @@ function configurarBotoesControle() {
     
     if (btnEncerrar) {
         btnEncerrar.addEventListener('click', () => {
+            if (typeof tocarSom === 'function') {
+                tocarSom('encerrarJogo');
+            }
             socket.emit('encerrar-jogo', { codigoSala });
         });
     }

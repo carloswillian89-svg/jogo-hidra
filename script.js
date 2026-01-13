@@ -7,7 +7,9 @@ const sons = {
     iniciarJogo: new Audio('som/iniciar_jogo.wav'),
     hidra: new Audio('som/hidra.mp3'),
     reiniciarTabuleiro: new Audio('som/reiniciar_tabuleiro.wav'),
-    encerrarTurno: new Audio('som/encerrar_turno.wav')
+    encerrarTurno: new Audio('som/encerrar_turno.wav'),
+    encerrarJogo: new Audio('som/encerrar_jogo.wav'),
+    passos: new Audio('som/passos.mp3')
 };
 
 function tocarSom(nomeSom) {
@@ -228,6 +230,7 @@ function moverJogador(tileDestino) {
     jogador.tile = tileDestino
     jogador.tileId = tileDestino.dataset.id
 
+    tocarSom('passos');
     desenharJogadores()
     
     // Enviar movimento para outros jogadores no modo multiplayer
@@ -827,7 +830,7 @@ document.getElementById("fimTurno").addEventListener("click", () => {
     console.log("BOTÃO ENCERRAR TURNO CLICADO")
     tocarSom('encerrarTurno');
     proximoJogador()
-    atualizarInfoTurno()
+    atualizarInfoTurno(true) // Mostrar notificação ao encerrar turno
     
     // Sincronizar mudança de turno no multiplayer
     if (typeof enviarAcao === 'function') {
@@ -1346,7 +1349,7 @@ document.addEventListener("keyup", (event) => {
     }
 })
 
-function atualizarInfoTurno() {
+function atualizarInfoTurno(mostrarNotificacao = false) {
     const atual = jogadorAtual()
     let nomeExibicao = `Jogador ${atual.ordem}`
 
@@ -1370,8 +1373,10 @@ function atualizarInfoTurno() {
 
     document.getElementById("infoTurno").innerText = `Vez de ${nomeExibicao}`
     
-    // Mostrar notificação visual de mudança de turno
-    mostrarNotificacaoTurno(nomeExibicao);
+    // Mostrar notificação visual de mudança de turno apenas se solicitado
+    if (mostrarNotificacao) {
+        mostrarNotificacaoTurno(nomeExibicao);
+    }
 }
 
 // ==================== PERSISTÊNCIA LOCAL ====================

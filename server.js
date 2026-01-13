@@ -819,13 +819,13 @@ io.on('connection', (socket) => {
             console.log(`🎮 Jogador atual atualizado: índice ${dados.dados.jogadorAtualIndex}`);
         }
 
-        // Broadcast para outros jogadores com jogadores atualizados
+        // Broadcast para TODOS os jogadores (incluindo quem enviou) com jogadores atualizados
         const dadosParaEnviar = {
             ...dados,
             jogadoresAtualizados: sala.jogadores  // 🔥 Incluir jogadores atualizados
         };
         console.log('📤 Enviando jogadoresAtualizados:', sala.jogadores.map(j => `ID:${j.id} tileId:${j.tileId}`));
-        socket.to(dados.codigoSala).emit('acao-jogo', dadosParaEnviar);
+        io.to(dados.codigoSala).emit('acao-jogo', dadosParaEnviar);
     });
 
     // Desconexão
