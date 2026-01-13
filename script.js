@@ -718,7 +718,7 @@ function desenharJogadores() {
         (a, b) => a.ordem - b.ordem
     )
 
-    jogadoresOrdenados.forEach(jogador => {
+    jogadoresOrdenados.forEach((jogador, index) => {
         if (!jogador.tile || !(jogador.tile instanceof HTMLElement)) {
             console.error("Jogador com tile inválido:", jogador)
             return
@@ -744,8 +744,8 @@ function desenharJogadores() {
         const jogadorEl = document.createElement("div")
         jogadorEl.classList.add("jogador", classePersonagem)
         
-        // Encontrar a posição atual deste jogador na ordem de jogo
-        const ordemAtual = jogadoresOrdenados.findIndex(j => j.id === jogador.id) + 1;
+        // O número é a posição no array ordenado (index + 1)
+        const ordemAtual = index + 1;
         
         jogadorEl.textContent = ordemAtual
 

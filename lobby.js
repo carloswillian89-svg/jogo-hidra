@@ -218,7 +218,6 @@ function atualizarListaJogadores() {
         const personagemTexto = nomePersonagem ? ` - ${nomePersonagem}` : '';
         
         li.innerHTML = `
-            <span class="jogador-icone">${icone}</span>
             <span class="jogador-nome">${jogador.nome}${personagemTexto}${voce}</span>
             <span class="jogador-status">${status}</span>
         `;
