@@ -139,6 +139,7 @@ function gerarTabuleiroHost() {
     
     // Definir jogador inicial aleatório
     jogadorAtualIndex = Math.floor(Math.random() * jogadores.length);
+    console.log(`🎲 Jogador inicial sorteado: índice ${jogadorAtualIndex} - ${jogadores[jogadorAtualIndex]?.nome} (${jogadores[jogadorAtualIndex]?.personagem})`);
     
     // Atualizar UI do turno
     if (typeof atualizarInfoTurno === 'function') {
