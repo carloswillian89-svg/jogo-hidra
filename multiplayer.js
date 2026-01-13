@@ -445,10 +445,22 @@ function configurarEventosSocket() {
         const tiles = document.querySelectorAll('.tile');
         console.log('📍 Total de tiles no DOM:', tiles.length);
         
-        // Se recebeu estado dos jogadores, aplicar posições salvas
+        // Se recebeu estado dos jogadores, PRIMEIRO atualizar IDs e então aplicar posições
         if (dados.jogadoresEstado && dados.jogadoresEstado.length > 0) {
             console.log('👥 Aplicando estado dos jogadores recebido:', dados.jogadoresEstado);
             
+            // PRIMEIRO: Atualizar IDs dos jogadores locais baseado no servidor
+            jogadores.forEach(j => {
+                const estadoServidor = dados.jogadoresEstado.find(ej => 
+                    ej.nome === j.nome || ej.ordem === j.ordem
+                );
+                if (estadoServidor) {
+                    j.id = estadoServidor.id; // Atualizar ID do servidor
+                    console.log(`  🔄 Jogador ${j.nome}: ID atualizado para ${j.id}`);
+                }
+            });
+            
+            // DEPOIS: Aplicar posições salvas
             jogadores.forEach(j => {
                 const estadoSalvo = dados.jogadoresEstado.find(ej => ej.id === j.id || ej.ordem === j.ordem);
                 if (estadoSalvo && estadoSalvo.tileId) {
