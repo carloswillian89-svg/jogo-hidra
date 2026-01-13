@@ -184,7 +184,16 @@ function gerarTabuleiroHost() {
     console.log('🎲 Jogador inicial sorteado:', jogadorAtualIndex);
     console.log('  📍 Índice:', jogadorAtualIndex);
     console.log('  👤 Jogador no índice:', jogadores[jogadorAtualIndex]);
-    console.log('  🎭 Personagem:', personagens ? personagens.find(p => p.id === jogadores[jogadorAtualIndex].id) : 'não carregado');
+    
+    // Log do personagem (mapear nome do personagem para ID)
+    if (personagens && jogadores[jogadorAtualIndex].personagem) {
+        const personagemMap = { 'torvin': 1, 'elara': 2, 'zephyr': 3, 'kaelen': 4 };
+        const personagemId = personagemMap[jogadores[jogadorAtualIndex].personagem.toLowerCase()];
+        const p = personagens.find(pp => pp.id === personagemId);
+        console.log('  🎭 Personagem:', p || 'não encontrado');
+    } else {
+        console.log('  🎭 Personagem: não carregado');
+    }
     console.log('  📋 Array completo de jogadores:', jogadores.map((j, idx) => `[${idx}] ID:${j.id} Ordem:${j.ordem} Personagem:${j.personagem || 'N/A'}`));
     
     // Atualizar UI do turno
@@ -324,7 +333,16 @@ function configurarEventosSocket() {
         console.log('✅ Jogador inicial index recebido:', jogadorAtualIndex);
         console.log('  📍 Índice:', jogadorAtualIndex);
         console.log('  👤 Jogador no índice:', jogadores[jogadorAtualIndex]);
-        console.log('  🎭 Personagem:', personagens ? personagens.find(p => p.id === jogadores[jogadorAtualIndex].id) : 'não carregado');
+        
+        // Log do personagem (mapear nome do personagem para ID)
+        if (personagens && jogadores[jogadorAtualIndex] && jogadores[jogadorAtualIndex].personagem) {
+            const personagemMap = { 'torvin': 1, 'elara': 2, 'zephyr': 3, 'kaelen': 4 };
+            const personagemId = personagemMap[jogadores[jogadorAtualIndex].personagem.toLowerCase()];
+            const p = personagens.find(pp => pp.id === personagemId);
+            console.log('  🎭 Personagem:', p || 'não encontrado');
+        } else {
+            console.log('  🎭 Personagem: não carregado');
+        }
         console.log('  📋 Array completo de jogadores:', jogadores.map((j, idx) => `[${idx}] ID:${j.id} Ordem:${j.ordem} Personagem:${j.personagem || 'N/A'}`));
         
         // Log da matriz recebida para debug
