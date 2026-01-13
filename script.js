@@ -732,8 +732,17 @@ function desenharJogadores() {
             return;
         }
 
+        // Mapear personagem para classe de cor
+        const personagemParaClasse = {
+            'torvin': 'jogador-1',   // vermelho
+            'elara': 'jogador-2',    // azul
+            'zephyr': 'jogador-3',   // verde
+            'kaelen': 'jogador-4'    // amarelo
+        };
+        const classePersonagem = personagemParaClasse[jogador.personagem?.toLowerCase()] || `jogador-${jogador.id}`;
+
         const jogadorEl = document.createElement("div")
-        jogadorEl.classList.add("jogador", `jogador-${jogador.id}`)
+        jogadorEl.classList.add("jogador", classePersonagem)
         jogadorEl.textContent = jogador.ordem
 
         tileEl.appendChild(jogadorEl)
