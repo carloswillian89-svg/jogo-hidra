@@ -693,6 +693,10 @@ function processarPassarTurnoRemoto(dados) {
         if (typeof atualizarInfoTurno === 'function') {
             atualizarInfoTurno();
         }
+        // Tocar som de mudança de turno
+        if (typeof tocarSom === 'function') {
+            tocarSom('encerrarTurno');
+        }
     }
 }
 

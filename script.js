@@ -6,7 +6,8 @@ const sons = {
     dado: new Audio('som/dado-rolando.mp3'),
     iniciarJogo: new Audio('som/iniciar_jogo.wav'),
     hidra: new Audio('som/hidra.mp3'),
-    reiniciarTabuleiro: new Audio('som/reiniciar_tabuleiro.wav')
+    reiniciarTabuleiro: new Audio('som/reiniciar_tabuleiro.wav'),
+    encerrarTurno: new Audio('som/encerrar_turno.wav')
 };
 
 function tocarSom(nomeSom) {
@@ -14,6 +15,37 @@ function tocarSom(nomeSom) {
         sons[nomeSom].currentTime = 0;
         sons[nomeSom].play().catch(err => console.log('Erro ao tocar som:', err));
     }
+}
+
+function mostrarNotificacaoTurno(nomeJogador) {
+    // Remover notificação anterior se existir
+    const notifAnterior = document.getElementById('notificacao-turno');
+    if (notifAnterior) {
+        notifAnterior.remove();
+    }
+    
+    // Criar nova notificação
+    const notif = document.createElement('div');
+    notif.id = 'notificacao-turno';
+    notif.className = 'notificacao-turno';
+    notif.innerHTML = `
+        <div class="notificacao-turno-conteudo">
+            <h2>Vez de ${nomeJogador}</h2>
+        </div>
+    `;
+    
+    document.body.appendChild(notif);
+    
+    // Adicionar classe de animação
+    setTimeout(() => {
+        notif.classList.add('mostrar');
+    }, 10);
+    
+    // Remover após 3 segundos
+    setTimeout(() => {
+        notif.classList.remove('mostrar');
+        setTimeout(() => notif.remove(), 500);
+    }, 3000);
 }
 
 const DIRECOES = ["N", "L", "S", "O"]
@@ -793,6 +825,7 @@ console.log(jogadores.map(j => ({
 
 document.getElementById("fimTurno").addEventListener("click", () => {
     console.log("BOTÃO ENCERRAR TURNO CLICADO")
+    tocarSom('encerrarTurno');
     proximoJogador()
     atualizarInfoTurno()
     
@@ -1014,16 +1047,21 @@ function gritoHidra() {
     const ehLinha = Math.random() < 0.5
     const indiceAleatorio = Math.floor(Math.random() * TAMANHO)
 
-    // Executar o grito da hidra localmente
-    executarGritoHidra(ehLinha, indiceAleatorio)
+    // Verificar se está em modo multiplayer
+    const modoMultiplayer = sessionStorage.getItem('modoMultiplayer') === 'true';
     
-    // Sincronizar com multiplayer
-    if (typeof enviarAcao === 'function') {
-        console.log('🐉 Enviando grito-hidra para servidor');
+    if (modoMultiplayer && typeof enviarAcao === 'function') {
+        // Em multiplayer, apenas enviar para o servidor (não executar localmente)
+        // O servidor irá retransmitir para TODOS os jogadores executarem
+        console.log('🐉 [MULTIPLAYER] Enviando grito-hidra para servidor (não executa localmente)');
         enviarAcao('grito-hidra', {
             ehLinha: ehLinha,
             indice: indiceAleatorio
         });
+    } else {
+        // Em modo local, executar diretamente
+        console.log('🐉 [LOCAL] Executando grito-hidra localmente');
+        executarGritoHidra(ehLinha, indiceAleatorio);
     }
 }
 
@@ -1331,6 +1369,9 @@ function atualizarInfoTurno() {
     }
 
     document.getElementById("infoTurno").innerText = `Vez de ${nomeExibicao}`
+    
+    // Mostrar notificação visual de mudança de turno
+    mostrarNotificacaoTurno(nomeExibicao);
 }
 
 // ==================== PERSISTÊNCIA LOCAL ====================
