@@ -14,6 +14,25 @@
         <span id="info-sala"></span>
     </div>
 
+    <!-- Controles de Volume no canto superior esquerdo -->
+    <div id="controles-audio-container">
+        <div id="controle-volume" class="controle-volume">
+            <label for="volume-slider" title="Volume dos Efeitos Sonoros">
+                <span id="volume-icon">🔊</span>
+            </label>
+            <input type="range" id="volume-slider" min="0" max="100" value="50" />
+            <span id="volume-value">50%</span>
+        </div>
+
+        <div id="controle-musica" class="controle-volume">
+            <label for="musica-slider" title="Volume da Música">
+                <span id="musica-icon">🎵</span>
+            </label>
+            <input type="range" id="musica-slider" min="0" max="100" value="50" />
+            <span id="musica-value">50%</span>
+        </div>
+    </div>
+
     <div id="main-area">
         <aside id="left-panel">
             <div id="inventario-esquerdo">
@@ -119,14 +138,6 @@
             </div>
 
             <button id="grito-da-hidra">🐉 Grito da Hidra</button>
-
-            <div id="controle-volume" class="controle-volume">
-                <label for="volume-slider">
-                    <span id="volume-icon">🔊</span>
-                </label>
-                <input type="range" id="volume-slider" min="0" max="100" value="50" />
-                <span id="volume-value">50%</span>
-            </div>
 
             <div id="contador-rodadas" class="contador-rodadas">
                 <span class="rotulo-rodada">Rodada atual</span>

@@ -12,18 +12,34 @@ const sons = {
     passos: new Audio('som/passos.mp3')
 };
 
-// Carregar volume salvo ou usar 50% como padrão
+// Música de fundo
+const musicaFundo = new Audio('som/musica.mp3');
+musicaFundo.loop = true;
+
+// Carregar volume dos sons salvo ou usar 50% como padrão
 let volumeGlobal = parseFloat(localStorage.getItem('volumeJogo')) || 0.5;
 
-// Aplicar volume a todos os sons
+// Carregar volume da música salvo ou usar 50% como padrão
+let volumeMusica = parseFloat(localStorage.getItem('volumeMusica')) || 0.5;
+
+// Aplicar volume a todos os sons (efeitos)
 function atualizarVolumeTodos() {
     Object.values(sons).forEach(som => {
         som.volume = volumeGlobal;
     });
 }
 
-// Inicializar volume
+// Aplicar volume à música de fundo
+function atualizarVolumeMusica() {
+    musicaFundo.volume = volumeMusica;
+}
+
+// Inicializar volumes
 atualizarVolumeTodos();
+atualizarVolumeMusica();
+
+// Iniciar música de fundo
+musicaFundo.play().catch(err => console.log('Música será iniciada após interação do usuário'));
 
 function tocarSom(nomeSom) {
     if (sons[nomeSom]) {
@@ -869,19 +885,20 @@ document.getElementById("fimTurno").addEventListener("click", () => {
 
 document.getElementById("btn-reiniciar-tabuleiro").addEventListener("click", () => {
     console.log("BOTÃO REINICIAR TABULEIRO CLICADO")
-    tocarSom('reiniciarTabuleiro');
     
     // Verificar se está em modo multiplayer
     const modoMultiplayer = sessionStorage.getItem('modoMultiplayer') === 'true';
     
     if (modoMultiplayer && window.socket) {
         // Em modo multiplayer, enviar evento para servidor
+        // Som será tocado quando o servidor emitir 'tabuleiro-reiniciado'
         const codigoSala = sessionStorage.getItem('codigoSala');
         console.log("🔄 Enviando reiniciar-tabuleiro para servidor");
         window.socket.emit('reiniciar-tabuleiro', { codigoSala });
         // O servidor irá notificar todos os jogadores e recarregar a página
     } else {
-        // Modo local: confirmar antes de reiniciar
+        // Modo local: tocar som e confirmar antes de reiniciar
+        tocarSom('reiniciarTabuleiro');
         if (confirm('Deseja realmente reiniciar o jogo? Todo o progresso será perdido.')) {
             limparEstadoLocal();
             location.reload();
@@ -2438,7 +2455,7 @@ renderizarCartasPersonagens(jogadorAtual().id)
 atualizarInfoTurno()
 atualizarDestaqueInventario()
 
-// Configurar controle de volume
+// Configurar controle de volume dos sons (efeitos)
 const volumeSlider = document.getElementById('volume-slider');
 const volumeValue = document.getElementById('volume-value');
 const volumeIcon = document.getElementById('volume-icon');
@@ -2479,6 +2496,52 @@ if (volumeSlider && volumeValue) {
     });
 }
 
+// Configurar controle de volume da música
+const musicaSlider = document.getElementById('musica-slider');
+const musicaValue = document.getElementById('musica-value');
+const musicaIcon = document.getElementById('musica-icon');
+
+if (musicaSlider && musicaValue) {
+    // Definir valor inicial do slider
+    musicaSlider.value = Math.round(volumeMusica * 100);
+    musicaValue.textContent = `${Math.round(volumeMusica * 100)}%`;
+    
+    // Atualizar ícone baseado no volume
+    function atualizarIconeMusica(volume) {
+        if (volume === 0) {
+            musicaIcon.textContent = '🔇'; // Mudo
+        } else if (volume < 0.3) {
+            musicaIcon.textContent = '🎵'; // Baixo
+        } else if (volume < 0.7) {
+            musicaIcon.textContent = '🎶'; // Médio
+        } else {
+            musicaIcon.textContent = '🎵'; // Alto
+        }
+    }
+    
+    atualizarIconeMusica(volumeMusica);
+    
+    musicaSlider.addEventListener('input', (e) => {
+        const valor = parseInt(e.target.value);
+        volumeMusica = valor / 100;
+        musicaValue.textContent = `${valor}%`;
+        
+        // Atualizar volume da música
+        atualizarVolumeMusica();
+        
+        // Salvar preferência
+        localStorage.setItem('volumeMusica', volumeMusica);
+        
+        // Atualizar ícone
+        atualizarIconeMusica(volumeMusica);
+        
+        // Tentar tocar a música se ainda não estiver tocando
+        if (musicaFundo.paused) {
+            musicaFundo.play().catch(err => console.log('Erro ao tocar música:', err));
+        }
+    });
+}
+
 
 
 
@@ -2516,7 +2579,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     console.log('✅ Botão Iniciar Jogo encontrado, registrando event listener');
                     btnIniciarJogo.addEventListener("click", () => {
                         console.log("🎮 BOTÃO INICIAR JOGO CLICADO");
-                        tocarSom('iniciarJogo');
+                        // Som será tocado quando o servidor emitir 'jogo-iniciado-partida'
                         const codigoSala = sessionStorage.getItem('codigoSala');
                         console.log("📤 Enviando iniciar-jogo para sala:", codigoSala);
                         socket.emit('iniciar-jogo', { codigoSala });

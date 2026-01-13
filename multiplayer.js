@@ -457,6 +457,9 @@ function configurarEventosSocket() {
     
     // Eventos de controle de jogo
     socket.on('tabuleiro-reiniciado', (dados) => {
+        console.log('🔄 Tabuleiro reiniciado! Tocando som...');
+        tocarSom('reiniciarTabuleiro');
+        
         jogadores.forEach(j => {
             j.tileId = null;
             j.tile = null;
@@ -498,10 +501,14 @@ function configurarEventosSocket() {
     });
     
     socket.on('jogo-iniciado-partida', () => {
+        console.log('🎮 Jogo iniciado! Tocando som...');
+        tocarSom('iniciarJogo');
         atualizarBotoesControle('jogando');
     });
     
     socket.on('jogo-encerrado', () => {
+        console.log('🏁 Jogo encerrado! Tocando som...');
+        tocarSom('encerrarJogo');
         atualizarBotoesControle('aguardando');
     });
 }
@@ -891,9 +898,7 @@ function configurarBotoesControle() {
     
     if (btnEncerrar) {
         btnEncerrar.addEventListener('click', () => {
-            if (typeof tocarSom === 'function') {
-                tocarSom('encerrarJogo');
-            }
+            // Som será tocado quando o servidor emitir 'jogo-encerrado'
             socket.emit('encerrar-jogo', { codigoSala });
         });
     }
