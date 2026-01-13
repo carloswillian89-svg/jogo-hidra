@@ -315,7 +315,6 @@ io.on('connection', (socket) => {
         
         // Se já tiver tabuleiro, enviar apenas o estado salvo (NÃO gerar novo)
         if (sala.tabuleiro) {
-            console.log(`📤 [RECONEXÃO] Enviando tabuleiro salvo para ${socket.id}`);
             console.log(`  📊 Matriz linha 0:`, sala.tabuleiro[0]);
             console.log(`  📊 Matriz linha 1:`, sala.tabuleiro[1]);
             console.log(`  📊 Matriz linha 2:`, sala.tabuleiro[2]);
@@ -398,8 +397,6 @@ io.on('connection', (socket) => {
             jogadorAtualIndex: sala.jogadorAtualIndex,
             jogadoresEstado: sala.jogadores  // 🔥 Enviar sala.jogadores completo
         });
-
-        console.log(`📤 Tabuleiro compartilhado com outros jogadores da sala ${dados.codigoSala}`);
     });
 
     // Reiniciar tabuleiro
