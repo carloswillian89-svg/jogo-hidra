@@ -734,10 +734,10 @@ function desenharJogadores() {
 
         // Mapear personagem para classe de cor
         const personagemParaClasse = {
-            'torvin': 'jogador-1',   // vermelho
-            'elara': 'jogador-2',    // azul
+            'torvin': 'jogador-1',   // azul
+            'elara': 'jogador-2',    // vermelho
             'zephyr': 'jogador-3',   // verde
-            'kaelen': 'jogador-4'    // amarelo
+            'kaelen': 'jogador-4'    // roxo
         };
         const classePersonagem = personagemParaClasse[jogador.personagem?.toLowerCase()] || `jogador-${jogador.id}`;
 
@@ -1486,6 +1486,7 @@ function atualizarDestaqueInventario() {
     const atual = jogadorAtual()
     
     // Mapear personagem para slot de inventário no HTML
+    // Torvin=azul(1), Elara=vermelho(2), Zephyr=verde(3), Kaelen=roxo(4)
     const personagemParaSlot = {
         'torvin': 1,
         'elara': 2,
