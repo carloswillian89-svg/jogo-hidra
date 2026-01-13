@@ -1,5 +1,24 @@
 const socket = io();
 
+// Sistema de Áudio do Lobby
+const musicaLobby = new Audio('som/lobby.mp3');
+musicaLobby.loop = true;
+musicaLobby.volume = 0.3;
+
+// Iniciar música do lobby quando a página carregar
+window.addEventListener('load', () => {
+    musicaLobby.play().catch(err => {
+        console.log('Música do lobby será reproduzida após interação do usuário');
+    });
+});
+
+// Garantir que a música toque após qualquer clique do usuário
+document.addEventListener('click', () => {
+    if (musicaLobby.paused) {
+        musicaLobby.play().catch(err => console.log('Erro ao tocar música:', err));
+    }
+}, { once: false });
+
 let estadoLocal = {
     nome: '',
     codigoSala: '',
@@ -120,6 +139,7 @@ btnEntrarSala.addEventListener('click', () => {
 
 // Jogar local
 btnJogarLocal.addEventListener('click', () => {
+    musicaLobby.pause();
     window.location.href = 'index.html';
 });
 
@@ -156,6 +176,7 @@ btnPronto.addEventListener('click', () => {
 
 // Sair do lobby
 btnSairLobby.addEventListener('click', () => {
+    musicaLobby.pause();
     window.location.reload();
 });
 
@@ -334,6 +355,7 @@ socket.on('jogo-iniciado', (dados) => {
     // Redirecionar para o jogo após um delay
     setTimeout(() => {
         console.log('🎮 Redirecionando para o jogo...');
+        musicaLobby.pause();
         window.location.href = 'index.html';
     }, 2000);
 });

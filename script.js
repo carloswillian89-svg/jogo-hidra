@@ -1,6 +1,21 @@
 
 const tabuleiro = document.getElementById("tabuleiro")
 
+// Sistema de Áudio
+const sons = {
+    dado: new Audio('som/dado-rolando.mp3'),
+    iniciarJogo: new Audio('som/iniciar_jogo.wav'),
+    hidra: new Audio('som/hidra.mp3'),
+    reiniciarTabuleiro: new Audio('som/reiniciar_tabuleiro.wav')
+};
+
+function tocarSom(nomeSom) {
+    if (sons[nomeSom]) {
+        sons[nomeSom].currentTime = 0;
+        sons[nomeSom].play().catch(err => console.log('Erro ao tocar som:', err));
+    }
+}
+
 const DIRECOES = ["N", "L", "S", "O"]
 
 const CONEXOES_BASE = {
@@ -794,6 +809,7 @@ document.getElementById("fimTurno").addEventListener("click", () => {
 
 document.getElementById("btn-reiniciar-tabuleiro").addEventListener("click", () => {
     console.log("BOTÃO REINICIAR TABULEIRO CLICADO")
+    tocarSom('reiniciarTabuleiro');
     
     // Verificar se está em modo multiplayer
     const modoMultiplayer = sessionStorage.getItem('modoMultiplayer') === 'true';
@@ -2050,6 +2066,7 @@ const btnRolar2D6 = document.getElementById("btn-rolar-2d6")
 const resultadoDado = document.getElementById("resultado-dado")
 
 btnRolarD6.addEventListener("click", () => {
+    tocarSom('dado');
     animarDados(1, () => {
         const valor = rolarD6()
         document.getElementById("dado1").textContent = valor
@@ -2065,6 +2082,7 @@ btnRolarD6.addEventListener("click", () => {
 })
 
 btnRolar2D6.addEventListener("click", () => {
+    tocarSom('dado');
     animarDados(2, () => {
         const { d1, d2, total } = rolar2D6()
         document.getElementById("dado1").textContent = d1
@@ -2121,6 +2139,7 @@ atualizarRodadaUI()
 const botaoGritoHidra = document.getElementById("grito-da-hidra")
 if (botaoGritoHidra) {
     botaoGritoHidra.addEventListener("click", () => {
+        tocarSom('hidra');
         gritoHidra()
     })
 }
@@ -2380,6 +2399,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     console.log('✅ Botão Iniciar Jogo encontrado, registrando event listener');
                     btnIniciarJogo.addEventListener("click", () => {
                         console.log("🎮 BOTÃO INICIAR JOGO CLICADO");
+                        tocarSom('iniciarJogo');
                         const codigoSala = sessionStorage.getItem('codigoSala');
                         console.log("📤 Enviando iniciar-jogo para sala:", codigoSala);
                         socket.emit('iniciar-jogo', { codigoSala });
