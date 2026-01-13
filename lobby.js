@@ -309,18 +309,26 @@ socket.on('jogo-iniciado', (dados) => {
     btnPronto.disabled = true;
     btnSairLobby.disabled = true;
     
-    // Encontrar minha ordem no jogo (match por socketId)
-    const meuJogador = dados.jogadores.find(j => j.socketId === estadoLocal.meuId);
-    console.log('🔍 Procurando meu jogador:', { meuSocketId: estadoLocal.meuId, jogadores: dados.jogadores });
+    // Encontrar minha ordem no jogo (match por socketId ATUAL)
+    const meuJogador = dados.jogadores.find(j => j.socketId === socket.id);
+    console.log('🔍 Procurando meu jogador:', { meuSocketId: socket.id, jogadores: dados.jogadores });
     console.log('✅ Meu jogador encontrado:', meuJogador);
+    
+    if (!meuJogador) {
+        console.error('❌ Erro crítico: Jogador não encontrado na lista!');
+        console.log('📋 Jogadores recebidos:', dados.jogadores);
+        console.log('🔑 Meu socket.id:', socket.id);
+        mostrarNotificacao('Erro ao identificar jogador. Recarregue a página.', 'erro');
+        return;
+    }
     
     // Salvar dados do jogo no sessionStorage
     sessionStorage.setItem('modoMultiplayer', 'true');
     sessionStorage.setItem('codigoSala', estadoLocal.codigoSala);
     sessionStorage.setItem('jogadoresMultiplayer', JSON.stringify(dados.jogadores));
-    sessionStorage.setItem('minhaOrdem', meuJogador ? meuJogador.ordem : 1);
-    sessionStorage.setItem('meuJogadorId', meuJogador ? meuJogador.id : 1); // Salvar ID numérico também
-    sessionStorage.setItem('socketId', socket.id); // Salvar socket ID atual
+    sessionStorage.setItem('minhaOrdem', meuJogador.ordem);
+    sessionStorage.setItem('meuJogadorId', meuJogador.id);
+    sessionStorage.setItem('socketId', socket.id);
     
     // Redirecionar para o jogo após um delay
     setTimeout(() => {

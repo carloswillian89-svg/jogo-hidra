@@ -201,7 +201,12 @@ function configurarJogadoresMultiplayer(jogadoresData) {
 
 function exibirInfoMultiplayer(jogadoresData) {
     const minhaOrdem = parseInt(sessionStorage.getItem('minhaOrdem')) || 1;
+    const meuJogadorId = parseInt(sessionStorage.getItem('meuJogadorId'));
+    console.log('🔍 [exibirInfoMultiplayer] minhaOrdem:', minhaOrdem, 'meuJogadorId:', meuJogadorId);
+    console.log('👥 [exibirInfoMultiplayer] jogadoresData:', jogadoresData);
+    
     const meuJogador = jogadoresData.find(j => j.ordem === minhaOrdem);
+    console.log('✅ [exibirInfoMultiplayer] meuJogador encontrado:', meuJogador);
     
     const multiplayerInfo = document.getElementById('multiplayer-info');
     const infoJogador = document.getElementById('info-jogador');
