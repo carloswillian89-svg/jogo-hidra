@@ -873,10 +873,14 @@ document.getElementById("fimTurno").addEventListener("click", () => {
     
     // Verificar se o jogador atual tem a MAIOR ordemJogada (último a jogar na rodada)
     const jogadorAtualObj = jogadorAtual();
-    const maxOrdemJogada = Math.max(...jogadores.map(j => j.ordemJogada || j.ordem));
-    const eraUltimoAJogar = jogadorAtualObj.ordemJogada === maxOrdemJogada || jogadorAtualObj.ordem === maxOrdemJogada;
     
-    console.log('🔍 DEBUG: jogadorAtual =', jogadorAtualObj.nome, '| ordemJogada =', jogadorAtualObj.ordemJogada || jogadorAtualObj.ordem);
+    // Usar APENAS ordemJogada (nunca ordem como fallback)
+    const ordensJogada = jogadores.map(j => j.ordemJogada).filter(o => o !== undefined);
+    const maxOrdemJogada = ordensJogada.length > 0 ? Math.max(...ordensJogada) : jogadores.length;
+    const ordemAtual = jogadorAtualObj.ordemJogada;
+    const eraUltimoAJogar = ordemAtual === maxOrdemJogada;
+    
+    console.log('🔍 DEBUG: jogadorAtual =', jogadorAtualObj.nome, '| ordemJogada =', ordemAtual);
     console.log('🔍 DEBUG: maxOrdemJogada =', maxOrdemJogada);
     console.log('🔍 DEBUG: eraUltimoAJogar =', eraUltimoAJogar);
     
