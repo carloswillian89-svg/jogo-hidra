@@ -2547,6 +2547,20 @@ if (musicaSlider && musicaValue) {
 
 // Aguardar DOM estar pronto antes de inicializar
 document.addEventListener('DOMContentLoaded', () => {
+    // Tentar tocar música após primeira interação do usuário
+    const iniciarMusica = () => {
+        if (musicaFundo.paused) {
+            musicaFundo.play()
+                .then(() => console.log('🎵 Música de fundo iniciada'))
+                .catch(err => console.log('Aguardando interação para iniciar música'));
+        }
+    };
+    
+    // Adicionar listeners para iniciar música na primeira interação
+    ['click', 'keydown', 'touchstart'].forEach(eventType => {
+        document.addEventListener(eventType, iniciarMusica, { once: true });
+    });
+    
     // Criar socket global para uso no multiplayer.js
     let socket = null;
 

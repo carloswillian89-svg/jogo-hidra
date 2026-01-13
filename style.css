@@ -955,21 +955,21 @@ body {
 /* Controle de Volume */
 #controles-audio-container {
     position: fixed;
-    top: 20px;
-    left: 20px;
+    top: 10px;
+    left: 10px;
     z-index: 1000;
     display: flex;
-    flex-direction: column;
-    gap: 10px;
+    flex-direction: row;
+    gap: 8px;
 }
 
 .controle-volume {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 10px 15px;
+    gap: 6px;
+    padding: 6px 10px;
     background: rgba(0, 0, 0, 0.85);
-    border-radius: 8px;
+    border-radius: 6px;
     border: 2px solid #4ecdc4;
     backdrop-filter: blur(10px);
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
@@ -983,7 +983,7 @@ body {
 
 #volume-icon,
 #musica-icon {
-    font-size: 24px;
+    font-size: 18px;
     user-select: none;
 }
 
@@ -1002,9 +1002,9 @@ body {
 
 #volume-slider,
 #musica-slider {
-    flex: 1;
-    height: 6px;
-    border-radius: 3px;
+    width: 80px;
+    height: 4px;
+    border-radius: 2px;
     outline: none;
     -webkit-appearance: none;
     cursor: pointer;
@@ -1022,8 +1022,8 @@ body {
 #musica-slider::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
-    width: 18px;
-    height: 18px;
+    width: 14px;
+    height: 14px;
     background: white;
     border-radius: 50%;
     cursor: pointer;
@@ -1047,8 +1047,8 @@ body {
 
 #volume-slider::-moz-range-thumb,
 #musica-slider::-moz-range-thumb {
-    width: 18px;
-    height: 18px;
+    width: 14px;
+    height: 14px;
     background: white;
     border-radius: 50%;
     cursor: pointer;
@@ -1071,17 +1071,17 @@ body {
 }
 
 #volume-value {
-    min-width: 45px;
+    min-width: 35px;
     text-align: right;
     font-weight: bold;
     color: #4ecdc4;
-    font-size: 14px;
+    font-size: 11px;
 }
 
 #musica-value {
-    min-width: 45px;
+    min-width: 35px;
     text-align: right;
     font-weight: bold;
     color: #ff6b6b;
-    font-size: 14px;
+    font-size: 11px;
 }
