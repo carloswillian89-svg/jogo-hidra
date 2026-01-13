@@ -222,7 +222,10 @@ io.on('connection', (socket) => {
         const todosComPersonagem = sala.jogadores.every(j => j.personagem !== null);
         const todosProntos = sala.jogadores.every(j => j.pronto);
         
-        if (sala.jogadores.length >= 2 && todosComPersonagem && todosProntos) {
+        // 🔥 VERIFICAR: Apenas embaralhar se NENHUM jogador tiver ID atribuído ainda
+        const alguemTemId = sala.jogadores.some(j => j.id !== null);
+        
+        if (sala.jogadores.length >= 2 && todosComPersonagem && todosProntos && !alguemTemId) {
             // Aguardar um pouco para garantir que todos receberam o status de pronto
             setTimeout(() => {
                 // 🔥 Embaralhar E atribuir IDs numéricos AQUI (antes de iniciar jogo)
@@ -246,6 +249,28 @@ io.on('connection', (socket) => {
 
                 console.log(`🎮 Jogadores redirecionados para o jogo na sala ${dados.codigoSala} (aguardando início)`);
             }, 500);
+        } else if (sala.jogadores.length >= 2 && todosComPersonagem && todosProntos && alguemTemId) {
+            // Se já tem IDs atribuídos, apenas adicionar IDs aos novos jogadores sem embaralhar
+            const proximoId = Math.max(...sala.jogadores.filter(j => j.id !== null).map(j => j.id)) + 1;
+            sala.jogadores.forEach((j, idx) => {
+                if (j.id === null) {
+                    j.id = proximoId + (idx - sala.jogadores.findIndex(jj => jj.id === null));
+                    j.ordem = j.id;
+                }
+            });
+            
+            console.log(`✅ Novos jogadores receberam IDs (sem embaralhar):`, sala.jogadores.map(j => `ID:${j.id} ${j.nome}`));
+            
+            // Reenviar jogo-iniciado para os novos jogadores
+            io.to(dados.codigoSala).emit('jogo-iniciado', {
+                jogadores: sala.jogadores.map(j => ({
+                    id: j.id,
+                    socketId: j.socketId,
+                    nome: j.nome,
+                    personagem: j.personagem,
+                    ordem: j.ordem
+                }))
+            });
         }
     });
 
