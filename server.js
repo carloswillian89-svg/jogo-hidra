@@ -297,10 +297,11 @@ io.on('connection', (socket) => {
         });
         console.log(`📤 Estado da sala enviado: ${sala.estado}`);
         
-        // 🔥 Se jogadores já têm IDs atribuídos, reenviar jogo-iniciado
+        // 🔥 Se jogadores já têm IDs atribuídos mas SEM tabuleiro, reenviar jogo-iniciado
+        // Se já tiver tabuleiro, apenas enviar receber-tabuleiro (não gerar novo)
         const todosTemId = sala.jogadores.every(j => j.id !== null);
-        if (todosTemId) {
-            console.log(`📤 Reenviando jogo-iniciado com IDs para ${socket.id}`);
+        if (todosTemId && !sala.tabuleiro) {
+            console.log(`📤 Reenviando jogo-iniciado com IDs para ${socket.id} (sem tabuleiro ainda)`);
             socket.emit('jogo-iniciado', {
                 jogadores: sala.jogadores.map(j => ({
                     id: j.id,
@@ -312,7 +313,7 @@ io.on('connection', (socket) => {
             });
         }
         
-        // Se já tiver tabuleiro, enviar para este jogador
+        // Se já tiver tabuleiro, enviar apenas o estado salvo (NÃO gerar novo)
         if (sala.tabuleiro) {
             console.log(`📤 [RECONEXÃO] Enviando tabuleiro salvo para ${socket.id}`);
             console.log(`  📊 Matriz linha 0:`, sala.tabuleiro[0]);
