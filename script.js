@@ -66,6 +66,14 @@ function ehMinhaVez() {
 function meuJogadorEstaNoTile(tileId) {
     const meuId = obterMeuJogadorId();
     const meuJogador = jogadores.find(j => j.id === meuId);
+    
+    console.log('🔍 meuJogadorEstaNoTile:');
+    console.log('  📌 tileId procurado:', tileId, typeof tileId);
+    console.log('  👤 meuId:', meuId);
+    console.log('  👤 meuJogador:', meuJogador);
+    console.log('  📍 meuJogador.tileId:', meuJogador?.tileId, typeof meuJogador?.tileId);
+    console.log('  ✅ Resultado:', meuJogador && meuJogador.tileId === tileId);
+    
     return meuJogador && meuJogador.tileId === tileId;
 }
 
