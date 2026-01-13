@@ -45,28 +45,22 @@ function inicializarJogoMultiplayer(jogadoresData) {
     
     const socket = window.socket;
     meuSocketId = socket.id;
-    console.log('🎮 Inicializando jogo multiplayer com socket:', meuSocketId);
-    console.log('📋 Dados dos jogadores:', jogadoresData);
-    console.log('📋 Código da sala:', codigoSala);
+    console.log('Inicializando multiplayer - Sala:', codigoSala);
     
     // Primeiro configurar eventos para receber respostas
     configurarEventosSocket();
     
     // Depois reentrar na sala
-    console.log('📤 Emitindo reconectar-sala com:', { codigoSala, socketId: meuSocketId });
     socket.emit('reconectar-sala', { 
         codigoSala: codigoSala,
         socketId: meuSocketId
     });
-    console.log('✅ Evento reconectar-sala emitido');
         
     // Configurar jogadores baseado nos dados do lobby
     configurarJogadoresMultiplayer(jogadoresData);
     
     // Verificar se sou o host pela ordem salva
     const minhaOrdem = parseInt(sessionStorage.getItem('minhaOrdem')) || 1;
-    console.log('👤 Minha ordem:', minhaOrdem);
-    console.log('📊 Estado atual tabuleiroMatriz:', tabuleiroMatriz ? 'existe' : 'null');
     
     // Flag para controlar se já recebeu tabuleiro do servidor
     let tabuleiroRecebido = false;
@@ -93,7 +87,6 @@ function inicializarJogoMultiplayer(jogadoresData) {
     // Função global para cancelar timeout
     window.marcarTabuleiroRecebido = () => {
         tabuleiroRecebido = true;
-        console.log('⏱️ Timeout cancelado - tabuleiro recebido com sucesso');
         clearTimeout(timeoutEsperaServidor);
     };
 }
@@ -139,8 +132,6 @@ function gerarTabuleiroHost() {
     
     console.log('🚪 Tile de entrada encontrado?', tileEntrada ? 'SIM - ' + tileEntrada.dataset.id : 'NÃO');
     if (tileEntrada) {
-        console.log('✅ Tile de entrada encontrado:', tileEntrada.dataset.id);
-        console.log('👥 Jogadores antes de atribuir tile:', jogadores);
         jogadores.forEach(j => {
             j.tile = tileEntrada;
             j.tileId = tileEntrada.dataset.id;
@@ -181,9 +172,7 @@ function gerarTabuleiroHost() {
     
     // Definir jogador inicial aleatório
     jogadorAtualIndex = Math.floor(Math.random() * jogadores.length);
-    console.log('🎲 Jogador inicial sorteado:', jogadorAtualIndex);
-    console.log('  📍 Índice:', jogadorAtualIndex);
-    console.log('  👤 Jogador no índice:', jogadores[jogadorAtualIndex]);
+    console.log('Jogador inicial:', jogadorAtualIndex);
     
     // Log do personagem (mapear nome do personagem para ID)
     if (personagens && jogadores[jogadorAtualIndex].personagem) {
@@ -299,11 +288,10 @@ function atualizarLabelsJogadores() {
 
 function configurarEventosSocket() {
     const socket = window.socket;
-    console.log('⚙️ [INICIO] Configurando eventos do socket...');
+
     
     // Receber estado da sala (enviado antes do tabuleiro)
     socket.on('estado-sala', (dados) => {
-        console.log('📡 Estado da sala recebido:', dados.estado);
         // Atualizar variável no escopo da reconexão
         if (typeof window.atualizarEstadoSalaRecebido === 'function') {
             window.atualizarEstadoSalaRecebido(dados.estado);
@@ -1155,3 +1143,4 @@ if (typeof window !== 'undefined') {
         }, 100);
     });
 }
+
