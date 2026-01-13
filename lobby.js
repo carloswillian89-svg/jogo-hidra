@@ -27,6 +27,7 @@ const btnPronto = document.getElementById('btn-pronto');
 const btnSairLobby = document.getElementById('btn-sair-lobby');
 const listaJogadores = document.getElementById('lista-jogadores');
 const qtdJogadores = document.getElementById('qtd-jogadores');
+const btnIniciarJogoLobby = document.getElementById('btn-iniciar-jogo-lobby');
 
 // Inicializar carrossel
 function inicializarCarrossel() {
@@ -340,3 +341,28 @@ socket.on('jogo-iniciado', (dados) => {
 socket.on('erro', (dados) => {
     mostrarNotificacao(dados.mensagem, 'erro');
 });
+socket.on('todos-prontos', (dados) => {
+    console.log(`✅ Todos os ${dados.quantidadeJogadores} jogadores estão prontos!`);
+    
+    // Mostrar botão de iniciar apenas para o host (primeiro jogador da sala)
+    const souHost = estadoLocal.jogadores[0]?.id === estadoLocal.meuId;
+    if (souHost && btnIniciarJogoLobby) {
+        btnIniciarJogoLobby.style.display = 'block';
+        mostrarNotificacao('Todos prontos! Você pode iniciar o jogo.', 'sucesso');
+    } else {
+        mostrarNotificacao('Todos prontos! Aguardando host iniciar o jogo...', 'info');
+    }
+});
+
+// Handler para botão Iniciar Jogo
+if (btnIniciarJogoLobby) {
+    btnIniciarJogoLobby.addEventListener('click', () => {
+        console.log('🎮 Host clicou em Iniciar Jogo');
+        btnIniciarJogoLobby.disabled = true;
+        btnIniciarJogoLobby.textContent = 'Iniciando...';
+        
+        socket.emit('iniciar-jogo-lobby', {
+            codigoSala: estadoLocal.codigoSala
+        });
+    });
+}

@@ -222,56 +222,49 @@ io.on('connection', (socket) => {
         const todosComPersonagem = sala.jogadores.every(j => j.personagem !== null);
         const todosProntos = sala.jogadores.every(j => j.pronto);
         
-        // 🔥 VERIFICAR: Apenas embaralhar se NENHUM jogador tiver ID atribuído ainda
-        const alguemTemId = sala.jogadores.some(j => j.id !== null);
-        
-        if (sala.jogadores.length >= 2 && todosComPersonagem && todosProntos && !alguemTemId) {
-            // Aguardar um pouco para garantir que todos receberam o status de pronto
-            setTimeout(() => {
-                // 🔥 Embaralhar E atribuir IDs numéricos AQUI (antes de iniciar jogo)
-                sala.jogadores.sort(() => Math.random() - 0.5);
-                sala.jogadores.forEach((j, idx) => {
-                    j.id = idx + 1;  // ID numérico (1, 2, 3, 4)
-                    j.ordem = idx + 1;  // Ordem de jogo
-                });
-                
-                console.log(`✅ Jogadores embaralhados e IDs atribuídos (todos prontos):`, sala.jogadores.map(j => `ID:${j.id} ${j.nome}`));
-
-                io.to(dados.codigoSala).emit('jogo-iniciado', {
-                    jogadores: sala.jogadores.map(j => ({
-                        id: j.id,  // ID numérico
-                        socketId: j.socketId,
-                        nome: j.nome,
-                        personagem: j.personagem,
-                        ordem: j.ordem  // Usar j.ordem (já atribuído acima)
-                    }))
-                });
-
-                console.log(`🎮 Jogadores redirecionados para o jogo na sala ${dados.codigoSala} (aguardando início)`);
-            }, 500);
-        } else if (sala.jogadores.length >= 2 && todosComPersonagem && todosProntos && alguemTemId) {
-            // Se já tem IDs atribuídos, apenas adicionar IDs aos novos jogadores sem embaralhar
-            const proximoId = Math.max(...sala.jogadores.filter(j => j.id !== null).map(j => j.id)) + 1;
-            sala.jogadores.forEach((j, idx) => {
-                if (j.id === null) {
-                    j.id = proximoId + (idx - sala.jogadores.findIndex(jj => jj.id === null));
-                    j.ordem = j.id;
-                }
-            });
-            
-            console.log(`✅ Novos jogadores receberam IDs (sem embaralhar):`, sala.jogadores.map(j => `ID:${j.id} ${j.nome}`));
-            
-            // Reenviar jogo-iniciado para os novos jogadores
-            io.to(dados.codigoSala).emit('jogo-iniciado', {
-                jogadores: sala.jogadores.map(j => ({
-                    id: j.id,
-                    socketId: j.socketId,
-                    nome: j.nome,
-                    personagem: j.personagem,
-                    ordem: j.ordem
-                }))
+        // Notificar todos sobre o estado de prontidão
+        if (sala.jogadores.length >= 2 && todosComPersonagem && todosProntos) {
+            console.log(`✅ Todos os ${sala.jogadores.length} jogadores estão prontos na sala ${dados.codigoSala}`);
+            // Notificar todos que podem iniciar o jogo (host verá botão)
+            io.to(dados.codigoSala).emit('todos-prontos', {
+                quantidadeJogadores: sala.jogadores.length
             });
         }
+    });
+    
+    // Iniciar jogo do lobby (apenas host)
+    socket.on('iniciar-jogo-lobby', (dados) => {
+        const sala = salas.get(dados.codigoSala);
+        if (!sala) return;
+        
+        // Verificar se todos estão prontos
+        const todosProntos = sala.jogadores.every(j => j.pronto);
+        if (!todosProntos || sala.jogadores.length < 2) {
+            socket.emit('erro', { mensagem: 'Todos os jogadores devem estar prontos' });
+            return;
+        }
+        
+        // Embaralhar e atribuir IDs
+        sala.jogadores.sort(() => Math.random() - 0.5);
+        sala.jogadores.forEach((j, idx) => {
+            j.id = idx + 1;
+            j.ordem = idx + 1;
+        });
+        
+        console.log(`✅ Jogo iniciado pelo host - Jogadores embaralhados:`, sala.jogadores.map(j => `ID:${j.id} ${j.nome}`));
+        
+        // Redirecionar todos para o jogo
+        io.to(dados.codigoSala).emit('jogo-iniciado', {
+            jogadores: sala.jogadores.map(j => ({
+                id: j.id,
+                socketId: j.socketId,
+                nome: j.nome,
+                personagem: j.personagem,
+                ordem: j.ordem
+            }))
+        });
+        
+        console.log(`🎮 Jogadores redirecionados para o jogo na sala ${dados.codigoSala}`);
     });
 
     // Reconectar jogador na sala após carregar o jogo

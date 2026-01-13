@@ -404,6 +404,19 @@ button {
     background: #ed8936;
 }
 
+.btn-iniciar-jogo {
+    background: #4299e1;
+    color: white;
+    width: 100%;
+    margin-bottom: 10px;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
 .info-texto {
     text-align: center;
     color: #666;
