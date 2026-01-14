@@ -234,10 +234,19 @@ function exibirInfoMultiplayer(jogadoresData) {
 }
 
 function atualizarLabelsJogadores() {
+    console.log('🏷️ Atualizando labels dos inventários...');
     jogadores.forEach((jogador) => {
+        console.log(`  Jogador ID:${jogador.id} Personagem:"${jogador.personagem}" Nome:"${jogador.nome}"`);
         const label = document.querySelector(`#jogador-${jogador.id} .zona-label`);
         if (label) {
-            label.textContent = jogador.personagem || `Jogador ${jogador.id}`;
+            // Converter personagem para nome com primeira letra maiúscula
+            const nomePersonagem = jogador.personagem ? 
+                jogador.personagem.charAt(0).toUpperCase() + jogador.personagem.slice(1) : 
+                `Jogador ${jogador.id}`;
+            console.log(`    Alterando label de #jogador-${jogador.id} de "${label.textContent}" para "${nomePersonagem}"`);
+            label.textContent = nomePersonagem;
+        } else {
+            console.warn(`    ⚠️ Label não encontrado para #jogador-${jogador.id}`);
         }
     });
 }
