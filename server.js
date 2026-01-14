@@ -447,24 +447,51 @@ io.on('connection', (socket) => {
         const sala = salas.get(dados.codigoSala);
         if (!sala) return;
         
-        // Limpar estado do tabuleiro (não resetar jogadorAtualIndex aqui - será definido pelo host)
+        // Limpar estado do tabuleiro
         sala.tabuleiro = null;
         sala.tilesEstado = null;
         sala.cartasEstado = null;
         sala.entradaPosicao = null;
-        // Não resetar sala.jogadorAtualIndex - o host enviará um novo valor aleatório
+        
+        // Zerar contador de rodadas
+        sala.rodadasContador = 1;
+        
+        // Re-embaralhar ordem de jogo (ordemJogada)
+        const ordensJogo = sala.jogadores.map((j, idx) => idx + 1);
+        console.log(`🎲 ANTES do embaralhamento (reiniciar): [${ordensJogo.join(', ')}]`);
+        
+        // Algoritmo Fisher-Yates para embaralhamento correto
+        for (let i = ordensJogo.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [ordensJogo[i], ordensJogo[j]] = [ordensJogo[j], ordensJogo[i]];
+        }
+        
+        console.log(`🎲 DEPOIS do embaralhamento (reiniciar): [${ordensJogo.join(', ')}]`);
+        
+        sala.jogadores.forEach((j, idx) => {
+            j.ordemJogada = ordensJogo[idx]; // Atribui nova ordem de jogo embaralhada
+        });
+        
+        // Resetar jogadorAtualIndex para o primeiro jogador da nova ordem
+        sala.jogadorAtualIndex = 0;
+        
+        console.log(`✅ Nova ordem após reiniciar:`, sala.jogadores.map(j => `ID:${j.id} ${j.nome} (OrdemEntrada:${j.ordem}, OrdemJogo:${j.ordemJogada})`));
         
         // Enviar lista atualizada de jogadores para todos (para garantir sincronização)
         const jogadoresAtualizados = sala.jogadores.map((j, idx) => ({
-            id: j.socketId,
+            id: j.id,
+            socketId: j.socketId,
             nome: j.nome,
             personagem: j.personagem,
-            ordem: j.ordem
+            ordem: j.ordem,
+            ordemJogada: j.ordemJogada
         }));
         
         // Notificar todos os jogadores para reiniciar
         io.to(dados.codigoSala).emit('tabuleiro-reiniciado', {
-            jogadores: jogadoresAtualizados
+            jogadores: jogadoresAtualizados,
+            jogadorAtualIndex: sala.jogadorAtualIndex,
+            rodadasContador: sala.rodadasContador
         });
         
         console.log(`🔄 Tabuleiro reiniciado na sala ${dados.codigoSala}`);

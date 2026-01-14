@@ -486,10 +486,39 @@ function configurarEventosSocket() {
         console.log('🔄 Tabuleiro reiniciado! Tocando som...');
         tocarSom('reiniciarTabuleiro');
         
-        jogadores.forEach(j => {
-            j.tileId = null;
-            j.tile = null;
-        });
+        // Aplicar nova ordem dos jogadores recebida do servidor
+        if (dados.jogadores && dados.jogadores.length > 0) {
+            jogadores = dados.jogadores.map(jogadorServidor => ({
+                id: jogadorServidor.id,
+                ordem: jogadorServidor.ordem,
+                ordemJogada: jogadorServidor.ordemJogada,
+                nome: jogadorServidor.nome,
+                personagem: jogadorServidor.personagem,
+                socketId: jogadorServidor.socketId,
+                tileId: null,
+                tile: null
+            }));
+            
+            console.log('📋 Nova ordem dos jogadores:', jogadores.map(j => `${j.nome} ID:${j.id} OrdemJogo:${j.ordemJogada}`));
+        } else {
+            jogadores.forEach(j => {
+                j.tileId = null;
+                j.tile = null;
+            });
+        }
+        
+        // Aplicar jogadorAtualIndex recebido do servidor
+        if (typeof dados.jogadorAtualIndex !== 'undefined') {
+            jogadorAtualIndex = dados.jogadorAtualIndex;
+            console.log('🎮 Novo jogador inicial:', jogadorAtualIndex, '(ID:', jogadores[jogadorAtualIndex]?.id, ')');
+        }
+        
+        // Aplicar contador de rodadas recebido do servidor
+        if (typeof dados.rodadasContador !== 'undefined') {
+            rodadaAtual = dados.rodadasContador;
+            atualizarRodadaUI();
+            console.log('📊 Contador de rodadas resetado para:', rodadaAtual);
+        }
         
         const minhaOrdem = parseInt(sessionStorage.getItem('minhaOrdem')) || 1;
         

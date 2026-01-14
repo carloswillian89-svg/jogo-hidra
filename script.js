@@ -937,6 +937,22 @@ document.getElementById("btn-reiniciar-tabuleiro").addEventListener("click", () 
         // Modo local: tocar som e confirmar antes de reiniciar
         tocarSom('reiniciarTabuleiro');
         if (confirm('Deseja realmente reiniciar o jogo? Todo o progresso será perdido.')) {
+            // Zerar contador de rodadas
+            rodadaAtual = 1;
+            atualizarRodadaUI();
+            
+            // Re-embaralhar ordem dos jogadores
+            jogadores.sort(() => Math.random() - 0.5);
+            jogadores.forEach((jogador, index) => {
+                jogador.ordem = index + 1;
+                jogador.ordemJogada = index + 1;
+            });
+            
+            // Sortear novo jogador inicial
+            jogadorAtualIndex = Math.floor(Math.random() * jogadores.length);
+            console.log('🎲 Nova ordem dos jogadores:', jogadores.map(j => `ID:${j.id} OrdemJogo:${j.ordemJogada}`));
+            console.log('🎲 Novo jogador inicial:', jogadorAtualIndex, '(ID:', jogadores[jogadorAtualIndex].id, ')');
+            
             limparEstadoLocal();
             location.reload();
         }
