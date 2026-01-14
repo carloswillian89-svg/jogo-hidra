@@ -944,8 +944,18 @@ document.getElementById("btn-reiniciar-tabuleiro").addEventListener("click", () 
 })
 
 function proximoJogador() {
-    jogadorAtualIndex =
-        (jogadorAtualIndex + 1) % jogadores.length
+    // Buscar o próximo jogador baseado na ordemJogada, não no índice do array
+    const jogadorAtualObj = jogadorAtual();
+    const ordemAtual = jogadorAtualObj.ordemJogada;
+    
+    // Calcular próxima ordem (circular: 1,2,3,4 → 1,2,3,4...)
+    const proximaOrdem = (ordemAtual % jogadores.length) + 1;
+    
+    // Encontrar o jogador com essa ordemJogada
+    const proximoIndex = jogadores.findIndex(j => j.ordemJogada === proximaOrdem);
+    jogadorAtualIndex = proximoIndex !== -1 ? proximoIndex : (jogadorAtualIndex + 1) % jogadores.length;
+    
+    console.log(`🔄 Próximo jogador: ordemAtual=${ordemAtual} → proximaOrdem=${proximaOrdem} → índice=${jogadorAtualIndex} (${jogadores[jogadorAtualIndex]?.nome})`);
         
     desenharJogadores()
     // atualizar destaque das cartas-personagem
