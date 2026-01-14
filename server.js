@@ -35,6 +35,7 @@ class Sala {
         this.cartasEstado = null; // Estado das cartas
         this.entradaPosicao = null; // Posição da entrada
         this.jogadorAtualIndex = 0; // Índice do jogador atual
+        this.rodadasContador = 1; // Contador de rodadas
         this.maxJogadores = 4;
     }
 
@@ -351,7 +352,8 @@ io.on('connection', (socket) => {
             console.log(`  📊 Matriz linha 1:`, sala.tabuleiro[1]);
             console.log(`  📊 Matriz linha 2:`, sala.tabuleiro[2]);
             console.log(`  📦 tilesEstado (primeiros 5):`, sala.tilesEstado.slice(0, 5).map(t => `${t.id}:${t.tipo}`));
-            console.log(`  👥 Jogadores enviados:`, sala.jogadores.map(j => `ID:${j.id} tileId:"${j.tileId}"`));
+            console.log(`  👥 Jogadores enviados:`, sala.jogadores.map(j => `ID:${j.id} ordem:${j.ordem} ordemJogada:${j.ordemJogada} tileId:"${j.tileId}"`));
+            console.log(`  📊 Contador de rodadas: ${sala.rodadasContador || 1}`);
             console.log(`  🎯 ORIGEM: Estado salvo no servidor (não vem do host)`);
             
             socket.emit('receber-tabuleiro', {
@@ -361,7 +363,8 @@ io.on('connection', (socket) => {
                 entradaPosicao: sala.entradaPosicao,
                 jogadorAtualIndex: sala.jogadorAtualIndex,
                 jogadoresEstado: sala.jogadores,  // 🔥 CORRIGIDO: usar sala.jogadores ao invés de jogadoresEstado
-                estadoSala: sala.estado
+                estadoSala: sala.estado,
+                rodadasContador: sala.rodadasContador || 1  // 🔥 Enviar contador de rodadas
             });
             console.log(`  👥 Jogadores: ${sala.jogadores?.length || 0}, Índice atual: ${sala.jogadorAtualIndex}`);
             console.log(`  🎮 Estado da sala: ${sala.estado}`);
@@ -831,6 +834,12 @@ io.on('connection', (socket) => {
         if (dados.tipo === 'passar-turno' && dados.dados && typeof dados.dados.jogadorAtualIndex !== 'undefined') {
             sala.jogadorAtualIndex = dados.dados.jogadorAtualIndex;
             console.log(`🎮 Jogador atual atualizado: índice ${dados.dados.jogadorAtualIndex}`);
+        }
+        
+        // Se for atualizar rodada, salvar no estado da sala
+        if (dados.tipo === 'atualizar-rodada' && dados.dados && typeof dados.dados.valor !== 'undefined') {
+            sala.rodadasContador = dados.dados.valor;
+            console.log(`📊 Contador de rodadas atualizado: ${dados.dados.valor}`);
         }
 
         // Decidir se envia para TODOS ou apenas para OUTROS

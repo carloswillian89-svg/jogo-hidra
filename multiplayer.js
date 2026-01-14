@@ -281,6 +281,17 @@ function configurarEventosSocket() {
         entradaPosicao = dados.entradaPosicao;
         jogadorAtualIndex = dados.jogadorAtualIndex || 0;
         
+        // 🔥 Restaurar contador de rodadas do servidor
+        if (dados.rodadasContador !== undefined) {
+            rodadaAtual = dados.rodadasContador;
+            // Atualizar UI do contador de rodadas
+            const rodadasValor = document.querySelector('#rodadas-valor');
+            if (rodadasValor) {
+                rodadasValor.textContent = rodadaAtual;
+            }
+            console.log(`📊 Contador de rodadas restaurado: ${rodadaAtual}`);
+        }
+        
         // NÃO recalcular ordemJogada - ela já foi definida pelo servidor
         // A ordemJogada é fixa e embaralhada pelo servidor no início do jogo
         
