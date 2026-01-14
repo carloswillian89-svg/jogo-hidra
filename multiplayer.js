@@ -500,6 +500,9 @@ function configurarEventosSocket() {
             
             console.log('📋 Array jogadores final:', jogadores.map(j => `${j.nome} ID:${j.id} Ordem:${j.ordem}`));
             
+            // Atualizar labels dos inventários agora que os IDs foram atribuídos
+            atualizarLabelsJogadores();
+            
             const minhaOrdem = parseInt(sessionStorage.getItem('minhaOrdem')) || 1;
             if (minhaOrdem === 1) {
                 setTimeout(() => {
