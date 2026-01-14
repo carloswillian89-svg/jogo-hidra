@@ -187,14 +187,15 @@ function configurarJogadoresMultiplayer(jogadoresData) {
     // IDs numéricos serão atribuídos pelo servidor quando todos ficarem prontos
     jogadores = jogadoresData.map(j => ({
         id: null,  // Será atribuído pelo servidor no evento 'jogo-iniciado'
-        ordem: j.ordem,
+        ordem: j.ordem, // Ordem de entrada no lobby
+        ordemJogada: null, // Ordem de jogar (será atribuída pelo servidor)
         nome: j.nome,
         personagem: j.personagem,
         socketId: j.id,
         tileId: null
     }));
     
-    console.log('👥 Jogadores configurados:', jogadores.map(j => `${j.nome} (Ordem: ${j.ordem}, Personagem: ${j.personagem}, ID: pendente)`));
+    console.log('👥 Jogadores configurados:', jogadores.map(j => `${j.nome} (Ordem entrada: ${j.ordem}, Personagem: ${j.personagem}, ID: pendente)`));
     
     // Não definir jogadorAtualIndex aqui - será recebido do host via 'receber-tabuleiro'
     // O host já sorteou e enviou o jogador inicial correto
@@ -493,12 +494,13 @@ function configurarEventosSocket() {
                 if (jogadorLocal) {
                     jogadorLocal.id = jogadorServidor.id;
                     jogadorLocal.ordem = jogadorServidor.ordem;
+                    jogadorLocal.ordemJogada = jogadorServidor.ordemJogada;
                     jogadorLocal.socketId = jogadorServidor.socketId;
-                    console.log(`✅ Jogador ${jogadorLocal.nome} atualizado: ID=${jogadorLocal.id}, Ordem=${jogadorLocal.ordem}`);
+                    console.log(`✅ Jogador ${jogadorLocal.nome} atualizado: ID=${jogadorLocal.id}, Ordem entrada=${jogadorLocal.ordem}, Ordem jogo=${jogadorLocal.ordemJogada}`);
                 }
             });
             
-            console.log('📋 Array jogadores final:', jogadores.map(j => `${j.nome} ID:${j.id} Ordem:${j.ordem}`));
+            console.log('📋 Array jogadores final:', jogadores.map(j => `${j.nome} ID:${j.id} OrdemEntrada:${j.ordem} OrdemJogo:${j.ordemJogada}`));
             
             // Atualizar labels dos inventários agora que os IDs foram atribuídos
             atualizarLabelsJogadores();

@@ -70,7 +70,8 @@ class Jogador {
         this.personagem = null; // será escolhido depois
         this.pronto = false;
         this.id = null; // ID numérico será atribuído quando o jogo iniciar
-        this.ordem = null; // Ordem de jogo
+        this.ordem = null; // Ordem de entrada no lobby
+        this.ordemJogada = null; // Ordem de jogo (embaralhada)
         this.tileId = null; // Posição atual no tabuleiro
     }
 }
@@ -248,18 +249,21 @@ io.on('connection', (socket) => {
             return;
         }
         
-        // Atribuir IDs respeitando a ordem original do lobby
-        // Ordenar por ordem de entrada (garantir consistência)
+        // Atribuir IDs fixos baseados na ordem de entrada no lobby
         sala.jogadores.sort((a, b) => (a.ordem || 0) - (b.ordem || 0));
         sala.jogadores.forEach((j, idx) => {
-            j.id = idx + 1;
-            // Manter a ordem original se já foi definida
-            if (j.ordem === null || j.ordem === undefined) {
-                j.ordem = idx + 1;
-            }
+            j.id = idx + 1; // ID fixo baseado na ordem de entrada
         });
         
-        console.log(`✅ Jogo iniciado pelo host - Jogadores ordenados:`, sala.jogadores.map(j => `ID:${j.id} ${j.nome} Ordem:${j.ordem}`));
+        // Embaralhar apenas a ordem de jogo (ordemJogada)
+        const ordensJogo = sala.jogadores.map((j, idx) => idx + 1);
+        ordensJogo.sort(() => Math.random() - 0.5); // Embaralha as ordens de jogo
+        
+        sala.jogadores.forEach((j, idx) => {
+            j.ordemJogada = ordensJogo[idx]; // Atribui ordem de jogo embaralhada
+        });
+        
+        console.log(`✅ Jogo iniciado pelo host - Jogadores:`, sala.jogadores.map(j => `ID:${j.id} ${j.nome} (Ordem de entrada:${j.ordem}, Ordem de jogo:${j.ordemJogada})`));
         
         // Redirecionar todos para o jogo
         io.to(dados.codigoSala).emit('jogo-iniciado', {
@@ -268,7 +272,8 @@ io.on('connection', (socket) => {
                 socketId: j.socketId,
                 nome: j.nome,
                 personagem: j.personagem,
-                ordem: j.ordem
+                ordem: j.ordem,
+                ordemJogada: j.ordemJogada
             }))
         });
         
@@ -334,7 +339,8 @@ io.on('connection', (socket) => {
                     socketId: j.socketId,
                     nome: j.nome,
                     personagem: j.personagem,
-                    ordem: j.ordem
+                    ordem: j.ordem,
+                    ordemJogada: j.ordemJogada
                 }))
             });
         }
