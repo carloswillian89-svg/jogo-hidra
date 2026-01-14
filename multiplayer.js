@@ -137,15 +137,14 @@ function gerarTabuleiroHost() {
         imagemMiniatura: c.imagemMiniatura
     }));
     
-    // Definir jogador inicial aleatório
-    jogadorAtualIndex = Math.floor(Math.random() * jogadores.length);
-    console.log(`🎲 Jogador inicial sorteado: índice ${jogadorAtualIndex} - ${jogadores[jogadorAtualIndex]?.nome} (${jogadores[jogadorAtualIndex]?.personagem})`);
+    // Determinar jogador inicial baseado na ordemJogada atribuída pelo servidor
+    // O jogador com ordemJogada === 1 começa
+    jogadorAtualIndex = jogadores.findIndex(j => j.ordemJogada === 1);
+    if (jogadorAtualIndex === -1) jogadorAtualIndex = 0; // Fallback
+    console.log(`🎲 Jogador inicial determinado: índice ${jogadorAtualIndex} - ${jogadores[jogadorAtualIndex]?.nome} (ordemJogada: ${jogadores[jogadorAtualIndex]?.ordemJogada})`);
     
-    // 🔢 Calcular e salvar ordem de jogada FIXA para cada jogador
-    jogadores.forEach((jogador, indice) => {
-        jogador.ordemJogada = ((indice - jogadorAtualIndex + jogadores.length) % jogadores.length) + 1;
-        console.log(`  ${jogador.nome}: ordemJogada = ${jogador.ordemJogada}`);
-    });
+    // ordemJogada já foi definida pelo servidor, não recalcular
+    console.log('📋 Ordem de jogo:', jogadores.map(j => `${j.nome}:${j.ordemJogada}`).join(', '));
     
     // Atualizar UI do turno
     if (typeof atualizarInfoTurno === 'function') {
@@ -276,10 +275,8 @@ function configurarEventosSocket() {
         entradaPosicao = dados.entradaPosicao;
         jogadorAtualIndex = dados.jogadorAtualIndex || 0;
         
-        // 🔢 Calcular e salvar ordem de jogada FIXA para cada jogador
-        jogadores.forEach((jogador, indice) => {
-            jogador.ordemJogada = ((indice - jogadorAtualIndex + jogadores.length) % jogadores.length) + 1;
-        });
+        // NÃO recalcular ordemJogada - ela já foi definida pelo servidor
+        // A ordemJogada é fixa e embaralhada pelo servidor no início do jogo
         
         criarTabuleiro();
         
