@@ -487,20 +487,20 @@ function configurarEventosSocket() {
     // Handler para receber jogadores com IDs do servidor (após todos prontos)
     socket.on('jogo-iniciado', (dados) => {
         console.log('🎮 Evento jogo-iniciado recebido com jogadores:', dados.jogadores);
-        // Atualizar jogadores com IDs recebidos do servidor
+        // Substituir completamente o array de jogadores com os dados do servidor
+        // Isso garante que a ordem e IDs estejam corretos mesmo após reconexão
         if (dados.jogadores && dados.jogadores.length > 0) {
-            dados.jogadores.forEach(jogadorServidor => {
-                const jogadorLocal = jogadores.find(j => j.nome === jogadorServidor.nome);
-                if (jogadorLocal) {
-                    jogadorLocal.id = jogadorServidor.id;
-                    jogadorLocal.ordem = jogadorServidor.ordem;
-                    jogadorLocal.ordemJogada = jogadorServidor.ordemJogada;
-                    jogadorLocal.socketId = jogadorServidor.socketId;
-                    console.log(`✅ Jogador ${jogadorLocal.nome} atualizado: ID=${jogadorLocal.id}, Ordem entrada=${jogadorLocal.ordem}, Ordem jogo=${jogadorLocal.ordemJogada}`);
-                }
-            });
+            jogadores = dados.jogadores.map(jogadorServidor => ({
+                id: jogadorServidor.id,
+                ordem: jogadorServidor.ordem,
+                ordemJogada: jogadorServidor.ordemJogada,
+                nome: jogadorServidor.nome,
+                personagem: jogadorServidor.personagem,
+                socketId: jogadorServidor.socketId,
+                tileId: null // Será atualizado quando receber o tabuleiro
+            }));
             
-            console.log('📋 Array jogadores final:', jogadores.map(j => `${j.nome} ID:${j.id} OrdemEntrada:${j.ordem} OrdemJogo:${j.ordemJogada}`));
+            console.log('📋 Array jogadores substituído:', jogadores.map(j => `${j.nome} ID:${j.id} OrdemEntrada:${j.ordem} OrdemJogo:${j.ordemJogada}`));
             
             // Atualizar labels dos inventários agora que os IDs foram atribuídos
             atualizarLabelsJogadores();
