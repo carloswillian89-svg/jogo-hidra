@@ -880,9 +880,10 @@ document.getElementById("fimTurno").addEventListener("click", () => {
     const ordemAtual = jogadorAtualObj.ordemJogada;
     const eraUltimoAJogar = ordemAtual === maxOrdemJogada;
     
-    console.log('🔍 DEBUG: jogadorAtual =', jogadorAtualObj.nome, '| ordemJogada =', ordemAtual);
-    console.log('🔍 DEBUG: maxOrdemJogada =', maxOrdemJogada);
-    console.log('🔍 DEBUG: eraUltimoAJogar =', eraUltimoAJogar);
+    console.log('🔍 DEBUG fimTurno: jogadorAtual =', jogadorAtualObj.nome, '| ordemJogada =', ordemAtual);
+    console.log('🔍 DEBUG fimTurno: Todas ordemJogada =', ordensJogada);
+    console.log('🔍 DEBUG fimTurno: maxOrdemJogada =', maxOrdemJogada);
+    console.log('🔍 DEBUG fimTurno: eraUltimoAJogar =', eraUltimoAJogar);
     
     proximoJogador()
     atualizarInfoTurno(true) // Mostrar notificação ao encerrar turno

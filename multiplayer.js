@@ -139,8 +139,14 @@ function gerarTabuleiroHost() {
     
     // Determinar jogador inicial baseado na ordemJogada atribuída pelo servidor
     // O jogador com ordemJogada === 1 começa
+    console.log('🔍 DEBUG gerarTabuleiroHost - Jogadores antes de buscar ordemJogada=1:', 
+        jogadores.map(j => `${j.nome} ID:${j.id} ordemJogada:${j.ordemJogada}`));
+    
     jogadorAtualIndex = jogadores.findIndex(j => j.ordemJogada === 1);
-    if (jogadorAtualIndex === -1) jogadorAtualIndex = 0; // Fallback
+    if (jogadorAtualIndex === -1) {
+        console.warn('⚠️ Nenhum jogador com ordemJogada=1 encontrado! Usando índice 0 como fallback');
+        jogadorAtualIndex = 0;
+    }
     console.log(`🎲 Jogador inicial determinado: índice ${jogadorAtualIndex} - ${jogadores[jogadorAtualIndex]?.nome} (ordemJogada: ${jogadores[jogadorAtualIndex]?.ordemJogada})`);
     
     // ordemJogada já foi definida pelo servidor, não recalcular
