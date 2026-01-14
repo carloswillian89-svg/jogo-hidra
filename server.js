@@ -89,6 +89,8 @@ io.on('connection', (socket) => {
         const sala = new Sala(codigo);
         const jogador = new Jogador(socket.id, dados.nome);
         
+        // O primeiro jogador sempre tem ordem 1
+        jogador.ordem = 1;
         sala.adicionarJogador(jogador);
         salas.set(codigo, sala);
         
@@ -125,6 +127,8 @@ io.on('connection', (socket) => {
         }
 
         const jogador = new Jogador(socket.id, dados.nome);
+        // Definir ordem antes de adicionar
+        jogador.ordem = sala.jogadores.length + 1;
         sala.adicionarJogador(jogador);
         socket.join(dados.codigo);
 
@@ -244,14 +248,18 @@ io.on('connection', (socket) => {
             return;
         }
         
-        // Embaralhar e atribuir IDs
-        sala.jogadores.sort(() => Math.random() - 0.5);
+        // Atribuir IDs respeitando a ordem original do lobby
+        // Ordenar por ordem de entrada (garantir consistência)
+        sala.jogadores.sort((a, b) => (a.ordem || 0) - (b.ordem || 0));
         sala.jogadores.forEach((j, idx) => {
             j.id = idx + 1;
-            j.ordem = idx + 1;
+            // Manter a ordem original se já foi definida
+            if (j.ordem === null || j.ordem === undefined) {
+                j.ordem = idx + 1;
+            }
         });
         
-        console.log(`✅ Jogo iniciado pelo host - Jogadores embaralhados:`, sala.jogadores.map(j => `ID:${j.id} ${j.nome}`));
+        console.log(`✅ Jogo iniciado pelo host - Jogadores ordenados:`, sala.jogadores.map(j => `ID:${j.id} ${j.nome} Ordem:${j.ordem}`));
         
         // Redirecionar todos para o jogo
         io.to(dados.codigoSala).emit('jogo-iniciado', {
