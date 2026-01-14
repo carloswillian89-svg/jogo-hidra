@@ -258,7 +258,15 @@ io.on('connection', (socket) => {
         
         // Embaralhar apenas a ordem de jogo (ordemJogada)
         const ordensJogo = sala.jogadores.map((j, idx) => idx + 1);
-        ordensJogo.sort(() => Math.random() - 0.5); // Embaralha as ordens de jogo
+        console.log(`🎲 ANTES do embaralhamento: [${ordensJogo.join(', ')}]`);
+        
+        // Algoritmo Fisher-Yates para embaralhamento correto
+        for (let i = ordensJogo.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [ordensJogo[i], ordensJogo[j]] = [ordensJogo[j], ordensJogo[i]];
+        }
+        
+        console.log(`🎲 DEPOIS do embaralhamento: [${ordensJogo.join(', ')}]`);
         
         sala.jogadores.forEach((j, idx) => {
             j.ordemJogada = ordensJogo[idx]; // Atribui ordem de jogo embaralhada
