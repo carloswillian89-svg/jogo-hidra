@@ -361,13 +361,15 @@ function configurarEventosSocket() {
         
         // Se recebeu estado dos jogadores, PRIMEIRO atualizar IDs e então aplicar posições
         if (dados.jogadoresEstado && dados.jogadoresEstado.length > 0) {
-            // PRIMEIRO: Atualizar IDs dos jogadores locais baseado no servidor
+            // PRIMEIRO: Atualizar IDs e ordemJogada dos jogadores locais baseado no servidor
             jogadores.forEach(j => {
                 const estadoServidor = dados.jogadoresEstado.find(ej => 
                     ej.nome === j.nome || ej.ordem === j.ordem
                 );
                 if (estadoServidor) {
                     j.id = estadoServidor.id;
+                    j.ordemJogada = estadoServidor.ordemJogada; // 🔥 RESTAURAR ORDEMJOGADA
+                    console.log(`📋 Restaurando jogador ${j.nome}: ID=${j.id} ordemJogada=${j.ordemJogada}`);
                 }
             });
             
