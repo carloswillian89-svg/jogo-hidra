@@ -1315,21 +1315,40 @@ function gritoHidra() {
 }
 
 function executarGritoHidra(linha, coluna, direcaoLinha, direcaoColuna, rotacoesLinha, rotacoesColuna) {
-    console.log(`🐉 [EXEC] executarGritoHidra - Linha ${linha} (${direcaoLinha}), Coluna ${coluna} (${direcaoColuna})`);
+    console.log(`🐉 [EXEC] executarGritoHidra - Linha ${linha} (${ direcaoLinha}), Coluna ${coluna} (${direcaoColuna})`);
     
-    // Salvar estado de cartas e jogadores ANTES do movimento
-    const estadoCartas = new Map();
-    const estadoJogadores = new Map();
+    // Salvar estado de cartas e jogadores ANTES do movimento (baseado no índice físico)
+    const cartasPorIndice = new Map();  // índice do tile → [cartaIds]
+    const jogadoresPorIndice = new Map();  // índice do tile → [jogadorIds]
     
+    // Coletar estado atual de todas as cartas
     cartas.forEach((carta, cartaId) => {
         if (carta.zona && carta.zona.startsWith('tile-')) {
-            estadoCartas.set(cartaId, carta.zona.replace('tile-', ''));
+            const tileId = carta.zona.replace('tile-', '');
+            // Encontrar o índice físico deste tile
+            const tiles = Array.from(tabuleiro.children);
+            const indice = tiles.findIndex(t => t.dataset.id === tileId);
+            if (indice !== -1) {
+                if (!cartasPorIndice.has(indice)) {
+                    cartasPorIndice.set(indice, []);
+                }
+                cartasPorIndice.get(indice).push(cartaId);
+            }
         }
     });
     
+    // Coletar estado atual de todos os jogadores
     jogadores.forEach(jogador => {
         if (jogador.tileId) {
-            estadoJogadores.set(jogador.id, jogador.tileId);
+            // Encontrar o índice físico deste tile
+            const tiles = Array.from(tabuleiro.children);
+            const indice = tiles.findIndex(t => t.dataset.id === jogador.tileId);
+            if (indice !== -1) {
+                if (!jogadoresPorIndice.has(indice)) {
+                    jogadoresPorIndice.set(indice, []);
+                }
+                jogadoresPorIndice.get(indice).push(jogador.id);
+            }
         }
     });
     
@@ -1367,9 +1386,9 @@ function executarGritoHidra(linha, coluna, direcaoLinha, direcaoColuna, rotacoes
         // Aplicar rotação aleatória (exceto tiles especiais)
         const tiposEspeciais = ['entrada', 'saida', 'hidra'];
         const novaRotacao = tiposEspeciais.includes(tile.tipo) ? 0 : rotacoesLinha[idx];
-        tile.rotacao = novaRotacao;
+        tile.rotacao = novaRotacao;  // Atualizar propriedade do objeto
         tile.style.transform = `rotate(${novaRotacao}deg)`;
-        tile.dataset.rotacao = novaRotacao;
+        tile.dataset.rotacao = novaRotacao;  // Atualizar dataset
         
         // Aplicar contra-rotação nos overlays para que cartas e jogadores não girem
         const contraRot = -novaRotacao;
@@ -1422,9 +1441,9 @@ function executarGritoHidra(linha, coluna, direcaoLinha, direcaoColuna, rotacoes
         // Aplicar rotação aleatória (exceto tiles especiais)
         const tiposEspeciais = ['entrada', 'saida', 'hidra'];
         const novaRotacao = tiposEspeciais.includes(tile.tipo) ? 0 : rotacoesColuna[idx];
-        tile.rotacao = novaRotacao;
+        tile.rotacao = novaRotacao;  // Atualizar propriedade do objeto
         tile.style.transform = `rotate(${novaRotacao}deg)`;
-        tile.dataset.rotacao = novaRotacao;
+        tile.dataset.rotacao = novaRotacao;  // Atualizar dataset
         
         // Aplicar contra-rotação nos overlays para que cartas e jogadores não girem
         const contraRot = -novaRotacao;
@@ -1447,54 +1466,80 @@ function executarGritoHidra(linha, coluna, direcaoLinha, direcaoColuna, rotacoes
         tabuleiroMatriz[lin][coluna] = novaOrdemColuna[lin];
     }
     
-    // PASSO 3: Calcular novo mapeamento de IDs após movimento
-    // Os tiles se moveram, então os IDs precisam ser atualizados
-    const mapeamentoIds = new Map(); // oldId -> newId
+    // PASSO 3: Atualizar cartas e jogadores baseado no movimento CIRCULAR
+    // Quando tiles se movem circularmente, cartas e jogadores devem seguir o movimento
     
-    // Mapear linha
-    idsTilesLinha.forEach((oldId, idx) => {
-        let novaPosicao;
+    // Processar linha: criar novo mapeamento de índices
+    const novosIndicesLinha = new Map();  // índice antigo → índice novo
+    for (let col = 0; col < TAMANHO; col++) {
+        const indiceAntigo = linha * TAMANHO + col;
+        let novoCol;
         if (direcaoLinha === 'direita') {
-            novaPosicao = (idx + 1) % TAMANHO;
+            novoCol = (col + 1) % TAMANHO;
         } else {
-            novaPosicao = (idx - 1 + TAMANHO) % TAMANHO;
+            novoCol = (col - 1 + TAMANHO) % TAMANHO;
         }
-        const newId = `${linha}-${novaPosicao}`;
-        mapeamentoIds.set(oldId, newId);
-    });
+        const indiceNovo = linha * TAMANHO + novoCol;
+        novosIndicesLinha.set(indiceAntigo, indiceNovo);
+    }
     
-    // Mapear coluna (cuidado com interseção)
+    // Processar coluna: criar novo mapeamento de índices
+    const novosIndicesColuna = new Map();  // índice antigo → índice novo
     for (let lin = 0; lin < TAMANHO; lin++) {
-        const oldId = `${lin}-${coluna}`;
-        let novaPosicao;
+        const indiceAntigo = lin * TAMANHO + coluna;
+        let novoLin;
         if (direcaoColuna === 'baixo') {
-            novaPosicao = (lin + 1) % TAMANHO;
+            novoLin = (lin + 1) % TAMANHO;
         } else {
-            novaPosicao = (lin - 1 + TAMANHO) % TAMANHO;
+            novoLin = (lin - 1 + TAMANHO) % TAMANHO;
         }
-        const newId = `${novaPosicao}-${coluna}`;
+        const indiceNovo = novoLin * TAMANHO + coluna;
         
-        // Se já foi mapeado pela linha, manter o mapeamento da linha
-        if (!mapeamentoIds.has(oldId)) {
-            mapeamentoIds.set(oldId, newId);
+        // Se este tile não foi afetado pela linha, usar mapeamento da coluna
+        if (!novosIndicesLinha.has(indiceAntigo)) {
+            novosIndicesColuna.set(indiceAntigo, indiceNovo);
         }
     }
     
-    // PASSO 4: Atualizar cartas e jogadores baseado no mapeamento
-    estadoCartas.forEach((oldTileId, cartaId) => {
-        const carta = cartas.get(cartaId);
-        if (carta) {
-            const newTileId = mapeamentoIds.get(oldTileId) || oldTileId;
-            carta.zona = `tile-${newTileId}`;
-        }
+    // Combinar mapeamentos (linha tem prioridade sobre coluna na interseção)
+    const mapeamentoCompleto = new Map([...novosIndicesColuna, ...novosIndicesLinha]);
+    
+    // Criar mapeamento de IDs baseado nos novos índices
+    const tiles = Array.from(tabuleiro.children);
+    const mapeamentoIds = new Map();  // oldId → newId
+    
+    mapeamentoCompleto.forEach((novoIndice, indiceAntigo) => {
+        const oldId = tiles[indiceAntigo].dataset.id;
+        const newId = tiles[novoIndice].dataset.id;
+        mapeamentoIds.set(oldId, newId);
     });
     
-    estadoJogadores.forEach((oldTileId, jogadorId) => {
-        const jogador = jogadores.find(j => j.id === jogadorId);
-        if (jogador) {
-            const newTileId = mapeamentoIds.get(oldTileId) || oldTileId;
-            jogador.tileId = newTileId;
-        }
+    // Atualizar cartas baseado no movimento dos tiles
+    cartasPorIndice.forEach((cartasIds, indiceAntigo) => {
+        const novoIndice = mapeamentoCompleto.get(indiceAntigo) || indiceAntigo;
+        const newTileId = tiles[novoIndice].dataset.id;
+        
+        cartasIds.forEach(cartaId => {
+            const carta = cartas.get(cartaId);
+            if (carta) {
+                carta.zona = `tile-${newTileId}`;
+                console.log(`  🎴 Carta ${cartaId}: índice ${indiceAntigo} → ${novoIndice} (tile ${newTileId})`);
+            }
+        });
+    });
+    
+    // Atualizar jogadores baseado no movimento dos tiles
+    jogadoresPorIndice.forEach((jogadoresIds, indiceAntigo) => {
+        const novoIndice = mapeamentoCompleto.get(indiceAntigo) || indiceAntigo;
+        const newTileId = tiles[novoIndice].dataset.id;
+        
+        jogadoresIds.forEach(jogadorId => {
+            const jogador = jogadores.find(j => j.id === jogadorId);
+            if (jogador) {
+                jogador.tileId = newTileId;
+                console.log(`  👤 Jogador ${jogadorId}: índice ${indiceAntigo} → ${novoIndice} (tile ${newTileId})`);
+            }
+        });
     });
     
     // Re-renderizar cartas e jogadores
@@ -2451,17 +2496,19 @@ if (botaoGritoHidraCombate) {
 function gritoHidraCombate() {
     console.log('🐉 [INICIO] gritoHidraCombate() chamado');
     
+    // Executar localmente PRIMEIRO
+    console.log('🐉 Executando grito-hidra-combate localmente');
+    executarGritoHidraCombate(dificuldade);
+    
     // Verificar se está em modo multiplayer
     const modoMultiplayer = sessionStorage.getItem('modoMultiplayer') === 'true';
     
+    // Depois sincronizar com outros jogadores
     if (modoMultiplayer && typeof enviarAcao === 'function') {
         console.log('🐉 [MULTIPLAYER] Enviando grito-hidra-combate para servidor');
         enviarAcao('grito-hidra-combate', {
             dificuldade: dificuldade
         });
-    } else {
-        console.log('🐉 [LOCAL] Executando grito-hidra-combate localmente');
-        executarGritoHidraCombate(dificuldade);
     }
 }
 
