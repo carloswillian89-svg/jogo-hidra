@@ -94,7 +94,22 @@ const CONEXOES_BASE = {
 }
 
 let tileArrastado = null
-const TAMANHO = 5
+
+// Configurações globais do jogo
+let dificuldade = localStorage.getItem('dificuldade') || 'normal'; // 'facil', 'normal', 'dificil'
+let tamanhoTabuleiro = localStorage.getItem('tamanhoTabuleiro') || 'pequeno'; // 'pequeno', 'medio', 'grande'
+
+// Calcular TAMANHO baseado na configuração
+function calcularTamanhoTabuleiro() {
+    switch(tamanhoTabuleiro) {
+        case 'pequeno': return 5;
+        case 'medio': return 6;
+        case 'grande': return 7;
+        default: return 5;
+    }
+}
+
+let TAMANHO = calcularTamanhoTabuleiro();
 let tabuleiroMatriz = []
 
 let jogadores = [
@@ -193,10 +208,11 @@ function gerarMatriz() {
        TILES FIXOS (REGRAS DO JOGO)
        =============================== */
 
-    // entrada (linha 4, coluna aleatória)
+    // entrada (última linha, coluna aleatória)
+    const ultimaLinha = TAMANHO - 1;
     const colunaEntrada = Math.floor(Math.random() * TAMANHO)
-    tabuleiroMatriz[4][colunaEntrada] = "entrada"
-    entradaPosicao = { linha: 4, coluna: colunaEntrada }
+    tabuleiroMatriz[ultimaLinha][colunaEntrada] = "entrada"
+    entradaPosicao = { linha: ultimaLinha, coluna: colunaEntrada }
 
     // saída (linha 0, coluna diferente da entrada)
     let colunaSaida
@@ -207,7 +223,9 @@ function gerarMatriz() {
     tabuleiroMatriz[0][colunaSaida] = "saida"
 
     // hidra (centro fixo)
-    tabuleiroMatriz[2][2] = "hidra"
+    const linhaCentro = Math.floor(TAMANHO / 2);
+    const colunaCentro = Math.floor(TAMANHO / 2);
+    tabuleiroMatriz[linhaCentro][colunaCentro] = "hidra"
 
     /* ===============================
        POOL CONTROLADO DE TILES
@@ -216,27 +234,56 @@ function gerarMatriz() {
     // contamos quantos espaços sobraram
     const totalTiles = TAMANHO * TAMANHO
     const tilesFixos = 3 // entrada + saída + hidra
-    const tilesRestantes = totalTiles - tilesFixos // 22
+    const tilesRestantes = totalTiles - tilesFixos
 
-    // queremos exatamente 8 câmaras
+    // Ajustar número de câmaras baseado no tamanho do tabuleiro
+    let numCamaras;
+    switch(tamanhoTabuleiro) {
+        case 'pequeno': numCamaras = 8; break;  // 5x5
+        case 'medio': numCamaras = 10; break;   // 6x6
+        case 'grande': numCamaras = 12; break;  // 7x7
+        default: numCamaras = 8;
+    }
+
     const pool = []
 
-    // 8 câmaras
-    for (let i = 0; i < 8; i++) {
+    // Adicionar câmaras
+    for (let i = 0; i < numCamaras; i++) {
         pool.push("camara")
     }
 
     // outros tipos (completam o restante)
-    const outrosTipos = [
-        "corredor",
-        "curva",
-        "bifurcacao",
-        "encruzilhada"
-    ]
+    // Ajustar probabilidades baseado na dificuldade
+    const outrosTipos = [];
+    
+    if (dificuldade === 'facil') {
+        // Mais encruzilhadas na dificuldade fácil
+        outrosTipos.push(...[
+            "corredor", "corredor",
+            "curva", "curva",
+            "bifurcacao", "bifurcacao", "bifurcacao",
+            "encruzilhada", "encruzilhada", "encruzilhada", "encruzilhada", "encruzilhada"
+        ]);
+    } else if (dificuldade === 'dificil') {
+        // Menos encruzilhadas na dificuldade difícil
+        outrosTipos.push(...[
+            "corredor", "corredor", "corredor", "corredor",
+            "curva", "curva", "curva", "curva",
+            "bifurcacao", "bifurcacao",
+            "encruzilhada"
+        ]);
+    } else {
+        // Normal - balanceado
+        outrosTipos.push(...[
+            "corredor", "corredor", "corredor",
+            "curva", "curva", "curva",
+            "bifurcacao", "bifurcacao", "bifurcacao",
+            "encruzilhada", "encruzilhada", "encruzilhada"
+        ]);
+    }
 
     while (pool.length < tilesRestantes) {
-        const tipo =
-            outrosTipos[Math.floor(Math.random() * outrosTipos.length)]
+        const tipo = outrosTipos[Math.floor(Math.random() * outrosTipos.length)]
         pool.push(tipo)
     }
 
@@ -871,6 +918,9 @@ document.getElementById("fimTurno").addEventListener("click", () => {
     
     tocarSom('encerrarTurno');
     
+    // Adicionar artefato ao tabuleiro ANTES de passar o turno
+    adicionarArtefatoAoTabuleiro();
+    
     // Verificar se o jogador atual tem a MAIOR ordemJogada (último a jogar na rodada)
     const jogadorAtualObj = jogadorAtual();
     
@@ -919,6 +969,53 @@ document.getElementById("fimTurno").addEventListener("click", () => {
     // Salvar estado após passar turno
     salvarEstadoLocal();
 })
+
+// Função para adicionar artefato automaticamente ao tabuleiro
+function adicionarArtefatoAoTabuleiro() {
+    console.log('🎁 Adicionando artefato ao tabuleiro...');
+    
+    // Pegar o topo da pilha de artefatos
+    const topoArtefato = obterTopoDaPilha('pilha-artefato');
+    if (!topoArtefato) {
+        console.log('⚠️ Pilha de artefatos vazia');
+        return;
+    }
+    
+    // Encontrar todos os tiles vazios (sem cartas)
+    const tilesVazios = [];
+    const todosOsTiles = tabuleiro.querySelectorAll('.tile');
+    
+    todosOsTiles.forEach(tile => {
+        const tileId = tile.dataset.id;
+        // Verificar se há alguma carta neste tile
+        const temCarta = [...cartas.values()].some(c => c.zona === `tile-${tileId}`);
+        if (!temCarta) {
+            tilesVazios.push(tile);
+        }
+    });
+    
+    if (tilesVazios.length === 0) {
+        console.log('⚠️ Não há tiles vazios disponíveis');
+        return;
+    }
+    
+    // Escolher um tile aleatório
+    const tileAleatorio = tilesVazios[Math.floor(Math.random() * tilesVazios.length)];
+    const tileId = tileAleatorio.dataset.id;
+    
+    // Mover a carta para o tile
+    moverCartaParaTile(topoArtefato.id, tileId);
+    
+    console.log(`✅ Artefato ${topoArtefato.nome} adicionado ao tile ${tileId}`);
+    
+    // Sincronizar no multiplayer
+    if (typeof enviarAcao === 'function') {
+        enviarAcao('adicionar-artefato-tabuleiro', {
+            artefatoId: topoArtefato.id,
+            tileId: tileId
+        });
+    }
+}
 
 document.getElementById("btn-reiniciar-tabuleiro").addEventListener("click", () => {
     console.log("BOTÃO REINICIAR TABULEIRO CLICADO")
@@ -1766,8 +1863,29 @@ function obterTopoDaPilha(zonaId) {
 }
 
 
-// Distribui cartas iniciais nas câmaras: 3 perigos e 5 artefatos
-function distribuirCartasNasCamaras(qtdPerigo = 3, qtdArtefato = 5) {
+// Distribui cartas iniciais nas câmaras baseado na dificuldade
+function distribuirCartasNasCamaras() {
+    // Ajustar quantidades baseado na dificuldade
+    let qtdPerigo, qtdArtefato;
+    
+    switch(dificuldade) {
+        case 'facil':
+            qtdPerigo = 3;
+            qtdArtefato = 5;
+            break;
+        case 'medio':
+            qtdPerigo = 4;
+            qtdArtefato = 5;
+            break;
+        case 'dificil':
+            qtdPerigo = 5;
+            qtdArtefato = 5;
+            break;
+        default:
+            qtdPerigo = 3;
+            qtdArtefato = 5;
+    }
+    
     // coleta todos os tiles do tipo camara no DOM (já criados por criarTabuleiro)
     const camaras = [...tabuleiro.children].filter(tile => tile && tile.tipo === 'camara')
     if (camaras.length === 0) return
@@ -1855,7 +1973,7 @@ renderizarCartas()
 
 // Após primeira renderização, distribui cartas iniciais nas câmaras
 try {
-    distribuirCartasNasCamaras(3, 5)
+    distribuirCartasNasCamaras()
 } catch (e) {
     console.warn('Falha ao distribuir cartas iniciais nas câmaras:', e)
 }
@@ -2291,14 +2409,182 @@ if (rodadasDecrBtn) {
 // inicializa UI do contador
 atualizarRodadaUI()
 
-// Botão Grito da Hidra
-const botaoGritoHidra = document.getElementById("grito-da-hidra")
-if (botaoGritoHidra) {
-    botaoGritoHidra.addEventListener("click", () => {
+// Botão Grito da Hidra (ao perder combate)
+const botaoGritoHidraCombate = document.getElementById("grito-da-hidra-combate")
+if (botaoGritoHidraCombate) {
+    botaoGritoHidraCombate.addEventListener("click", () => {
         tocarSom('hidra');
-        gritoHidra()
+        gritoHidraCombate();
     })
 }
+
+// Função de Grito da Hidra ao perder combate
+function gritoHidraCombate() {
+    console.log('🐉 [INICIO] gritoHidraCombate() chamado');
+    
+    // Verificar se está em modo multiplayer
+    const modoMultiplayer = sessionStorage.getItem('modoMultiplayer') === 'true';
+    
+    if (modoMultiplayer && typeof enviarAcao === 'function') {
+        console.log('🐉 [MULTIPLAYER] Enviando grito-hidra-combate para servidor');
+        enviarAcao('grito-hidra-combate', {
+            dificuldade: dificuldade
+        });
+    } else {
+        console.log('🐉 [LOCAL] Executando grito-hidra-combate localmente');
+        executarGritoHidraCombate(dificuldade);
+    }
+}
+
+function executarGritoHidraCombate(dificuldadeParam) {
+    console.log(`🐉 [EXEC] executarGritoHidraCombate(${dificuldadeParam})`);
+    
+    // Salvar posições de cartas e jogadores ANTES do grito
+    const cartasPorTileId = new Map();
+    const jogadoresPorTileId = new Map();
+    
+    // Salvar cartas
+    cartas.forEach((carta, cartaId) => {
+        if (carta.zona && carta.zona.startsWith('tile-')) {
+            const tileId = carta.zona.replace('tile-', '');
+            if (!cartasPorTileId.has(tileId)) {
+                cartasPorTileId.set(tileId, []);
+            }
+            cartasPorTileId.get(tileId).push(cartaId);
+        }
+    });
+    
+    // Salvar jogadores
+    jogadores.forEach(jogador => {
+        if (jogador.tileId) {
+            if (!jogadoresPorTileId.has(jogador.tileId)) {
+                jogadoresPorTileId.set(jogador.tileId, []);
+            }
+            jogadoresPorTileId.get(jogador.tileId).push(jogador.id);
+        }
+    });
+    
+    // Inicia animação de terremoto
+    tabuleiro.classList.add("terremoto");
+    
+    if (dificuldadeParam === 'facil') {
+        // FÁCIL: Apenas girar todos os tiles 90° para a direita
+        console.log('🐉 Modo Fácil: Girando todos os tiles 90° para direita');
+        const tiles = tabuleiro.querySelectorAll('.tile');
+        tiles.forEach(tile => {
+            tile.classList.add("tile-grito-hidra");
+            const rotAtual = Number(tile.dataset.rotacao) || 0;
+            const novaRot = (rotAtual + 90) % 360;
+            
+            tile.dataset.rotacao = novaRot;
+            tile.style.transform = `rotate(${novaRot}deg)`;
+            
+            // Contra-rotação nos overlays
+            const contraRot = -novaRot;
+            const cartas = tile.querySelector('.cartas-no-tile');
+            const overlay = tile.querySelector('.overlay-no-rotacao');
+            if (cartas) {
+                cartas.style.transform = `rotate(${contraRot}deg)`;
+                cartas.style.transformOrigin = '50% 50%';
+            }
+            if (overlay) {
+                overlay.style.transform = `rotate(${contraRot}deg)`;
+                overlay.style.transformOrigin = '50% 50%';
+            }
+        });
+        
+    } else if (dificuldadeParam === 'medio' || dificuldadeParam === 'normal') {
+        // MÉDIO: Girar todos os tiles de forma aleatória
+        console.log('🐉 Modo Médio: Girando todos os tiles aleatoriamente');
+        const tiles = tabuleiro.querySelectorAll('.tile');
+        tiles.forEach(tile => {
+            tile.classList.add("tile-grito-hidra");
+            const rotacoes = [0, 90, 180, 270];
+            const novaRot = rotacoes[Math.floor(Math.random() * rotacoes.length)];
+            
+            tile.dataset.rotacao = novaRot;
+            tile.style.transform = `rotate(${novaRot}deg)`;
+            
+            // Contra-rotação nos overlays
+            const contraRot = -novaRot;
+            const cartas = tile.querySelector('.cartas-no-tile');
+            const overlay = tile.querySelector('.overlay-no-rotacao');
+            if (cartas) {
+                cartas.style.transform = `rotate(${contraRot}deg)`;
+                cartas.style.transformOrigin = '50% 50%';
+            }
+            if (overlay) {
+                overlay.style.transform = `rotate(${contraRot}deg)`;
+                overlay.style.transformOrigin = '50% 50%';
+            }
+        });
+        
+    } else if (dificuldadeParam === 'dificil') {
+        // DIFÍCIL: Girar E movimentar (gerar novo tabuleiro mantendo cartas e jogadores)
+        console.log('🐉 Modo Difícil: Regenerando tabuleiro mantendo cartas e jogadores');
+        
+        // Gerar nova matriz
+        gerarMatriz();
+        
+        // Recriar tabuleiro
+        tabuleiro.innerHTML = "";
+        for (let linha = 0; linha < TAMANHO; linha++) {
+            for (let coluna = 0; coluna < TAMANHO; coluna++) {
+                const tipo = tabuleiroMatriz[linha][coluna];
+                const tile = criarTile(tipo);
+                tile.dataset.id = `${linha}-${coluna}`;
+                tornarTileDropavel(tile);
+                tile.classList.add("tile-grito-hidra");
+                tabuleiro.appendChild(tile);
+            }
+        }
+        
+        // Restaurar cartas nas mesmas posições (IDs de tile)
+        cartasPorTileId.forEach((cartasIds, tileId) => {
+            cartasIds.forEach(cartaId => {
+                const carta = cartas.get(cartaId);
+                if (carta) {
+                    carta.zona = `tile-${tileId}`;
+                }
+            });
+        });
+        
+        // Restaurar jogadores nas mesmas posições
+        jogadoresPorTileId.forEach((jogadoresIds, tileId) => {
+            jogadoresIds.forEach(jogadorId => {
+                const jogador = jogadores.find(j => j.id === jogadorId);
+                if (jogador) {
+                    jogador.tileId = tileId;
+                    const tileEl = document.querySelector(`.tile[data-id="${CSS.escape(tileId)}"]`);
+                    if (tileEl) {
+                        jogador.tile = tileEl;
+                    }
+                }
+            });
+        });
+        
+        // Re-renderizar cartas e jogadores
+        renderizarCartas();
+        desenharJogadores();
+    }
+    
+    // Remover destaque após 2 segundos
+    setTimeout(() => {
+        const tiles = tabuleiro.querySelectorAll('.tile');
+        tiles.forEach(tile => {
+            tile.classList.remove("tile-grito-hidra");
+        });
+        tabuleiro.classList.remove("terremoto");
+    }, 2000);
+    
+    // Salvar estado
+    salvarEstadoLocal();
+    
+    console.log('✅ Grito da Hidra (combate) executado');
+}
+
+// REMOVIDO: Botão Grito da Hidra manual (agora é automático no fim do turno)
+// O grito da hidra de fim de turno é executado automaticamente em "fimTurno"
 
 // Contadores de PA por jogador
 const paValores = { 1: 4, 2: 4, 3: 4, 4: 4 }
@@ -2604,6 +2890,47 @@ if (musicaSlider && musicaValue) {
         }
     });
 }
+
+// ==================== CONFIGURAÇÕES DO JOGO ====================
+
+// Função para exibir configurações atuais
+function exibirConfiguracoesAtuais() {
+    console.log('⚙️ Configurações atuais:');
+    console.log('  Dificuldade:', dificuldade);
+    console.log('  Tamanho:', tamanhoTabuleiro, '(' + TAMANHO + 'x' + TAMANHO + ')');
+}
+
+// Configurar menu de dificuldade
+const seletorDificuldade = document.getElementById('seletor-dificuldade');
+if (seletorDificuldade) {
+    // Definir valor inicial
+    seletorDificuldade.value = dificuldade;
+    
+    seletorDificuldade.addEventListener('change', (e) => {
+        dificuldade = e.target.value;
+        localStorage.setItem('dificuldade', dificuldade);
+        console.log('🎮 Dificuldade alterada para:', dificuldade);
+        alert(`Dificuldade alterada para ${dificuldade.toUpperCase()}!\nReinicie o jogo para aplicar as mudanças.`);
+    });
+}
+
+// Configurar menu de tamanho do tabuleiro
+const seletorTamanho = document.getElementById('seletor-tamanho');
+if (seletorTamanho) {
+    // Definir valor inicial
+    seletorTamanho.value = tamanhoTabuleiro;
+    
+    seletorTamanho.addEventListener('change', (e) => {
+        tamanhoTabuleiro = e.target.value;
+        localStorage.setItem('tamanhoTabuleiro', tamanhoTabuleiro);
+        TAMANHO = calcularTamanhoTabuleiro();
+        console.log('📏 Tamanho alterado para:', tamanhoTabuleiro, '(' + TAMANHO + 'x' + TAMANHO + ')');
+        alert(`Tamanho do tabuleiro alterado para ${tamanhoTabuleiro.toUpperCase()} (${TAMANHO}x${TAMANHO})!\nReinicie o jogo para aplicar as mudanças.`);
+    });
+}
+
+// Exibir configurações ao carregar
+exibirConfiguracoesAtuais();
 
 
 

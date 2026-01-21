@@ -21,12 +21,28 @@
             </div>
         </div>
 
-        <!-- Tela de Lobby -->
+               <!-- Tela de Lobby -->
         <div id="tela-lobby" class="tela">
             <div class="lobby-header">
                 <h2>Sala: <span id="codigo-sala-display"></span></h2>
                 <button id="btn-copiar-codigo" class="btn-icon">📋 Copiar Código</button>
             </div>
+
+             <!-- Menu de configurações (pode ser no lobby) -->
+            <select id="seletor-dificuldade">
+            <option value="facil">Fácil</option>
+            <option value="normal">Normal</option>
+            <option value="dificil">Difícil</option>
+            </select>
+
+            <select id="seletor-tamanho">
+            <option value="pequeno">Pequeno (5x5)</option>
+            <option value="medio">Médio (6x6)</option>
+            <option value="grande">Grande (7x7)</option>
+            </select>
+
+            <!-- Botão de grito da hidra ao perder combate -->
+            <button id="grito-da-hidra-combate">Grito da Hidra (Perder Combate)</button>
 
             <div class="lobby-content">
                 <!-- Seleção de Personagens -->
