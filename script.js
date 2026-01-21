@@ -1271,83 +1271,216 @@ function gritoHidra() {
     // Verificar se está em modo multiplayer
     const modoMultiplayer = sessionStorage.getItem('modoMultiplayer') === 'true';
     
-    // 1. Escolhe aleatoriamente qual linha/coluna será movida
-    const ehLinha = Math.random() < 0.5;
-    const indiceAleatorio = Math.floor(Math.random() * TAMANHO);
+    // 1. Escolhe um tile aleatório
+    const linhaAleatoria = Math.floor(Math.random() * TAMANHO);
+    const colunaAleatoria = Math.floor(Math.random() * TAMANHO);
     
-    // 2. Gerar rotações aleatórias para todos os tiles afetados
-    const rotacoesAleatorias = [];
+    console.log(`🐉 Tile escolhido: ${linhaAleatoria}-${colunaAleatoria} (linha ${linhaAleatoria}, coluna ${colunaAleatoria})`);
+    
+    // 2. Gerar dados de rotação e movimento para linha E coluna
+    // Sortear direção de movimento (0=esquerda/cima, 1=direita/baixo)
+    const direcaoLinha = Math.random() < 0.5 ? 'direita' : 'esquerda';
+    const direcaoColuna = Math.random() < 0.5 ? 'baixo' : 'cima';
+    
+    // Gerar rotações aleatórias para cada tile afetado
+    const rotacoesLinha = [];
+    const rotacoesColuna = [];
+    const rotacoesPossiveis = [0, 90, 180, 270];
+    
     for (let i = 0; i < TAMANHO; i++) {
-        rotacoesAleatorias.push([0, 90, 180, 270][Math.floor(Math.random() * 4)]);
+        rotacoesLinha.push(rotacoesPossiveis[Math.floor(Math.random() * 4)]);
+        rotacoesColuna.push(rotacoesPossiveis[Math.floor(Math.random() * 4)]);
     }
 
     if (modoMultiplayer && typeof enviarAcao === 'function') {
         // Em multiplayer, enviar dados para servidor
         console.log('🐉 [MULTIPLAYER] Enviando grito-hidra para servidor');
         enviarAcao('grito-hidra', {
-            ehLinha: ehLinha,
-            indice: indiceAleatorio,
-            rotacoes: rotacoesAleatorias
+            linha: linhaAleatoria,
+            coluna: colunaAleatoria,
+            direcaoLinha: direcaoLinha,
+            direcaoColuna: direcaoColuna,
+            rotacoesLinha: rotacoesLinha,
+            rotacoesColuna: rotacoesColuna
         });
     } else {
         // Em modo local, executar diretamente
         console.log('🐉 [LOCAL] Executando grito-hidra localmente');
-        executarGritoHidra(ehLinha, indiceAleatorio, rotacoesAleatorias);
+        executarGritoHidra(linhaAleatoria, colunaAleatoria, direcaoLinha, direcaoColuna, rotacoesLinha, rotacoesColuna);
     }
 }
 
-function executarGritoHidra(ehLinha, indiceAleatorio, rotacoes) {
-    console.log(`🐉 [EXEC] executarGritoHidra(${ehLinha ? 'Linha' : 'Coluna'}, ${indiceAleatorio}, rotacoes=${rotacoes})`);
+function executarGritoHidra(linha, coluna, direcaoLinha, direcaoColuna, rotacoesLinha, rotacoesColuna) {
+    console.log(`🐉 [EXEC] executarGritoHidra - Linha ${linha} (${direcaoLinha}), Coluna ${coluna} (${direcaoColuna})`);
     
-    // Coleta tiles da linha/coluna
-    const tiles = []
-    const indices = []
-
-    if (ehLinha) {
-        for (let col = 0; col < TAMANHO; col++) {
-            const index = indiceAleatorio * TAMANHO + col
-            indices.push(index)
-            tiles.push(tabuleiro.children[index])
-        }
-    } else {
-        for (let lin = 0; lin < TAMANHO; lin++) {
-            const index = lin * TAMANHO + indiceAleatorio
-            indices.push(index)
-            tiles.push(tabuleiro.children[index])
-        }
-    }
-
-    if (tiles.length === 0) return
-
-    console.log(`Grito da Hidra! ${ehLinha ? "Linha" : "Coluna"} ${indiceAleatorio}:`, indices)
-
-    // Inicia animação de terremoto
-    tabuleiro.classList.add("terremoto")
-
-    // Aplica destaque visual aos tiles afetados
-    tiles.forEach(tile => {
-        tile.classList.add("tile-grito-hidra")
-    })
-
-    // Aplicar rotações aleatórias a cada tile
-    tiles.forEach((tile, idx) => {
-        if (rotacoes && rotacoes[idx] !== undefined) {
-            const novaRotacao = rotacoes[idx];
-            tile.rotacao = novaRotacao;
-            tile.style.transform = `rotate(${novaRotacao}deg)`;
-            console.log(`  🔄 Tile ${tile.dataset.id}: rotação → ${novaRotacao}°`);
+    // Salvar estado de cartas e jogadores ANTES do movimento
+    const estadoCartas = new Map();
+    const estadoJogadores = new Map();
+    
+    cartas.forEach((carta, cartaId) => {
+        if (carta.zona && carta.zona.startsWith('tile-')) {
+            estadoCartas.set(cartaId, carta.zona.replace('tile-', ''));
         }
     });
-
+    
+    jogadores.forEach(jogador => {
+        if (jogador.tileId) {
+            estadoJogadores.set(jogador.id, jogador.tileId);
+        }
+    });
+    
+    // Inicia animação de terremoto
+    tabuleiro.classList.add("terremoto");
+    
+    // PASSO 1: Processar LINHA (girar e mover)
+    const tilesLinha = [];
+    for (let col = 0; col < TAMANHO; col++) {
+        const index = linha * TAMANHO + col;
+        const tile = tabuleiro.children[index];
+        tilesLinha.push(tile);
+        tile.classList.add("tile-grito-hidra");
+    }
+    
+    // Salvar tipos e IDs da linha antes do movimento
+    const tiposTilesLinha = tilesLinha.map(t => t.tipo);
+    const idsTilesLinha = tilesLinha.map(t => t.dataset.id);
+    
+    // Rotacionar tiles circularmente
+    let novaOrdemLinha;
+    if (direcaoLinha === 'direita') {
+        // Mover para direita: último vai pro início
+        novaOrdemLinha = [tiposTilesLinha[tiposTilesLinha.length - 1], ...tiposTilesLinha.slice(0, -1)];
+    } else {
+        // Mover para esquerda: primeiro vai pro final
+        novaOrdemLinha = [...tiposTilesLinha.slice(1), tiposTilesLinha[0]];
+    }
+    
+    // Aplicar nova ordem e rotações
+    tilesLinha.forEach((tile, idx) => {
+        tile.tipo = novaOrdemLinha[idx];
+        tile.className = `tile ${novaOrdemLinha[idx]} tile-grito-hidra`;
+        
+        // Aplicar rotação aleatória
+        const novaRotacao = rotacoesLinha[idx];
+        tile.rotacao = novaRotacao;
+        tile.style.transform = `rotate(${novaRotacao}deg)`;
+        tile.dataset.rotacao = novaRotacao;
+        
+        console.log(`  Linha ${linha}[${idx}]: tipo=${novaOrdemLinha[idx]}, rotação=${novaRotacao}°`);
+    });
+    
+    // Atualizar matriz
+    for (let col = 0; col < TAMANHO; col++) {
+        tabuleiroMatriz[linha][col] = novaOrdemLinha[col];
+    }
+    
+    // PASSO 2: Processar COLUNA (girar e mover)
+    const tilesColuna = [];
+    for (let lin = 0; lin < TAMANHO; lin++) {
+        const index = lin * TAMANHO + coluna;
+        const tile = tabuleiro.children[index];
+        tilesColuna.push(tile);
+        tile.classList.add("tile-grito-hidra");
+    }
+    
+    // Salvar tipos da coluna antes do movimento
+    const tiposTilesColuna = tilesColuna.map(t => t.tipo);
+    
+    // Rotacionar tiles circularmente
+    let novaOrdemColuna;
+    if (direcaoColuna === 'baixo') {
+        // Mover para baixo: último vai pro início
+        novaOrdemColuna = [tiposTilesColuna[tiposTilesColuna.length - 1], ...tiposTilesColuna.slice(0, -1)];
+    } else {
+        // Mover para cima: primeiro vai pro final
+        novaOrdemColuna = [...tiposTilesColuna.slice(1), tiposTilesColuna[0]];
+    }
+    
+    // Aplicar nova ordem e rotações
+    tilesColuna.forEach((tile, idx) => {
+        tile.tipo = novaOrdemColuna[idx];
+        tile.className = `tile ${novaOrdemColuna[idx]} tile-grito-hidra`;
+        
+        // Aplicar rotação aleatória
+        const novaRotacao = rotacoesColuna[idx];
+        tile.rotacao = novaRotacao;
+        tile.style.transform = `rotate(${novaRotacao}deg)`;
+        tile.dataset.rotacao = novaRotacao;
+        
+        console.log(`  Coluna ${coluna}[${idx}]: tipo=${novaOrdemColuna[idx]}, rotação=${novaRotacao}°`);
+    });
+    
+    // Atualizar matriz
+    for (let lin = 0; lin < TAMANHO; lin++) {
+        tabuleiroMatriz[lin][coluna] = novaOrdemColuna[lin];
+    }
+    
+    // PASSO 3: Calcular novo mapeamento de IDs após movimento
+    // Os tiles se moveram, então os IDs precisam ser atualizados
+    const mapeamentoIds = new Map(); // oldId -> newId
+    
+    // Mapear linha
+    idsTilesLinha.forEach((oldId, idx) => {
+        let novaPosicao;
+        if (direcaoLinha === 'direita') {
+            novaPosicao = (idx + 1) % TAMANHO;
+        } else {
+            novaPosicao = (idx - 1 + TAMANHO) % TAMANHO;
+        }
+        const newId = `${linha}-${novaPosicao}`;
+        mapeamentoIds.set(oldId, newId);
+    });
+    
+    // Mapear coluna (cuidado com interseção)
+    for (let lin = 0; lin < TAMANHO; lin++) {
+        const oldId = `${lin}-${coluna}`;
+        let novaPosicao;
+        if (direcaoColuna === 'baixo') {
+            novaPosicao = (lin + 1) % TAMANHO;
+        } else {
+            novaPosicao = (lin - 1 + TAMANHO) % TAMANHO;
+        }
+        const newId = `${novaPosicao}-${coluna}`;
+        
+        // Se já foi mapeado pela linha, manter o mapeamento da linha
+        if (!mapeamentoIds.has(oldId)) {
+            mapeamentoIds.set(oldId, newId);
+        }
+    }
+    
+    // PASSO 4: Atualizar cartas e jogadores baseado no mapeamento
+    estadoCartas.forEach((oldTileId, cartaId) => {
+        const carta = cartas.get(cartaId);
+        if (carta) {
+            const newTileId = mapeamentoIds.get(oldTileId) || oldTileId;
+            carta.zona = `tile-${newTileId}`;
+        }
+    });
+    
+    estadoJogadores.forEach((oldTileId, jogadorId) => {
+        const jogador = jogadores.find(j => j.id === jogadorId);
+        if (jogador) {
+            const newTileId = mapeamentoIds.get(oldTileId) || oldTileId;
+            jogador.tileId = newTileId;
+        }
+    });
+    
+    // Re-renderizar cartas e jogadores
+    renderizarCartas();
+    desenharJogadores();
+    
+    // Salvar estado
+    salvarEstadoLocal();
+    
     // Remove o destaque após 2 segundos
     setTimeout(() => {
-        tiles.forEach(tile => {
-            tile.classList.remove("tile-grito-hidra")
-        })
-        tabuleiro.classList.remove("terremoto")
-    }, 2000)
+        document.querySelectorAll('.tile').forEach(tile => {
+            tile.classList.remove("tile-grito-hidra");
+        });
+        tabuleiro.classList.remove("terremoto");
+    }, 2000);
 
-    console.log(`Grito da Hidra! Rotacionou ${ehLinha ? "linha" : "coluna"} ${indiceAleatorio}`)
+    console.log(`✅ Grito da Hidra executado: Linha ${linha} e Coluna ${coluna} movidas e giradas`);
 }
 
 function limparFeedbackMovimento() {
