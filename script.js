@@ -1366,6 +1366,19 @@ function executarGritoHidra(linha, coluna, direcaoLinha, direcaoColuna, rotacoes
         tile.style.transform = `rotate(${novaRotacao}deg)`;
         tile.dataset.rotacao = novaRotacao;
         
+        // Aplicar contra-rotação nos overlays para que cartas e jogadores não girem
+        const contraRot = -novaRotacao;
+        const cartasOverlay = tile.querySelector('.cartas-no-tile');
+        const overlay = tile.querySelector('.overlay-no-rotacao');
+        if (cartasOverlay) {
+            cartasOverlay.style.transform = `rotate(${contraRot}deg)`;
+            cartasOverlay.style.transformOrigin = '50% 50%';
+        }
+        if (overlay) {
+            overlay.style.transform = `rotate(${contraRot}deg)`;
+            overlay.style.transformOrigin = '50% 50%';
+        }
+        
         console.log(`  Linha ${linha}[${idx}]: tipo=${novaOrdemLinha[idx]}, rotação=${novaRotacao}°`);
     });
     
@@ -1406,6 +1419,19 @@ function executarGritoHidra(linha, coluna, direcaoLinha, direcaoColuna, rotacoes
         tile.rotacao = novaRotacao;
         tile.style.transform = `rotate(${novaRotacao}deg)`;
         tile.dataset.rotacao = novaRotacao;
+        
+        // Aplicar contra-rotação nos overlays para que cartas e jogadores não girem
+        const contraRot = -novaRotacao;
+        const cartasOverlay = tile.querySelector('.cartas-no-tile');
+        const overlay = tile.querySelector('.overlay-no-rotacao');
+        if (cartasOverlay) {
+            cartasOverlay.style.transform = `rotate(${contraRot}deg)`;
+            cartasOverlay.style.transformOrigin = '50% 50%';
+        }
+        if (overlay) {
+            overlay.style.transform = `rotate(${contraRot}deg)`;
+            overlay.style.transformOrigin = '50% 50%';
+        }
         
         console.log(`  Coluna ${coluna}[${idx}]: tipo=${novaOrdemColuna[idx]}, rotação=${novaRotacao}°`);
     });
@@ -2527,67 +2553,56 @@ function executarGritoHidraCombate(dificuldadeParam) {
         });
         
     } else if (dificuldadeParam === 'dificil') {
-        // DIFÍCIL: Girar E movimentar (gerar novo tabuleiro mantendo cartas e jogadores)
-        console.log('🐉 Modo Difícil: Regenerando tabuleiro mantendo cartas e jogadores');
+        // DIFÍCIL: Girar E movimentar (embaralhar todos os tiles mantendo cartas e jogadores)
+        console.log('🐉 Modo Difícil: Embaralhando tabuleiro mantendo cartas e jogadores');
         
-        // Gerar nova matriz (preserva entrada, saída e hidra)
-        gerarMatriz();
+        // Coletar todos os tiles atuais
+        const todosOsTiles = Array.from(tabuleiro.querySelectorAll('.tile'));
         
-        // Recriar tabuleiro
-        tabuleiro.innerHTML = "";
-        for (let linha = 0; linha < TAMANHO; linha++) {
-            for (let coluna = 0; coluna < TAMANHO; coluna++) {
-                const tipo = tabuleiroMatriz[linha][coluna];
-                const tile = criarTile(tipo);
-                tile.dataset.id = `${linha}-${coluna}`;
-                tornarTileDropavel(tile);
-                tile.classList.add("tile-grito-hidra");
-                tabuleiro.appendChild(tile);
-            }
+        // Salvar os tipos dos tiles
+        const tiposTiles = todosOsTiles.map(t => t.tipo);
+        
+        // Embaralhar os tipos (Fisher-Yates shuffle)
+        for (let i = tiposTiles.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [tiposTiles[i], tiposTiles[j]] = [tiposTiles[j], tiposTiles[i]];
         }
         
-        // Restaurar cartas nas mesmas posições (IDs de tile)
-        cartasPorTileId.forEach((cartasIds, tileId) => {
-            // Verificar se o tile ainda existe
-            const tileExiste = document.querySelector(`.tile[data-id="${CSS.escape(tileId)}"]`);
-            if (tileExiste) {
-                cartasIds.forEach(cartaId => {
-                    const carta = cartas.get(cartaId);
-                    if (carta) {
-                        carta.zona = `tile-${tileId}`;
-                    }
-                });
-            } else {
-                console.warn(`⚠️ Tile ${tileId} não existe mais após regeneração`);
+        // Aplicar novos tipos e rotações aleatórias
+        todosOsTiles.forEach((tile, idx) => {
+            tile.classList.add("tile-grito-hidra");
+            
+            const novoTipo = tiposTiles[idx];
+            tile.tipo = novoTipo;
+            tile.className = `tile ${novoTipo} tile-grito-hidra`;
+            
+            // Rotação aleatória
+            const rotacoes = [0, 90, 180, 270];
+            const novaRot = rotacoes[Math.floor(Math.random() * rotacoes.length)];
+            tile.dataset.rotacao = novaRot;
+            tile.style.transform = `rotate(${novaRot}deg)`;
+            tile.rotacao = novaRot;
+            
+            // Contra-rotação nos overlays
+            const contraRot = -novaRot;
+            const cartasOverlay = tile.querySelector('.cartas-no-tile');
+            const overlay = tile.querySelector('.overlay-no-rotacao');
+            if (cartasOverlay) {
+                cartasOverlay.style.transform = `rotate(${contraRot}deg)`;
+                cartasOverlay.style.transformOrigin = '50% 50%';
             }
+            if (overlay) {
+                overlay.style.transform = `rotate(${contraRot}deg)`;
+                overlay.style.transformOrigin = '50% 50%';
+            }
+            
+            // Atualizar matriz
+            const [lin, col] = tile.dataset.id.split('-').map(Number);
+            tabuleiroMatriz[lin][col] = novoTipo;
         });
         
-        // Restaurar jogadores nas mesmas posições
-        jogadoresPorTileId.forEach((jogadoresIds, tileId) => {
-            // Verificar se o tile ainda existe
-            const tileEl = document.querySelector(`.tile[data-id="${CSS.escape(tileId)}"]`);
-            if (tileEl) {
-                jogadoresIds.forEach(jogadorId => {
-                    const jogador = jogadores.find(j => j.id === jogadorId);
-                    if (jogador) {
-                        jogador.tileId = tileId;
-                        jogador.tile = tileEl;
-                    }
-                });
-            } else {
-                console.warn(`⚠️ Tile ${tileId} não existe mais - jogadores precisam ser reposicionados`);
-                // Tentar encontrar tile de entrada como fallback
-                const tileEntrada = obterTileEntrada();
-                jogadoresIds.forEach(jogadorId => {
-                    const jogador = jogadores.find(j => j.id === jogadorId);
-                    if (jogador && tileEntrada) {
-                        jogador.tileId = tileEntrada.dataset.id;
-                        jogador.tile = tileEntrada;
-                        console.log(`👤 Jogador ${jogadorId} reposicionado na entrada`);
-                    }
-                });
-            }
-        });
+        // Cartas e jogadores permanecem nos mesmos tiles (IDs não mudam)
+        // Não precisa reposicionar pois só mudamos o tipo dos tiles, não os IDs
         
         // Re-renderizar cartas e jogadores
         renderizarCartas();
