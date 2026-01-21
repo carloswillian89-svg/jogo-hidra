@@ -95,9 +95,11 @@ const CONEXOES_BASE = {
 
 let tileArrastado = null
 
-// Configurações globais do jogo
-let dificuldade = localStorage.getItem('dificuldade') || 'normal'; // 'facil', 'normal', 'dificil'
-let tamanhoTabuleiro = localStorage.getItem('tamanhoTabuleiro') || 'pequeno'; // 'pequeno', 'medio', 'grande'
+// Configurações globais do jogo (recuperadas do lobby)
+let dificuldade = sessionStorage.getItem('dificuldadeJogo') || 'normal'; // 'facil', 'normal', 'dificil'
+let tamanhoTabuleiro = sessionStorage.getItem('tamanhoTabuleiro') || 'medio'; // 'pequeno', 'medio', 'grande'
+
+console.log(`⚙️ Configurações carregadas: Dificuldade=${dificuldade}, Tamanho=${tamanhoTabuleiro}`);
 
 // Calcular TAMANHO baseado na configuração
 function calcularTamanhoTabuleiro() {
@@ -105,11 +107,12 @@ function calcularTamanhoTabuleiro() {
         case 'pequeno': return 5;
         case 'medio': return 6;
         case 'grande': return 7;
-        default: return 5;
+        default: return 6;
     }
 }
 
 let TAMANHO = calcularTamanhoTabuleiro();
+console.log(`📐 Tamanho do tabuleiro: ${TAMANHO}x${TAMANHO}`);
 let tabuleiroMatriz = []
 
 let jogadores = [
@@ -240,8 +243,8 @@ function gerarMatriz() {
     let numCamaras;
     switch(tamanhoTabuleiro) {
         case 'pequeno': numCamaras = 8; break;  // 5x5
-        case 'medio': numCamaras = 10; break;   // 6x6
-        case 'grande': numCamaras = 12; break;  // 7x7
+        case 'medio': numCamaras = 9; break;   // 6x6
+        case 'grande': numCamaras = 10; break;  // 7x7
         default: numCamaras = 8;
     }
 
@@ -270,7 +273,7 @@ function gerarMatriz() {
             "corredor", "corredor", "corredor", "corredor",
             "curva", "curva", "curva", "curva",
             "bifurcacao", "bifurcacao",
-            "encruzilhada"
+            "encruzilhada", "encruzilhada"
         ]);
     } else {
         // Normal - balanceado
@@ -786,6 +789,12 @@ function obterConexoes(tile) {
 
 function criarTabuleiro() {
     tabuleiro.innerHTML = "" 
+    
+    // Atualizar CSS do grid baseado no TAMANHO
+    tabuleiro.style.gridTemplateColumns = `repeat(${TAMANHO}, 140px)`;
+    tabuleiro.style.gridTemplateRows = `repeat(${TAMANHO}, 140px)`;
+    
+    console.log(`🎨 Grid CSS atualizado: ${TAMANHO}x${TAMANHO}`);
 
     for (let linha = 0; linha < TAMANHO; linha++) {
         for (let coluna = 0; coluna < TAMANHO; coluna++) {

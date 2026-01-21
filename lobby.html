@@ -36,20 +36,28 @@
                 <button id="btn-copiar-codigo" class="btn-icon">📋 Copiar Código</button>
             </div>
 
-             <!-- Menu de configurações (pode ser no lobby) -->
-            <select id="seletor-dificuldade">
-            <option value="facil">Fácil</option>
-            <option value="normal">Normal</option>
-            <option value="dificil">Difícil</option>
-            </select>
-
-            <select id="seletor-tamanho">
-            <option value="pequeno">Pequeno (5x5)</option>
-            <option value="medio">Médio (6x6)</option>
-            <option value="grande">Grande (7x7)</option>
-            </select>
-
-           
+            <!-- Menu de configurações (apenas para o host) -->
+            <div id="config-host" class="config-host" style="display: none;">
+                <h3>⚙️ Configurações da Partida (Host)</h3>
+                <div class="config-grid">
+                    <div class="config-item">
+                        <label for="seletor-dificuldade">Dificuldade:</label>
+                        <select id="seletor-dificuldade">
+                            <option value="facil">Fácil</option>
+                            <option value="normal" selected>Normal</option>
+                            <option value="dificil">Difícil</option>
+                        </select>
+                    </div>
+                    <div class="config-item">
+                        <label for="seletor-tamanho">Tamanho do Tabuleiro:</label>
+                        <select id="seletor-tamanho">
+                            <option value="pequeno">Pequeno (5x5)</option>
+                            <option value="medio" selected>Médio (6x6)</option>
+                            <option value="grande">Grande (7x7)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
 
             <div class="lobby-content">
                 <!-- Seleção de Personagens -->

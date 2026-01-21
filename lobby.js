@@ -445,8 +445,21 @@ if (btnIniciarJogoLobby) {
         btnIniciarJogoLobby.disabled = true;
         btnIniciarJogoLobby.textContent = 'Iniciando...';
         
+        // Salvar configurações do host no sessionStorage
+        const dificuldade = document.getElementById('seletor-dificuldade')?.value || 'normal';
+        const tamanho = document.getElementById('seletor-tamanho')?.value || 'medio';
+        
+        sessionStorage.setItem('dificuldadeJogo', dificuldade);
+        sessionStorage.setItem('tamanhoTabuleiro', tamanho);
+        
+        console.log(`⚙️ Configurações salvas: Dificuldade=${dificuldade}, Tamanho=${tamanho}`);
+        
         socket.emit('iniciar-jogo-lobby', {
-            codigoSala: estadoLocal.codigoSala
+            codigoSala: estadoLocal.codigoSala,
+            configuracoes: {
+                dificuldade: dificuldade,
+                tamanho: tamanho
+            }
         });
     });
 }
