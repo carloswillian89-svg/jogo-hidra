@@ -597,6 +597,9 @@ function processarAcaoRemota(acao) {
         case 'grito-hidra':
             processarGritoHidraRemoto(acao.dados);
             break;
+        case 'grito-hidra-combate':
+            processarGritoHidraCombateRemoto(acao.dados);
+            break;
         case 'virar-carta':
             processarVirarCartaRemoto(acao.dados);
             break;
@@ -698,6 +701,19 @@ function processarGritoHidraRemoto(dados) {
     
     if (typeof executarGritoHidra === 'function') {
         executarGritoHidra(linha, coluna, direcaoLinha, direcaoColuna, rotacoesLinha, rotacoesColuna);
+    }
+}
+
+function processarGritoHidraCombateRemoto(dados) {
+    const { dificuldade } = dados;
+    
+    // Tocar som da hidra para todos os jogadores
+    if (typeof tocarSom === 'function') {
+        tocarSom('hidra');
+    }
+    
+    if (typeof executarGritoHidraCombate === 'function') {
+        executarGritoHidraCombate(dificuldade);
     }
 }
 

@@ -1009,6 +1009,10 @@ function adicionarArtefatoAoTabuleiro() {
     
     todosOsTiles.forEach(tile => {
         const tileId = tile.dataset.id;
+        // Não adicionar artefatos em tiles de entrada ou saída
+        if (tile.tipo === 'entrada' || tile.tipo === 'saida') {
+            return;
+        }
         // Verificar se há alguma carta neste tile
         const temCarta = [...cartas.values()].some(c => c.zona === `tile-${tileId}`);
         if (!temCarta) {
@@ -1360,8 +1364,9 @@ function executarGritoHidra(linha, coluna, direcaoLinha, direcaoColuna, rotacoes
         tile.tipo = novaOrdemLinha[idx];
         tile.className = `tile ${novaOrdemLinha[idx]} tile-grito-hidra`;
         
-        // Aplicar rotação aleatória
-        const novaRotacao = rotacoesLinha[idx];
+        // Aplicar rotação aleatória (exceto tiles especiais)
+        const tiposEspeciais = ['entrada', 'saida', 'hidra'];
+        const novaRotacao = tiposEspeciais.includes(tile.tipo) ? 0 : rotacoesLinha[idx];
         tile.rotacao = novaRotacao;
         tile.style.transform = `rotate(${novaRotacao}deg)`;
         tile.dataset.rotacao = novaRotacao;
@@ -1414,8 +1419,9 @@ function executarGritoHidra(linha, coluna, direcaoLinha, direcaoColuna, rotacoes
         tile.tipo = novaOrdemColuna[idx];
         tile.className = `tile ${novaOrdemColuna[idx]} tile-grito-hidra`;
         
-        // Aplicar rotação aleatória
-        const novaRotacao = rotacoesColuna[idx];
+        // Aplicar rotação aleatória (exceto tiles especiais)
+        const tiposEspeciais = ['entrada', 'saida', 'hidra'];
+        const novaRotacao = tiposEspeciais.includes(tile.tipo) ? 0 : rotacoesColuna[idx];
         tile.rotacao = novaRotacao;
         tile.style.transform = `rotate(${novaRotacao}deg)`;
         tile.dataset.rotacao = novaRotacao;
@@ -2496,6 +2502,13 @@ function executarGritoHidraCombate(dificuldadeParam) {
         const tiles = tabuleiro.querySelectorAll('.tile');
         tiles.forEach(tile => {
             tile.classList.add("tile-grito-hidra");
+            
+            // Não girar tiles especiais
+            const tiposEspeciais = ['entrada', 'saida', 'hidra'];
+            if (tiposEspeciais.includes(tile.tipo)) {
+                return;
+            }
+            
             const rotAtual = Number(tile.dataset.rotacao) || 0;
             const novaRot = (rotAtual + 90) % 360;
             
@@ -2527,6 +2540,13 @@ function executarGritoHidraCombate(dificuldadeParam) {
         const tiles = tabuleiro.querySelectorAll('.tile');
         tiles.forEach(tile => {
             tile.classList.add("tile-grito-hidra");
+            
+            // Não girar tiles especiais
+            const tiposEspeciais = ['entrada', 'saida', 'hidra'];
+            if (tiposEspeciais.includes(tile.tipo)) {
+                return;
+            }
+            
             const rotacoes = [0, 90, 180, 270];
             const novaRot = rotacoes[Math.floor(Math.random() * rotacoes.length)];
             
@@ -2576,9 +2596,10 @@ function executarGritoHidraCombate(dificuldadeParam) {
             tile.tipo = novoTipo;
             tile.className = `tile ${novoTipo} tile-grito-hidra`;
             
-            // Rotação aleatória
+            // Rotação aleatória (exceto tiles especiais)
+            const tiposEspeciais = ['entrada', 'saida', 'hidra'];
             const rotacoes = [0, 90, 180, 270];
-            const novaRot = rotacoes[Math.floor(Math.random() * rotacoes.length)];
+            const novaRot = tiposEspeciais.includes(novoTipo) ? 0 : rotacoes[Math.floor(Math.random() * rotacoes.length)];
             tile.dataset.rotacao = novaRot;
             tile.style.transform = `rotate(${novaRot}deg)`;
             tile.rotacao = novaRot;
