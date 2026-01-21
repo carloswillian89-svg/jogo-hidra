@@ -37,6 +37,7 @@ class Sala {
         this.jogadorAtualIndex = 0; // Índice do jogador atual
         this.rodadasContador = 1; // Contador de rodadas
         this.maxJogadores = 4;
+        this.configuracoes = { dificuldade: 'normal', tamanho: 'medio' }; // Configurações do jogo
     }
 
     adicionarJogador(jogador) {
@@ -272,9 +273,15 @@ io.on('connection', (socket) => {
             j.ordemJogada = ordensJogo[idx]; // Atribui ordem de jogo embaralhada
         });
         
+        // Salvar configurações na sala
+        if (dados.configuracoes) {
+            sala.configuracoes = dados.configuracoes;
+            console.log(`⚙️ Configurações salvas: Dificuldade=${dados.configuracoes.dificuldade}, Tamanho=${dados.configuracoes.tamanho}`);
+        }
+        
         console.log(`✅ Jogo iniciado pelo host - Jogadores:`, sala.jogadores.map(j => `ID:${j.id} ${j.nome} (Ordem de entrada:${j.ordem}, Ordem de jogo:${j.ordemJogada})`));
         
-        // Redirecionar todos para o jogo
+        // Redirecionar todos para o jogo com configurações
         io.to(dados.codigoSala).emit('jogo-iniciado', {
             jogadores: sala.jogadores.map(j => ({
                 id: j.id,
@@ -283,7 +290,8 @@ io.on('connection', (socket) => {
                 personagem: j.personagem,
                 ordem: j.ordem,
                 ordemJogada: j.ordemJogada
-            }))
+            })),
+            configuracoes: sala.configuracoes || { dificuldade: 'normal', tamanho: 'medio' }
         });
         
         console.log(`🎮 Jogadores redirecionados para o jogo na sala ${dados.codigoSala}`);

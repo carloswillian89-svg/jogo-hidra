@@ -689,7 +689,7 @@ function processarTrocarTilesRemoto(dados) {
 }
 
 function processarGritoHidraRemoto(dados) {
-    const { ehLinha, indice } = dados;
+    const { ehLinha, indice, rotacoes } = dados;
     
     // Tocar som da hidra para todos os jogadores
     if (typeof tocarSom === 'function') {
@@ -697,7 +697,7 @@ function processarGritoHidraRemoto(dados) {
     }
     
     if (typeof executarGritoHidra === 'function') {
-        executarGritoHidra(ehLinha, indice);
+        executarGritoHidra(ehLinha, indice, rotacoes);
     }
 }
 

@@ -927,9 +927,6 @@ document.getElementById("fimTurno").addEventListener("click", () => {
     
     tocarSom('encerrarTurno');
     
-    // Adicionar artefato ao tabuleiro ANTES de passar o turno
-    adicionarArtefatoAoTabuleiro();
-    
     // Verificar se o jogador atual tem a MAIOR ordemJogada (último a jogar na rodada)
     const jogadorAtualObj = jogadorAtual();
     
@@ -958,6 +955,9 @@ document.getElementById("fimTurno").addEventListener("click", () => {
     if (eraUltimoAJogar) {
         console.log('🔄 Último jogador da rodada encerrou turno - Nova rodada!');
         
+        // Adicionar artefato ao tabuleiro se necessário (antes do grito)
+        adicionarArtefatoAoTabuleiro();
+        
         // Incrementar contador de rodadas
         rodadaAtual++;
         atualizarRodadaUI();
@@ -981,7 +981,20 @@ document.getElementById("fimTurno").addEventListener("click", () => {
 
 // Função para adicionar artefato automaticamente ao tabuleiro
 function adicionarArtefatoAoTabuleiro() {
-    console.log('🎁 Adicionando artefato ao tabuleiro...');
+    console.log('🎁 Verificando se deve adicionar artefato ao tabuleiro...');
+    
+    // Contar quantos artefatos já estão no tabuleiro
+    const artefatosNoTabuleiro = [...cartas.values()].filter(c => 
+        c.tipo === 'artefato' && c.zona.startsWith('tile-')
+    ).length;
+    
+    console.log(`📊 Artefatos no tabuleiro: ${artefatosNoTabuleiro}/5`);
+    
+    // Se já tem 5 artefatos, não adiciona mais
+    if (artefatosNoTabuleiro >= 5) {
+        console.log('⛔ Já existem 5 artefatos no tabuleiro - não adicionando mais');
+        return;
+    }
     
     // Pegar o topo da pilha de artefatos
     const topoArtefato = obterTopoDaPilha('pilha-artefato');
@@ -1015,7 +1028,7 @@ function adicionarArtefatoAoTabuleiro() {
     // Mover a carta para o tile
     moverCartaParaTile(topoArtefato.id, tileId);
     
-    console.log(`✅ Artefato ${topoArtefato.nome} adicionado ao tile ${tileId}`);
+    console.log(`✅ Artefato ${topoArtefato.nome} adicionado ao tile ${tileId} (${artefatosNoTabuleiro + 1}/5)`);
     
     // Sincronizar no multiplayer
     if (typeof enviarAcao === 'function') {
@@ -1253,48 +1266,50 @@ function podeMover(jogador, tileDestino) {
 
 
 function gritoHidra() {
-    console.log('🐉 [INICIO] gritoHidra() chamado');
-    console.trace('Stack trace de gritoHidra()');
+    console.log('🐉 [INICIO] gritoHidra() chamado - Fim da rodada');
     
-    // 1. Escolhe aleatoriamente se rotaciona linha ou coluna
-    const ehLinha = Math.random() < 0.5
-    const indiceAleatorio = Math.floor(Math.random() * TAMANHO)
-
     // Verificar se está em modo multiplayer
     const modoMultiplayer = sessionStorage.getItem('modoMultiplayer') === 'true';
     
+    // 1. Escolhe aleatoriamente qual linha/coluna será movida
+    const ehLinha = Math.random() < 0.5;
+    const indiceAleatorio = Math.floor(Math.random() * TAMANHO);
+    
+    // 2. Gerar rotações aleatórias para todos os tiles afetados
+    const rotacoesAleatorias = [];
+    for (let i = 0; i < TAMANHO; i++) {
+        rotacoesAleatorias.push([0, 90, 180, 270][Math.floor(Math.random() * 4)]);
+    }
+
     if (modoMultiplayer && typeof enviarAcao === 'function') {
-        // Em multiplayer, apenas enviar para o servidor (não executar localmente)
-        // O servidor irá retransmitir para TODOS os jogadores executarem
-        console.log('🐉 [MULTIPLAYER] Enviando grito-hidra para servidor (não executa localmente)');
+        // Em multiplayer, enviar dados para servidor
+        console.log('🐉 [MULTIPLAYER] Enviando grito-hidra para servidor');
         enviarAcao('grito-hidra', {
             ehLinha: ehLinha,
-            indice: indiceAleatorio
+            indice: indiceAleatorio,
+            rotacoes: rotacoesAleatorias
         });
     } else {
         // Em modo local, executar diretamente
         console.log('🐉 [LOCAL] Executando grito-hidra localmente');
-        executarGritoHidra(ehLinha, indiceAleatorio);
+        executarGritoHidra(ehLinha, indiceAleatorio, rotacoesAleatorias);
     }
 }
 
-function executarGritoHidra(ehLinha, indiceAleatorio) {
-    console.log(`🐉 [EXEC] executarGritoHidra(${ehLinha ? 'Linha' : 'Coluna'}, ${indiceAleatorio})`);
-    console.trace('Stack trace de executarGritoHidra()');
+function executarGritoHidra(ehLinha, indiceAleatorio, rotacoes) {
+    console.log(`🐉 [EXEC] executarGritoHidra(${ehLinha ? 'Linha' : 'Coluna'}, ${indiceAleatorio}, rotacoes=${rotacoes})`);
     
-    // 2 & 3 & 4. Coleta tiles da linha/coluna e realiza rotação circular
+    // Coleta tiles da linha/coluna
     const tiles = []
     const indices = []
 
     if (ehLinha) {
-        // Coleta todos os tiles da linha
         for (let col = 0; col < TAMANHO; col++) {
             const index = indiceAleatorio * TAMANHO + col
             indices.push(index)
             tiles.push(tabuleiro.children[index])
         }
     } else {
-        // Coleta todos os tiles da coluna
         for (let lin = 0; lin < TAMANHO; lin++) {
             const index = lin * TAMANHO + indiceAleatorio
             indices.push(index)
@@ -1306,35 +1321,6 @@ function executarGritoHidra(ehLinha, indiceAleatorio) {
 
     console.log(`Grito da Hidra! ${ehLinha ? "Linha" : "Coluna"} ${indiceAleatorio}:`, indices)
 
-    // 🔥 PASSO 1: SALVAR O ESTADO DAS CARTAS E JOGADORES ANTES DE MOVER OS TILES
-    console.log(`📋 Salvando estado das cartas e jogadores ANTES da rotação...`);
-    const cartasPorTile = new Map(); // índice → [cartaIds]
-    const jogadoresPorTile = new Map(); // índice → [jogadorIds]
-    
-    tiles.forEach((tile, idx) => {
-        const tileId = tile.dataset.id;
-        
-        // Salvar cartas
-        const cartasNoTile = [];
-        cartas.forEach((carta, cartaId) => {
-            if (carta.zona === `tile-${tileId}`) {
-                cartasNoTile.push(cartaId);
-            }
-        });
-        
-        if (cartasNoTile.length > 0) {
-            cartasPorTile.set(idx, cartasNoTile);
-            console.log(`  Posição ${idx} (tile ${tileId}): ${cartasNoTile.length} carta(s) - ${cartasNoTile.join(', ')}`);
-        }
-        
-        // Salvar jogadores
-        const jogadoresNoTile = jogadores.filter(j => j.tileId === tileId).map(j => j.id);
-        if (jogadoresNoTile.length > 0) {
-            jogadoresPorTile.set(idx, jogadoresNoTile);
-            console.log(`  Posição ${idx} (tile ${tileId}): ${jogadoresNoTile.length} jogador(es) - ${jogadoresNoTile.join(', ')}`);
-        }
-    });
-
     // Inicia animação de terremoto
     tabuleiro.classList.add("terremoto")
 
@@ -1343,154 +1329,21 @@ function executarGritoHidra(ehLinha, indiceAleatorio) {
         tile.classList.add("tile-grito-hidra")
     })
 
-    // Faz rotação circular usando trocarTiles
-    // Rotate: [t0, t1, t2, t3, t4] → [t1, t2, t3, t4, t0]
-    const primeiroTile = tiles[0]
-    
-    // Guardar tipos e rotações ANTES da troca
-    const tiposAntes = tiles.map(t => t.tipo);
-    const rotacoesAntes = tiles.map(t => t.rotacao || 0);
-    
-    console.log(`📝 ANTES das trocas - tipos:`, tiposAntes);
-    console.log(`📝 ANTES das trocas - IDs:`, tiles.map(t => t.dataset.id));
-    
-    for (let i = 0; i < tiles.length - 1; i++) {
-        trocarTiles(tiles[i], tiles[i + 1], false, false) // false = não sincronizar, false = não atualizar jogadores durante trocas
-    }
-    
-    // Verificar ordem DEPOIS das trocas
-    console.log(`📝 DEPOIS das trocas - ordem visual no DOM:`);
-    const tilesDepois = [];
-    if (ehLinha) {
-        for (let col = 0; col < TAMANHO; col++) {
-            const index = indiceAleatorio * TAMANHO + col;
-            tilesDepois.push(tabuleiro.children[index]);
-        }
-    } else {
-        for (let lin = 0; lin < TAMANHO; lin++) {
-            const index = lin * TAMANHO + indiceAleatorio;
-            tilesDepois.push(tabuleiro.children[index]);
-        }
-    }
-    console.log(`  Tipos:`, tilesDepois.map(t => t.tipo));
-    console.log(`  IDs:`, tilesDepois.map(t => t.dataset.id));
-
-    // Atualizar tabuleiroMatriz com base na ordem REAL após as trocas
-    if (ehLinha) {
-        for (let col = 0; col < TAMANHO; col++) {
-            tabuleiroMatriz[indiceAleatorio][col] = tilesDepois[col].tipo;
-        }
-    } else {
-        for (let lin = 0; lin < TAMANHO; lin++) {
-            tabuleiroMatriz[lin][indiceAleatorio] = tilesDepois[lin].tipo;
-        }
-    }
-    
-    console.log(`📊 Matriz atualizada após Grito da Hidra`);
-    if (ehLinha) {
-        console.log(`  Linha ${indiceAleatorio}:`, tabuleiroMatriz[indiceAleatorio]);
-    } else {
-        console.log(`  Coluna ${indiceAleatorio}:`, tabuleiroMatriz.map(linha => linha[indiceAleatorio]));
-    }
-
-    // 🔥 ATUALIZAR IDs DOS TILES E CARTAS APÓS A ROTAÇÃO
-    console.log(`🔄 Atualizando dataset.id dos tiles e cartas...`);
-    
-    // PASSO 1: Criar mapeamento completo ANTES de modificar qualquer coisa
-    const mapeamentoTiles = []; // [{tile: elemento, antigoId: string, novoId: string, indiceOriginal: number}]
-    
-    if (ehLinha) {
-        for (let col = 0; col < TAMANHO; col++) {
-            const tile = tilesDepois[col];
-            const antigoId = tile.dataset.id;
-            const novoId = `${indiceAleatorio}-${col}`;
-            
-            // Descobrir qual era o índice original deste tile ANTES da rotação
-            // Rotação para DIREITA: posição N recebe tile de posição (N-1)
-            // posição 0 recebe de posição 4, posição 1 recebe de 0, etc
-            const indiceOriginal = (col - 1 + TAMANHO) % TAMANHO;
-            
-            mapeamentoTiles.push({ tile, antigoId, novoId, indiceOriginal });
-            console.log(`  📍 Posição ${col}: tile ${antigoId} → ${novoId} (veio da posição ${indiceOriginal})`);
-        }
-    } else {
-        for (let lin = 0; lin < TAMANHO; lin++) {
-            const tile = tilesDepois[lin];
-            const antigoId = tile.dataset.id;
-            const novoId = `${lin}-${indiceAleatorio}`;
-            
-            // Rotação para DIREITA: posição N recebe tile de posição (N-1)
-            const indiceOriginal = (lin - 1 + TAMANHO) % TAMANHO;
-            
-            mapeamentoTiles.push({ tile, antigoId, novoId, indiceOriginal });
-            console.log(`  📍 Posição ${lin}: tile ${antigoId} → ${novoId} (veio da posição ${indiceOriginal})`);
-        }
-    }
-    
-    // PASSO 2: Atualizar os dataset.id dos tiles
-    mapeamentoTiles.forEach(({tile, antigoId, novoId}) => {
-        tile.dataset.id = novoId;
-        console.log(`  🏷️ Tile atualizado: ${antigoId} → ${novoId}`);
-    });
-    
-    // PASSO 3: Atualizar as cartas e jogadores baseado em qual posição eles vieram
-    let cartasAtualizadas = 0;
-    let jogadoresAtualizados = 0;
-    
-    mapeamentoTiles.forEach(({novoId, indiceOriginal}, posicaoAtual) => {
-        // As cartas que estavam no tile da posição original agora devem estar no tile da posição atual
-        if (cartasPorTile.has(indiceOriginal)) {
-            const cartasIds = cartasPorTile.get(indiceOriginal);
-            cartasIds.forEach(cartaId => {
-                const carta = cartas.get(cartaId);
-                if (carta) {
-                    const zonaAntiga = carta.zona;
-                    carta.zona = `tile-${novoId}`;
-                    console.log(`    📋 Carta ${cartaId}: ${zonaAntiga} → tile-${novoId}`);
-                    cartasAtualizadas++;
-                }
-            });
-        }
-        
-        // Os jogadores que estavam no tile da posição original agora devem estar no tile da posição atual
-        if (jogadoresPorTile.has(indiceOriginal)) {
-            const jogadoresIds = jogadoresPorTile.get(indiceOriginal);
-            jogadoresIds.forEach(jogadorId => {
-                const jogador = jogadores.find(j => j.id === jogadorId);
-                if (jogador) {
-                    const tileIdAntigo = jogador.tileId;
-                    jogador.tileId = novoId;
-                    console.log(`    👤 Jogador ${jogadorId}: ${tileIdAntigo} → ${novoId}`);
-                    jogadoresAtualizados++;
-                }
-            });
+    // Aplicar rotações aleatórias a cada tile
+    tiles.forEach((tile, idx) => {
+        if (rotacoes && rotacoes[idx] !== undefined) {
+            const novaRotacao = rotacoes[idx];
+            tile.rotacao = novaRotacao;
+            tile.style.transform = `rotate(${novaRotacao}deg)`;
+            console.log(`  🔄 Tile ${tile.dataset.id}: rotação → ${novaRotacao}°`);
         }
     });
-    
-    console.log(`  ✅ ${cartasAtualizadas} cartas e ${jogadoresAtualizados} jogadores atualizados`);
-    console.log(`✅ IDs dos tiles, cartas e jogadores atualizados`);
-    
-    // Log do estado final dos jogadores
-    console.log(`👥 Estado final dos jogadores após Grito da Hidra:`);
-    jogadores.forEach(j => {
-        console.log(`  Jogador ${j.id}: tileId="${j.tileId}"`);
-    });
-    
-    // Re-renderizar cartas para refletir as mudanças
-    renderizarCartas();
-
-    // Redesenha jogadores após a rotação (e atualização de posições)
-    desenharJogadores()
-    
-    // Salvar estado após Grito da Hidra
-    salvarEstadoLocal();
 
     // Remove o destaque após 2 segundos
     setTimeout(() => {
         tiles.forEach(tile => {
             tile.classList.remove("tile-grito-hidra")
         })
-        // Remove animação de terremoto
         tabuleiro.classList.remove("terremoto")
     }, 2000)
 
@@ -1874,11 +1727,11 @@ function obterTopoDaPilha(zonaId) {
 
 // Distribui cartas iniciais nas câmaras baseado na dificuldade
 function distribuirCartasNasCamaras() {
-    // Ajustar quantidades baseado na dificuldade
+    // Ajustar quantidades baseado no TAMANHO DO TABULEIRO (não dificuldade)
     let qtdPerigo, qtdArtefato;
     
-    switch(dificuldade) {
-        case 'facil':
+    switch(tamanhoTabuleiro) {
+        case 'pequeno':
             qtdPerigo = 3;
             qtdArtefato = 5;
             break;
@@ -1886,14 +1739,16 @@ function distribuirCartasNasCamaras() {
             qtdPerigo = 4;
             qtdArtefato = 5;
             break;
-        case 'dificil':
+        case 'grande':
             qtdPerigo = 5;
             qtdArtefato = 5;
             break;
         default:
-            qtdPerigo = 3;
+            qtdPerigo = 4;
             qtdArtefato = 5;
     }
+    
+    console.log(`📦 Distribuindo ${qtdPerigo} cartas de perigo e ${qtdArtefato} cartas de artefato (Tamanho: ${tamanhoTabuleiro})`);
     
     // coleta todos os tiles do tipo camara no DOM (já criados por criarTabuleiro)
     const camaras = [...tabuleiro.children].filter(tile => tile && tile.tipo === 'camara')
@@ -2488,6 +2343,11 @@ function executarGritoHidraCombate(dificuldadeParam) {
             tile.dataset.rotacao = novaRot;
             tile.style.transform = `rotate(${novaRot}deg)`;
             
+            // Atualizar rotação do tile
+            if (tile.rotacao !== undefined) {
+                tile.rotacao = (tile.rotacao + 90) % 360;
+            }
+            
             // Contra-rotação nos overlays
             const contraRot = -novaRot;
             const cartas = tile.querySelector('.cartas-no-tile');
@@ -2514,6 +2374,11 @@ function executarGritoHidraCombate(dificuldadeParam) {
             tile.dataset.rotacao = novaRot;
             tile.style.transform = `rotate(${novaRot}deg)`;
             
+            // Atualizar rotação do tile
+            if (tile.rotacao !== undefined) {
+                tile.rotacao = novaRot;
+            }
+            
             // Contra-rotação nos overlays
             const contraRot = -novaRot;
             const cartas = tile.querySelector('.cartas-no-tile');
@@ -2532,7 +2397,7 @@ function executarGritoHidraCombate(dificuldadeParam) {
         // DIFÍCIL: Girar E movimentar (gerar novo tabuleiro mantendo cartas e jogadores)
         console.log('🐉 Modo Difícil: Regenerando tabuleiro mantendo cartas e jogadores');
         
-        // Gerar nova matriz
+        // Gerar nova matriz (preserva entrada, saída e hidra)
         gerarMatriz();
         
         // Recriar tabuleiro
@@ -2550,26 +2415,45 @@ function executarGritoHidraCombate(dificuldadeParam) {
         
         // Restaurar cartas nas mesmas posições (IDs de tile)
         cartasPorTileId.forEach((cartasIds, tileId) => {
-            cartasIds.forEach(cartaId => {
-                const carta = cartas.get(cartaId);
-                if (carta) {
-                    carta.zona = `tile-${tileId}`;
-                }
-            });
+            // Verificar se o tile ainda existe
+            const tileExiste = document.querySelector(`.tile[data-id="${CSS.escape(tileId)}"]`);
+            if (tileExiste) {
+                cartasIds.forEach(cartaId => {
+                    const carta = cartas.get(cartaId);
+                    if (carta) {
+                        carta.zona = `tile-${tileId}`;
+                    }
+                });
+            } else {
+                console.warn(`⚠️ Tile ${tileId} não existe mais após regeneração`);
+            }
         });
         
         // Restaurar jogadores nas mesmas posições
         jogadoresPorTileId.forEach((jogadoresIds, tileId) => {
-            jogadoresIds.forEach(jogadorId => {
-                const jogador = jogadores.find(j => j.id === jogadorId);
-                if (jogador) {
-                    jogador.tileId = tileId;
-                    const tileEl = document.querySelector(`.tile[data-id="${CSS.escape(tileId)}"]`);
-                    if (tileEl) {
+            // Verificar se o tile ainda existe
+            const tileEl = document.querySelector(`.tile[data-id="${CSS.escape(tileId)}"]`);
+            if (tileEl) {
+                jogadoresIds.forEach(jogadorId => {
+                    const jogador = jogadores.find(j => j.id === jogadorId);
+                    if (jogador) {
+                        jogador.tileId = tileId;
                         jogador.tile = tileEl;
                     }
-                }
-            });
+                });
+            } else {
+                console.warn(`⚠️ Tile ${tileId} não existe mais - jogadores precisam ser reposicionados`);
+                // Tentar encontrar tile de entrada como fallback
+                const tileEntrada = obterTileEntrada();
+                jogadoresIds.forEach(jogadorId => {
+                    const jogador = jogadores.find(j => j.id === jogadorId);
+                    if (jogador && tileEntrada) {
+                        jogador.tileId = tileEntrada.dataset.id;
+                        jogador.tile = tileEntrada;
+                        console.log(`👤 Jogador ${jogadorId} reposicionado na entrada`);
+                    }
+                });
+            }
         });
         
         // Re-renderizar cartas e jogadores

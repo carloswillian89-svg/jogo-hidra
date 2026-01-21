@@ -394,6 +394,13 @@ socket.on('jogo-iniciado', (dados) => {
     btnPronto.disabled = true;
     btnSairLobby.disabled = true;
     
+    // Salvar configurações do servidor
+    if (dados.configuracoes) {
+        sessionStorage.setItem('dificuldadeJogo', dados.configuracoes.dificuldade);
+        sessionStorage.setItem('tamanhoTabuleiro', dados.configuracoes.tamanho);
+        console.log(`⚙️ Configurações recebidas do servidor: ${dados.configuracoes.dificuldade}, ${dados.configuracoes.tamanho}`);
+    }
+    
     // Encontrar minha ordem no jogo (match por socketId ATUAL)
     const meuJogador = dados.jogadores.find(j => j.socketId === socket.id);
     console.log('🔍 Procurando meu jogador:', { meuSocketId: socket.id, jogadores: dados.jogadores });
