@@ -22,13 +22,57 @@ document.addEventListener('click', () => {
     }
 }, { once: false });
 
+// Controle de Volume
+const btnVolume = document.getElementById('btn-volume');
+const sliderVolume = document.getElementById('slider-volume');
+const iconeVolume = document.getElementById('icone-volume');
+
+// Aplicar volume inicial ao slider
+sliderVolume.value = musicaLobby.volume * 100;
+
+// Alternar mudo
+btnVolume.addEventListener('click', () => {
+    if (musicaLobby.volume > 0) {
+        musicaLobby.dataset.volumeAnterior = musicaLobby.volume;
+        musicaLobby.volume = 0;
+        sliderVolume.value = 0;
+        iconeVolume.textContent = '🔇';
+    } else {
+        const volumeAnterior = parseFloat(musicaLobby.dataset.volumeAnterior) || 0.3;
+        musicaLobby.volume = volumeAnterior;
+        sliderVolume.value = volumeAnterior * 100;
+        atualizarIconeVolume(volumeAnterior);
+    }
+});
+
+// Slider de volume
+sliderVolume.addEventListener('input', (e) => {
+    const volume = e.target.value / 100;
+    musicaLobby.volume = volume;
+    atualizarIconeVolume(volume);
+    localStorage.setItem('volumeJogo', volume.toString());
+});
+
+function atualizarIconeVolume(volume) {
+    if (volume === 0) {
+        iconeVolume.textContent = '🔇';
+    } else if (volume < 0.33) {
+        iconeVolume.textContent = '🔈';
+    } else if (volume < 0.66) {
+        iconeVolume.textContent = '🔉';
+    } else {
+        iconeVolume.textContent = '🔊';
+    }
+}
+
 let estadoLocal = {
     nome: '',
     codigoSala: '',
     meuId: '',
     personagemEscolhido: null,
     pronto: false,
-    jogadores: []
+    jogadores: [],
+    ehHost: false
 };
 
 // Estado do carrossel
@@ -207,6 +251,15 @@ function atualizarPersonagens() {
     btnPronto.disabled = !estadoLocal.personagemEscolhido;
 }
 
+// Verificar se é o host e mostrar configurações
+function verificarSeEhHost() {
+    const configHost = document.getElementById('config-host');
+    
+    if (configHost) {
+        configHost.style.display = estadoLocal.ehHost ? 'block' : 'none';
+    }
+}
+
 // Atualizar lista de jogadores
 function atualizarListaJogadores() {
     listaJogadores.innerHTML = '';
@@ -241,9 +294,10 @@ function atualizarListaJogadores() {
         const status = jogador.pronto ? '✅' : '⏳';
         const voce = jogador.id === estadoLocal.meuId ? ' (Você)' : '';
         const personagemTexto = nomePersonagem ? ` - ${nomePersonagem}` : '';
+        const hostIndicador = (jogador.id === estadoLocal.jogadores[0]?.id) ? '👑 ' : '';
         
         li.innerHTML = `
-            <span class="jogador-nome">${jogador.nome}${personagemTexto}${voce}</span>
+            <span class="jogador-nome">${hostIndicador}${jogador.nome}${personagemTexto}${voce}</span>
             <span class="jogador-status">${status}</span>
         `;
         
@@ -257,18 +311,21 @@ socket.on('sala-criada', (dados) => {
     estadoLocal.codigoSala = dados.codigo;
     estadoLocal.meuId = dados.jogador.id;
     estadoLocal.jogadores = [dados.jogador];
+    estadoLocal.ehHost = true; // Quem cria a sala é sempre o host
     
     codigoSalaDisplay.textContent = dados.codigo;
     mostrarTela(telaLobby);
     inicializarCarrossel();
     mostrarNotificacao('Sala criada! Compartilhe o código com seus amigos', 'sucesso');
     atualizarListaJogadores();
+    verificarSeEhHost();
 });
 
 socket.on('entrou-na-sala', (dados) => {
     estadoLocal.codigoSala = dados.codigo;
     estadoLocal.meuId = dados.jogador.id;
     estadoLocal.jogadores = dados.jogadores;
+    estadoLocal.ehHost = false; // Quem entra na sala não é host
     
     codigoSalaDisplay.textContent = dados.codigo;
     mostrarTela(telaLobby);
@@ -276,12 +333,14 @@ socket.on('entrou-na-sala', (dados) => {
     mostrarNotificacao('Você entrou na sala!', 'sucesso');
     atualizarListaJogadores();
     atualizarPersonagens();
+    verificarSeEhHost();
 });
 
 socket.on('jogador-entrou', (dados) => {
     estadoLocal.jogadores = dados.jogadores;
     mostrarNotificacao(`${dados.jogador.nome} entrou na sala`, 'info');
     atualizarListaJogadores();
+    verificarSeEhHost();
 });
 
 socket.on('jogador-saiu', (dados) => {
@@ -289,6 +348,7 @@ socket.on('jogador-saiu', (dados) => {
     mostrarNotificacao(`${dados.nome} saiu da sala`, 'info');
     atualizarListaJogadores();
     atualizarPersonagens();
+    verificarSeEhHost();
 });
 
 socket.on('personagem-escolhido', (dados) => {
@@ -369,9 +429,8 @@ socket.on('erro', (dados) => {
 socket.on('todos-prontos', (dados) => {
     console.log(`✅ Todos os ${dados.quantidadeJogadores} jogadores estão prontos!`);
     
-    // Mostrar botão de iniciar apenas para o host (primeiro jogador da sala)
-    const souHost = estadoLocal.jogadores[0]?.id === estadoLocal.meuId;
-    if (souHost && btnIniciarJogoLobby) {
+    // Mostrar botão de iniciar apenas para o host (criador da sala)
+    if (estadoLocal.ehHost && btnIniciarJogoLobby) {
         btnIniciarJogoLobby.style.display = 'block';
         mostrarNotificacao('Todos prontos! Você pode iniciar o jogo.', 'sucesso');
     } else {

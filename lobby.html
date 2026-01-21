@@ -7,6 +7,14 @@
     <link rel="stylesheet" href="style-lobby.css">
 </head>
 <body>
+    <!-- Controle de Volume -->
+    <div id="controle-volume">
+        <button id="btn-volume" title="Volume">
+            <span id="icone-volume">🔊</span>
+        </button>
+        <input type="range" id="slider-volume" min="0" max="100" value="30">
+    </div>
+
     <div id="lobby-container">
         <!-- Tela Inicial -->
         <div id="tela-inicial" class="tela ativa">
@@ -41,8 +49,7 @@
             <option value="grande">Grande (7x7)</option>
             </select>
 
-            <!-- Botão de grito da hidra ao perder combate -->
-            <button id="grito-da-hidra-combate">Grito da Hidra (Perder Combate)</button>
+           
 
             <div class="lobby-content">
                 <!-- Seleção de Personagens -->
