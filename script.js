@@ -1560,11 +1560,17 @@ function salvarEstadoLocal() {
     // Coletar informações atuais dos tiles
     const tilesInfo = [];
     const tiles = tabuleiro.querySelectorAll('.tile');
+    const tiposEspeciais = ['entrada', 'saida', 'hidra'];
+    
     tiles.forEach(tile => {
+        const tipo = tile.tipo;
+        // Tiles especiais SEMPRE devem ter rotação 0
+        const rotacao = tiposEspeciais.includes(tipo) ? 0 : (tile.rotacao || Number(tile.dataset.rotacao) || 0);
+        
         tilesInfo.push({
             id: tile.dataset.id,
-            tipo: tile.tipo,
-            rotacao: tile.rotacao || 0
+            tipo: tipo,
+            rotacao: rotacao
         });
     });
     
@@ -1649,6 +1655,8 @@ function carregarEstadoLocal() {
         // Restaurar tipos e rotações dos tiles se houver
         if (estado.tilesInfo && estado.tilesInfo.length > 0) {
             console.log('🔄 Restaurando tipos e rotações dos tiles...');
+            const tiposEspeciais = ['entrada', 'saida', 'hidra'];
+            
             estado.tilesInfo.forEach(({id, tipo, rotacao}) => {
                 const tile = document.querySelector(`.tile[data-id="${CSS.escape(id)}"]`);
                 if (tile) {
@@ -1663,13 +1671,16 @@ function carregarEstadoLocal() {
                         tabuleiroMatriz[lin][col] = tipo;
                     }
                     
+                    // Garantir que tiles especiais SEMPRE tenham rotação 0
+                    const rotacaoFinal = tiposEspeciais.includes(tipo) ? 0 : (rotacao || 0);
+                    
                     // Restaurar rotação
-                    tile.rotacao = rotacao || 0;
-                    tile.dataset.rotacao = rotacao || 0;
-                    tile.style.transform = `rotate(${rotacao || 0}deg)`;
+                    tile.rotacao = rotacaoFinal;
+                    tile.dataset.rotacao = rotacaoFinal;
+                    tile.style.transform = `rotate(${rotacaoFinal}deg)`;
                     
                     // Aplicar contra-rotação nos overlays
-                    const contraRot = -(rotacao || 0);
+                    const contraRot = -rotacaoFinal;
                     const cartasOverlay = tile.querySelector('.cartas-no-tile');
                     const overlay = tile.querySelector('.overlay-no-rotacao');
                     if (cartasOverlay) {
@@ -1681,8 +1692,8 @@ function carregarEstadoLocal() {
                         overlay.style.transformOrigin = '50% 50%';
                     }
                     
-                    if (rotacao && rotacao !== 0) {
-                        console.log(`  Tile ${id}: tipo=${tipo}, rotação ${rotacao}°`);
+                    if (rotacaoFinal !== 0 || tiposEspeciais.includes(tipo)) {
+                        console.log(`  Tile ${id}: tipo=${tipo}, rotação ${rotacaoFinal}°`);
                     }
                 }
             });
@@ -2630,16 +2641,21 @@ function executarGritoHidraCombate(dificuldadeParam) {
             tile.classList.add("tile-grito-hidra");
             
             const novoTipo = tiposTiles[idx];
+            const tiposEspeciais = ['entrada', 'saida', 'hidra'];
+            
+            // Atualizar tipo do tile
             tile.tipo = novoTipo;
             tile.className = `tile ${novoTipo} tile-grito-hidra`;
             
-            // Rotação aleatória (exceto tiles especiais)
-            const tiposEspeciais = ['entrada', 'saida', 'hidra'];
+            // Rotação: SEMPRE 0 para tiles especiais, aleatória para outros
             const rotacoes = [0, 90, 180, 270];
             const novaRot = tiposEspeciais.includes(novoTipo) ? 0 : rotacoes[Math.floor(Math.random() * rotacoes.length)];
+            
             tile.dataset.rotacao = novaRot;
             tile.style.transform = `rotate(${novaRot}deg)`;
             tile.rotacao = novaRot;
+            
+            console.log(`🎲 Tile ${tile.dataset.id}: tipo=${novoTipo}, rotação=${novaRot}°`);
             
             // Salvar estado para sincronização
             estadosTiles.push({

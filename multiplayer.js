@@ -742,6 +742,8 @@ function aplicarEstadosTiles(estadosTiles) {
         return;
     }
     
+    const tiposEspeciais = ['entrada', 'saida', 'hidra'];
+    
     // Adicionar animação de terremoto
     tabuleiro.classList.add("terremoto");
     
@@ -768,14 +770,13 @@ function aplicarEstadosTiles(estadosTiles) {
             }
         }
         
+        // Garantir que tiles especiais SEMPRE tenham rotação 0
+        const rotacaoFinal = tiposEspeciais.includes(estado.tipo) ? 0 : estado.rotacao;
+        
         // Atualizar rotação
-        tile.dataset.rotacao = estado.rotacao;
-        tile.style.transform = `rotate(${estado.rotacao}deg)`;
-        if (tile.rotacao !== undefined) {
-            tile.rotacao = estado.rotacao;
-        } else {
-            tile.rotacao = estado.rotacao;
-        }
+        tile.dataset.rotacao = rotacaoFinal;
+        tile.style.transform = `rotate(${rotacaoFinal}deg)`;
+        tile.rotacao = rotacaoFinal;
         
         // Aplicar contra-rotação aos overlays
         const contraRot = -estado.rotacao;
