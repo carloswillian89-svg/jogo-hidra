@@ -84,6 +84,8 @@ function inicializarJogoMultiplayer(jogadoresData) {
 }
 
 function gerarTabuleiroHost() {
+    console.log('🏗️ [HOST] Gerando tabuleiro...');
+    
     gerarMatriz();
     criarTabuleiro();
     
@@ -175,6 +177,17 @@ function gerarTabuleiroHost() {
         personagem: j.personagem
     }));
     
+    console.log('📤 [HOST] Enviando tabuleiro para outros jogadores...');
+    console.log('📊 Dados a enviar:', {
+        codigoSala,
+        tabuleiroLinhas: tabuleiroMatriz?.length,
+        tilesEstadoLength: tilesEstadoCompleto.length,
+        cartasEstadoLength: cartasEstado.length,
+        jogadoresEstadoLength: jogadoresEstado.length,
+        jogadorAtualIndex
+    });
+    console.log('👥 Jogadores estado:', jogadoresEstado.map(j => `${j.nome}(ID:${j.id},tileId:${j.tileId})`));
+    
     socket.emit('enviar-tabuleiro', {
         codigoSala: codigoSala,
         tabuleiro: tabuleiroMatriz,
@@ -184,6 +197,8 @@ function gerarTabuleiroHost() {
         jogadorAtualIndex: jogadorAtualIndex,
         jogadoresEstado: jogadoresEstado
     });
+    
+    console.log('✅ [HOST] Evento enviar-tabuleiro emitido');
     
     // Marcar que o jogo foi iniciado (para distinguir recarregamentos)
     sessionStorage.setItem('jogoJaIniciado', 'true');
@@ -294,11 +309,24 @@ function configurarEventosSocket() {
         }
         
         console.log('📥 Recebendo tabuleiro do host...');
+        console.log('📊 Dados recebidos:', {
+            temTabuleiro: !!dados.tabuleiro,
+            temTilesEstado: !!dados.tilesEstado,
+            temJogadoresEstado: !!dados.jogadoresEstado,
+            jogadoresEstadoLength: dados.jogadoresEstado?.length,
+            jogadorAtualIndex: dados.jogadorAtualIndex
+        });
         
         // 🔥 IMPORTANTE: Só carregar estado local se for um RECARREGAMENTO
         // Verificar se o jogo já foi iniciado anteriormente
         const jogoJaIniciado = sessionStorage.getItem('jogoJaIniciado') === 'true';
         const estadoSalvo = localStorage.getItem('labirinto-hidra-estado');
+        
+        console.log('🔍 Verificação de recarregamento:', {
+            jogoJaIniciado,
+            temEstadoSalvo: !!estadoSalvo,
+            temFuncaoCarregar: typeof carregarEstadoLocal === 'function'
+        });
         
         if (jogoJaIniciado && estadoSalvo && typeof carregarEstadoLocal === 'function') {
             console.log('🔄 Recarregamento detectado! Tentando carregar estado local...');
@@ -416,8 +444,14 @@ function configurarEventosSocket() {
         // Inicializar jogadores
         const tiles = document.querySelectorAll('.tile');
         
+        console.log('👥 Inicializando jogadores...');
+        console.log('  - Tiles encontrados:', tiles.length);
+        console.log('  - Jogadores locais:', jogadores.map(j => `${j.nome}(ID:${j.id})`));
+        
         // Se recebeu estado dos jogadores, PRIMEIRO atualizar IDs e então aplicar posições
         if (dados.jogadoresEstado && dados.jogadoresEstado.length > 0) {
+            console.log('✅ Estado dos jogadores recebido:', dados.jogadoresEstado.map(j => `${j.nome}(ID:${j.id},tileId:${j.tileId})`));
+            
             // PRIMEIRO: Atualizar IDs e ordemJogada dos jogadores locais baseado no servidor
             jogadores.forEach(j => {
                 const estadoServidor = dados.jogadoresEstado.find(ej => 
@@ -438,6 +472,9 @@ function configurarEventosSocket() {
                     if (tile) {
                         j.tile = tile;
                         j.tileId = estadoSalvo.tileId;
+                        console.log(`  ✅ Jogador ${j.nome} posicionado em ${j.tileId}`);
+                    } else {
+                        console.warn(`  ⚠️ Tile ${estadoSalvo.tileId} não encontrado para ${j.nome}`);
                     }
                 } else {
                     // Fallback: posicionar na entrada se não tiver tileId
@@ -452,12 +489,16 @@ function configurarEventosSocket() {
                     if (tileEntrada) {
                         j.tile = tileEntrada;
                         j.tileId = tileEntrada.dataset.id;
+                        console.log(`  ⚠️ Jogador ${j.nome} posicionado na entrada (fallback)`);
                     }
                 }
             });
             
+            console.log('🎨 Chamando desenharJogadores()...');
             desenharJogadores();
+            console.log('✅ Jogadores desenhados');
         } else {
+            console.log('⚠️ Nenhum estado de jogadores recebido, usando entrada como padrão');
             
             let tileEntrada = null;
             if (entradaPosicao) {
@@ -473,8 +514,13 @@ function configurarEventosSocket() {
                 jogadores.forEach(j => {
                     j.tile = tileEntrada;
                     j.tileId = tileEntrada.dataset.id;
+                    console.log(`  ✅ Jogador ${j.nome} posicionado na entrada`);
                 });
+                console.log('🎨 Chamando desenharJogadores()...');
                 desenharJogadores();
+                console.log('✅ Jogadores desenhados');
+            } else {
+                console.error('❌ Tile de entrada não encontrado!');
             }
         }
         
