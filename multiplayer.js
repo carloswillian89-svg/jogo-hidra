@@ -184,6 +184,10 @@ function gerarTabuleiroHost() {
         jogadorAtualIndex: jogadorAtualIndex,
         jogadoresEstado: jogadoresEstado
     });
+    
+    // Marcar que o jogo foi iniciado (para distinguir recarregamentos)
+    sessionStorage.setItem('jogoJaIniciado', 'true');
+    console.log('✅ Host marcou jogo como iniciado');
 }
 
 
@@ -291,12 +295,13 @@ function configurarEventosSocket() {
         
         console.log('📥 Recebendo tabuleiro do host...');
         
-        // 🔥 IMPORTANTE: Tentar carregar estado local PRIMEIRO
-        // Se existe estado salvo, usá-lo ao invés do recebido
+        // 🔥 IMPORTANTE: Só carregar estado local se for um RECARREGAMENTO
+        // Verificar se o jogo já foi iniciado anteriormente
+        const jogoJaIniciado = sessionStorage.getItem('jogoJaIniciado') === 'true';
         const estadoSalvo = localStorage.getItem('labirinto-hidra-estado');
         
-        if (estadoSalvo && typeof carregarEstadoLocal === 'function') {
-            console.log('💾 Estado local encontrado! Carregando ao invés do recebido...');
+        if (jogoJaIniciado && estadoSalvo && typeof carregarEstadoLocal === 'function') {
+            console.log('🔄 Recarregamento detectado! Tentando carregar estado local...');
             const carregou = carregarEstadoLocal();
             
             if (carregou) {
@@ -323,7 +328,11 @@ function configurarEventosSocket() {
             }
         }
         
-        console.log('📋 Nenhum estado local ou falha ao carregar. Usando tabuleiro recebido do host.');
+        // Primeira vez ou sem estado salvo - usar tabuleiro do host
+        console.log('🆕 Primeiro carregamento ou sem estado local. Usando tabuleiro do host.');
+        
+        // Marcar que o jogo foi iniciado (para próximos recarregamentos)
+        sessionStorage.setItem('jogoJaIniciado', 'true');
         
         tabuleiroMatriz = dados.tabuleiro;
         entradaPosicao = dados.entradaPosicao;
