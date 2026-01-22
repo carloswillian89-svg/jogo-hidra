@@ -1049,6 +1049,15 @@ document.getElementById("btn-reiniciar-tabuleiro").addEventListener("click", () 
     // Verificar se está em modo multiplayer
     const modoMultiplayer = sessionStorage.getItem('modoMultiplayer') === 'true';
     
+    // Verificar se é host em multiplayer
+    if (modoMultiplayer) {
+        const ehHost = sessionStorage.getItem('ehHost') === 'true';
+        if (!ehHost) {
+            alert('Apenas o host pode reiniciar o tabuleiro!');
+            return;
+        }
+    }
+    
     if (modoMultiplayer && window.socket) {
         // Em modo multiplayer, enviar evento para servidor
         // Som será tocado quando o servidor emitir 'tabuleiro-reiniciado'
@@ -3071,6 +3080,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     console.log('✅ Botão Iniciar Jogo encontrado, registrando event listener');
                     btnIniciarJogo.addEventListener("click", () => {
                         console.log("🎮 BOTÃO INICIAR JOGO CLICADO");
+                        
+                        // Verificar se é host
+                        const ehHost = sessionStorage.getItem('ehHost') === 'true';
+                        if (!ehHost) {
+                            alert('Apenas o host pode iniciar o jogo!');
+                            return;
+                        }
+                        
                         // Som será tocado quando o servidor emitir 'jogo-iniciado-partida'
                         const codigoSala = sessionStorage.getItem('codigoSala');
                         console.log("📤 Enviando iniciar-jogo para sala:", codigoSala);
@@ -3083,25 +3100,59 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     } else {
         console.log('🎮 Modo local - Socket desativado');
+    }
+    
+    // Tentar carregar estado salvo (tanto em modo local quanto multiplayer)
+    const estadoCarregado = carregarEstadoLocal();
+    
+    if (!estadoCarregado && !emModoMultiplayer) {
+        // Se não há estado salvo E está em modo local, inicializar novo jogo
+        jogadorAtualIndex = Math.floor(Math.random() * jogadores.length);
+        console.log('🎲 Jogador inicial sorteado (modo local):', jogadorAtualIndex, '(ID:', jogadores[jogadorAtualIndex].id, ')');
         
-        // Tentar carregar estado salvo
-        const estadoCarregado = carregarEstadoLocal();
+        gerarMatriz();
+        criarTabuleiro();
+        renderizarCartasPersonagens(jogadorAtual().id);
         
-        if (!estadoCarregado) {
-            // Se não há estado salvo, inicializar novo jogo
-            // Em modo local, randomizar jogador inicial e inicializar
-            jogadorAtualIndex = Math.floor(Math.random() * jogadores.length);
-            console.log('🎲 Jogador inicial sorteado (modo local):', jogadorAtualIndex, '(ID:', jogadores[jogadorAtualIndex].id, ')');
-            
-            gerarMatriz();
-            criarTabuleiro();
-            renderizarCartasPersonagens(jogadorAtual().id);
-            
-            // Salvar estado inicial
-            salvarEstadoLocal();
+        // Salvar estado inicial
+        salvarEstadoLocal();
+    } else if (estadoCarregado) {
+        console.log('✅ Jogo retomado do estado salvo');
+        renderizarCartasPersonagens(jogadorAtual().id);
+    }
+    
+    // Controlar acesso aos botões de controle do jogo (apenas host)
+    if (emModoMultiplayer) {
+        const ehHost = sessionStorage.getItem('ehHost') === 'true';
+        const btnIniciarJogo = document.getElementById('btn-iniciar-jogo');
+        const btnEncerrarJogo = document.getElementById('btn-encerrar-jogo');
+        const btnReiniciarTabuleiro = document.getElementById('btn-reiniciar-tabuleiro');
+        
+        console.log(`🔐 Modo multiplayer - ehHost: ${ehHost}`);
+        
+        if (!ehHost) {
+            // Se não é host, desabilitar botões mas manter visíveis
+            if (btnIniciarJogo) {
+                btnIniciarJogo.disabled = true;
+                btnIniciarJogo.style.opacity = '0.5';
+                btnIniciarJogo.style.cursor = 'not-allowed';
+                btnIniciarJogo.title = 'Apenas o host pode iniciar o jogo';
+            }
+            if (btnEncerrarJogo) {
+                btnEncerrarJogo.disabled = true;
+                btnEncerrarJogo.style.opacity = '0.5';
+                btnEncerrarJogo.style.cursor = 'not-allowed';
+                btnEncerrarJogo.title = 'Apenas o host pode encerrar o jogo';
+            }
+            if (btnReiniciarTabuleiro) {
+                btnReiniciarTabuleiro.disabled = true;
+                btnReiniciarTabuleiro.style.opacity = '0.5';
+                btnReiniciarTabuleiro.style.cursor = 'not-allowed';
+                btnReiniciarTabuleiro.title = 'Apenas o host pode reiniciar o tabuleiro';
+            }
+            console.log('🔒 Botões desabilitados para não-host');
         } else {
-            console.log('✅ Jogo retomado do estado salvo');
-            renderizarCartasPersonagens(jogadorAtual().id);
+            console.log('🔓 Botões habilitados para host');
         }
     }
 });

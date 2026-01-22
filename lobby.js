@@ -313,6 +313,8 @@ socket.on('sala-criada', (dados) => {
     estadoLocal.jogadores = [dados.jogador];
     estadoLocal.ehHost = true; // Quem cria a sala é sempre o host
     
+    sessionStorage.setItem('ehHost', 'true'); // Salvar no sessionStorage
+    
     codigoSalaDisplay.textContent = dados.codigo;
     mostrarTela(telaLobby);
     inicializarCarrossel();
@@ -326,6 +328,8 @@ socket.on('entrou-na-sala', (dados) => {
     estadoLocal.meuId = dados.jogador.id;
     estadoLocal.jogadores = dados.jogadores;
     estadoLocal.ehHost = false; // Quem entra na sala não é host
+    
+    sessionStorage.setItem('ehHost', 'false'); // Garantir que não-host seja salvo
     
     codigoSalaDisplay.textContent = dados.codigo;
     mostrarTela(telaLobby);
@@ -458,8 +462,9 @@ if (btnIniciarJogoLobby) {
         
         sessionStorage.setItem('dificuldadeJogo', dificuldade);
         sessionStorage.setItem('tamanhoTabuleiro', tamanho);
+        sessionStorage.setItem('ehHost', 'true'); // Salvar que este jogador é o host
         
-        console.log(`⚙️ Configurações salvas: Dificuldade=${dificuldade}, Tamanho=${tamanho}`);
+        console.log(`⚙️ Configurações salvas: Dificuldade=${dificuldade}, Tamanho=${tamanho}, Host=true`);
         
         socket.emit('iniciar-jogo-lobby', {
             codigoSala: estadoLocal.codigoSala,
