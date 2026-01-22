@@ -1315,137 +1315,71 @@ function gritoHidra() {
 }
 
 function executarGritoHidra(linha, coluna, direcaoLinha, direcaoColuna, rotacoesLinha, rotacoesColuna) {
-    console.log(`🐉 [EXEC] executarGritoHidra - Linha ${linha} (${ direcaoLinha}), Coluna ${coluna} (${direcaoColuna})`);
-    
-    // Salvar estado de cartas e jogadores ANTES do movimento (baseado no índice físico)
-    const cartasPorIndice = new Map();  // índice do tile → [cartaIds]
-    const jogadoresPorIndice = new Map();  // índice do tile → [jogadorIds]
-    
-    // Coletar estado atual de todas as cartas
-    cartas.forEach((carta, cartaId) => {
-        if (carta.zona && carta.zona.startsWith('tile-')) {
-            const tileId = carta.zona.replace('tile-', '');
-            // Encontrar o índice físico deste tile
-            const tiles = Array.from(tabuleiro.children);
-            const indice = tiles.findIndex(t => t.dataset.id === tileId);
-            if (indice !== -1) {
-                if (!cartasPorIndice.has(indice)) {
-                    cartasPorIndice.set(indice, []);
-                }
-                cartasPorIndice.get(indice).push(cartaId);
-            }
-        }
-    });
-    
-    // Coletar estado atual de todos os jogadores
-    jogadores.forEach(jogador => {
-        if (jogador.tileId) {
-            // Encontrar o índice físico deste tile
-            const tiles = Array.from(tabuleiro.children);
-            const indice = tiles.findIndex(t => t.dataset.id === jogador.tileId);
-            if (indice !== -1) {
-                if (!jogadoresPorIndice.has(indice)) {
-                    jogadoresPorIndice.set(indice, []);
-                }
-                jogadoresPorIndice.get(indice).push(jogador.id);
-            }
-        }
-    });
+    console.log(`🐉 [EXEC] executarGritoHidra - Linha ${linha} (${direcaoLinha}), Coluna ${coluna} (${direcaoColuna})`);
     
     // Inicia animação de terremoto
     tabuleiro.classList.add("terremoto");
     
-    // PASSO 1: Processar LINHA (girar e mover)
-    const tilesLinha = [];
+    // Adicionar destaque visual
     for (let col = 0; col < TAMANHO; col++) {
-        const index = linha * TAMANHO + col;
-        const tile = tabuleiro.children[index];
-        tilesLinha.push(tile);
-        tile.classList.add("tile-grito-hidra");
+        tabuleiro.children[linha * TAMANHO + col].classList.add("tile-grito-hidra");
+    }
+    for (let lin = 0; lin < TAMANHO; lin++) {
+        tabuleiro.children[lin * TAMANHO + coluna].classList.add("tile-grito-hidra");
     }
     
-    // Salvar tipos e IDs da linha antes do movimento
-    const tiposTilesLinha = tilesLinha.map(t => t.tipo);
-    const idsTilesLinha = tilesLinha.map(t => t.dataset.id);
-    
-    // Rotacionar tiles circularmente
-    let novaOrdemLinha;
+    // PASSO 1: Mover linha fisicamente usando trocarTiles
+    console.log(`🔄 Movendo linha ${linha} para ${direcaoLinha}`);
     if (direcaoLinha === 'direita') {
-        // Mover para direita: último vai pro início
-        novaOrdemLinha = [tiposTilesLinha[tiposTilesLinha.length - 1], ...tiposTilesLinha.slice(0, -1)];
+        for (let i = TAMANHO - 1; i > 0; i--) {
+            const tile1 = tabuleiro.children[linha * TAMANHO + i];
+            const tile2 = tabuleiro.children[linha * TAMANHO + (i - 1)];
+            trocarTiles(tile2, tile1, false, false);
+        }
     } else {
-        // Mover para esquerda: primeiro vai pro final
-        novaOrdemLinha = [...tiposTilesLinha.slice(1), tiposTilesLinha[0]];
-    }
-    
-    // Aplicar nova ordem e rotações
-    tilesLinha.forEach((tile, idx) => {
-        tile.tipo = novaOrdemLinha[idx];
-        tile.className = `tile ${novaOrdemLinha[idx]} tile-grito-hidra`;
-        
-        // Aplicar rotação aleatória (exceto tiles especiais)
-        const tiposEspeciais = ['entrada', 'saida', 'hidra'];
-        const novaRotacao = tiposEspeciais.includes(tile.tipo) ? 0 : rotacoesLinha[idx];
-        tile.rotacao = novaRotacao;  // Atualizar propriedade do objeto
-        tile.style.transform = `rotate(${novaRotacao}deg)`;
-        tile.dataset.rotacao = novaRotacao;  // Atualizar dataset
-        
-        // Aplicar contra-rotação nos overlays para que cartas e jogadores não girem
-        const contraRot = -novaRotacao;
-        const cartasOverlay = tile.querySelector('.cartas-no-tile');
-        const overlay = tile.querySelector('.overlay-no-rotacao');
-        if (cartasOverlay) {
-            cartasOverlay.style.transform = `rotate(${contraRot}deg)`;
-            cartasOverlay.style.transformOrigin = '50% 50%';
+        for (let i = 0; i < TAMANHO - 1; i++) {
+            const tile1 = tabuleiro.children[linha * TAMANHO + i];
+            const tile2 = tabuleiro.children[linha * TAMANHO + (i + 1)];
+            trocarTiles(tile1, tile2, false, false);
         }
-        if (overlay) {
-            overlay.style.transform = `rotate(${contraRot}deg)`;
-            overlay.style.transformOrigin = '50% 50%';
-        }
-        
-        console.log(`  Linha ${linha}[${idx}]: tipo=${novaOrdemLinha[idx]}, rotação=${novaRotacao}°`);
-    });
-    
-    // Atualizar matriz
-    for (let col = 0; col < TAMANHO; col++) {
-        tabuleiroMatriz[linha][col] = novaOrdemLinha[col];
     }
     
-    // PASSO 2: Processar COLUNA (girar e mover)
-    const tilesColuna = [];
-    for (let lin = 0; lin < TAMANHO; lin++) {
-        const index = lin * TAMANHO + coluna;
-        const tile = tabuleiro.children[index];
-        tilesColuna.push(tile);
-        tile.classList.add("tile-grito-hidra");
-    }
-    
-    // Salvar tipos da coluna antes do movimento
-    const tiposTilesColuna = tilesColuna.map(t => t.tipo);
-    
-    // Rotacionar tiles circularmente
-    let novaOrdemColuna;
+    // PASSO 2: Mover coluna fisicamente usando trocarTiles
+    console.log(`🔄 Movendo coluna ${coluna} para ${direcaoColuna}`);
     if (direcaoColuna === 'baixo') {
-        // Mover para baixo: último vai pro início
-        novaOrdemColuna = [tiposTilesColuna[tiposTilesColuna.length - 1], ...tiposTilesColuna.slice(0, -1)];
+        for (let i = TAMANHO - 1; i > 0; i--) {
+            const tile1 = tabuleiro.children[i * TAMANHO + coluna];
+            const tile2 = tabuleiro.children[(i - 1) * TAMANHO + coluna];
+            trocarTiles(tile2, tile1, false, false);
+        }
     } else {
-        // Mover para cima: primeiro vai pro final
-        novaOrdemColuna = [...tiposTilesColuna.slice(1), tiposTilesColuna[0]];
+        for (let i = 0; i < TAMANHO - 1; i++) {
+            const tile1 = tabuleiro.children[i * TAMANHO + coluna];
+            const tile2 = tabuleiro.children[(i + 1) * TAMANHO + coluna];
+            trocarTiles(tile1, tile2, false, false);
+        }
     }
     
-    // Aplicar nova ordem e rotações
-    tilesColuna.forEach((tile, idx) => {
-        tile.tipo = novaOrdemColuna[idx];
-        tile.className = `tile ${novaOrdemColuna[idx]} tile-grito-hidra`;
-        
-        // Aplicar rotação aleatória (exceto tiles especiais)
+    // PASSO 3: Aplicar rotações aos tiles (após terem sido movidos)
+    console.log(`🎲 Aplicando rotações`);
+    
+    // Aplicar rotações na linha
+    for (let col = 0; col < TAMANHO; col++) {
+        const tile = tabuleiro.children[linha * TAMANHO + col];
         const tiposEspeciais = ['entrada', 'saida', 'hidra'];
-        const novaRotacao = tiposEspeciais.includes(tile.tipo) ? 0 : rotacoesColuna[idx];
-        tile.rotacao = novaRotacao;  // Atualizar propriedade do objeto
-        tile.style.transform = `rotate(${novaRotacao}deg)`;
-        tile.dataset.rotacao = novaRotacao;  // Atualizar dataset
         
-        // Aplicar contra-rotação nos overlays para que cartas e jogadores não girem
+        let novaRotacao;
+        if (tiposEspeciais.includes(tile.tipo)) {
+            novaRotacao = 0;  // Tiles especiais nunca giram
+        } else {
+            novaRotacao = rotacoesLinha[col];  // Tiles normais recebem rotação aleatória
+        }
+        
+        tile.rotacao = novaRotacao;
+        tile.style.transform = `rotate(${novaRotacao}deg)`;
+        tile.dataset.rotacao = String(novaRotacao);
+        
+        // Contra-rotação nos overlays
         const contraRot = -novaRotacao;
         const cartasOverlay = tile.querySelector('.cartas-no-tile');
         const overlay = tile.querySelector('.overlay-no-rotacao');
@@ -1458,89 +1392,48 @@ function executarGritoHidra(linha, coluna, direcaoLinha, direcaoColuna, rotacoes
             overlay.style.transformOrigin = '50% 50%';
         }
         
-        console.log(`  Coluna ${coluna}[${idx}]: tipo=${novaOrdemColuna[idx]}, rotação=${novaRotacao}°`);
-    });
+        console.log(`  🔄 Linha[${col}]: tipo=${tile.tipo}, rot=${novaRotacao}°`);
+    }
     
-    // Atualizar matriz
+    // Aplicar rotações na coluna
     for (let lin = 0; lin < TAMANHO; lin++) {
-        tabuleiroMatriz[lin][coluna] = novaOrdemColuna[lin];
-    }
-    
-    // PASSO 3: Atualizar cartas e jogadores baseado no movimento CIRCULAR
-    // Quando tiles se movem circularmente, cartas e jogadores devem seguir o movimento
-    
-    // Processar linha: criar novo mapeamento de índices
-    const novosIndicesLinha = new Map();  // índice antigo → índice novo
-    for (let col = 0; col < TAMANHO; col++) {
-        const indiceAntigo = linha * TAMANHO + col;
-        let novoCol;
-        if (direcaoLinha === 'direita') {
-            novoCol = (col + 1) % TAMANHO;
+        const tile = tabuleiro.children[lin * TAMANHO + coluna];
+        const tiposEspeciais = ['entrada', 'saida', 'hidra'];
+        
+        let novaRotacao;
+        if (tiposEspeciais.includes(tile.tipo)) {
+            novaRotacao = 0;  // Tiles especiais nunca giram
         } else {
-            novoCol = (col - 1 + TAMANHO) % TAMANHO;
+            novaRotacao = rotacoesColuna[lin];  // Tiles normais recebem rotação aleatória
         }
-        const indiceNovo = linha * TAMANHO + novoCol;
-        novosIndicesLinha.set(indiceAntigo, indiceNovo);
+        
+        tile.rotacao = novaRotacao;
+        tile.style.transform = `rotate(${novaRotacao}deg)`;
+        tile.dataset.rotacao = String(novaRotacao);
+        
+        // Contra-rotação nos overlays
+        const contraRot = -novaRotacao;
+        const cartasOverlay = tile.querySelector('.cartas-no-tile');
+        const overlay = tile.querySelector('.overlay-no-rotacao');
+        if (cartasOverlay) {
+            cartasOverlay.style.transform = `rotate(${contraRot}deg)`;
+            cartasOverlay.style.transformOrigin = '50% 50%';
+        }
+        if (overlay) {
+            overlay.style.transform = `rotate(${contraRot}deg)`;
+            overlay.style.transformOrigin = '50% 50%';
+        }
+        
+        console.log(`  🔄 Coluna[${lin}]: tipo=${tile.tipo}, rot=${novaRotacao}°`);
     }
     
-    // Processar coluna: criar novo mapeamento de índices
-    const novosIndicesColuna = new Map();  // índice antigo → índice novo
+    // Atualizar matriz baseado na configuração atual do tabuleiro
     for (let lin = 0; lin < TAMANHO; lin++) {
-        const indiceAntigo = lin * TAMANHO + coluna;
-        let novoLin;
-        if (direcaoColuna === 'baixo') {
-            novoLin = (lin + 1) % TAMANHO;
-        } else {
-            novoLin = (lin - 1 + TAMANHO) % TAMANHO;
-        }
-        const indiceNovo = novoLin * TAMANHO + coluna;
-        
-        // Se este tile não foi afetado pela linha, usar mapeamento da coluna
-        if (!novosIndicesLinha.has(indiceAntigo)) {
-            novosIndicesColuna.set(indiceAntigo, indiceNovo);
+        for (let col = 0; col < TAMANHO; col++) {
+            const tile = tabuleiro.children[lin * TAMANHO + col];
+            tabuleiroMatriz[lin][col] = tile.tipo;
         }
     }
-    
-    // Combinar mapeamentos (linha tem prioridade sobre coluna na interseção)
-    const mapeamentoCompleto = new Map([...novosIndicesColuna, ...novosIndicesLinha]);
-    
-    // Criar mapeamento de IDs baseado nos novos índices
-    const tiles = Array.from(tabuleiro.children);
-    const mapeamentoIds = new Map();  // oldId → newId
-    
-    mapeamentoCompleto.forEach((novoIndice, indiceAntigo) => {
-        const oldId = tiles[indiceAntigo].dataset.id;
-        const newId = tiles[novoIndice].dataset.id;
-        mapeamentoIds.set(oldId, newId);
-    });
-    
-    // Atualizar cartas baseado no movimento dos tiles
-    cartasPorIndice.forEach((cartasIds, indiceAntigo) => {
-        const novoIndice = mapeamentoCompleto.get(indiceAntigo) || indiceAntigo;
-        const newTileId = tiles[novoIndice].dataset.id;
-        
-        cartasIds.forEach(cartaId => {
-            const carta = cartas.get(cartaId);
-            if (carta) {
-                carta.zona = `tile-${newTileId}`;
-                console.log(`  🎴 Carta ${cartaId}: índice ${indiceAntigo} → ${novoIndice} (tile ${newTileId})`);
-            }
-        });
-    });
-    
-    // Atualizar jogadores baseado no movimento dos tiles
-    jogadoresPorIndice.forEach((jogadoresIds, indiceAntigo) => {
-        const novoIndice = mapeamentoCompleto.get(indiceAntigo) || indiceAntigo;
-        const newTileId = tiles[novoIndice].dataset.id;
-        
-        jogadoresIds.forEach(jogadorId => {
-            const jogador = jogadores.find(j => j.id === jogadorId);
-            if (jogador) {
-                jogador.tileId = newTileId;
-                console.log(`  👤 Jogador ${jogadorId}: índice ${indiceAntigo} → ${novoIndice} (tile ${newTileId})`);
-            }
-        });
-    });
     
     // Re-renderizar cartas e jogadores
     renderizarCartas();
@@ -1549,7 +1442,7 @@ function executarGritoHidra(linha, coluna, direcaoLinha, direcaoColuna, rotacoes
     // Salvar estado
     salvarEstadoLocal();
     
-    // Remove o destaque após 2 segundos
+    // Remover destaque após 2 segundos
     setTimeout(() => {
         document.querySelectorAll('.tile').forEach(tile => {
             tile.classList.remove("tile-grito-hidra");
@@ -1557,7 +1450,7 @@ function executarGritoHidra(linha, coluna, direcaoLinha, direcaoColuna, rotacoes
         tabuleiro.classList.remove("terremoto");
     }, 2000);
 
-    console.log(`✅ Grito da Hidra executado: Linha ${linha} e Coluna ${coluna} movidas e giradas`);
+    console.log(`✅ Grito da Hidra executado`);
 }
 
 function limparFeedbackMovimento() {
