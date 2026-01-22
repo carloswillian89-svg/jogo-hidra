@@ -796,6 +796,11 @@ function aplicarEstadosTiles(estadosTiles) {
         tabuleiro.classList.remove("terremoto");
     }, 2000);
     
+    // Salvar estado local após aplicar mudanças
+    if (typeof salvarEstadoLocal === 'function') {
+        salvarEstadoLocal();
+    }
+    
     console.log('✅ Estados dos tiles aplicados com sucesso');
 }
 

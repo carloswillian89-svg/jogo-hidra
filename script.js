@@ -2437,11 +2437,13 @@ function executarGritoHidraCombate(dificuldadeParam) {
     // Inicia animação de terremoto
     tabuleiro.classList.add("terremoto");
     
+    // Array para armazenar os estados dos tiles (para sincronização multiplayer)
+    let estadosTiles = [];
+    
     if (dificuldadeParam === 'facil') {
         // FÁCIL: Apenas girar todos os tiles 90° para a direita
         console.log('🐉 Modo Fácil: Girando todos os tiles 90° para direita');
         const tiles = tabuleiro.querySelectorAll('.tile');
-        const estadosTiles = []; // Para sincronização multiplayer
         
         tiles.forEach(tile => {
             tile.classList.add("tile-grito-hidra");
@@ -2494,14 +2496,10 @@ function executarGritoHidraCombate(dificuldadeParam) {
             }
         });
         
-        // Retornar estados para sincronização multiplayer
-        return estadosTiles;
-        
     } else if (dificuldadeParam === 'medio' || dificuldadeParam === 'normal') {
         // MÉDIO: Girar todos os tiles de forma aleatória
         console.log('🐉 Modo Médio: Girando todos os tiles aleatoriamente');
         const tiles = tabuleiro.querySelectorAll('.tile');
-        const estadosTiles = []; // Para sincronização multiplayer
         
         tiles.forEach(tile => {
             tile.classList.add("tile-grito-hidra");
@@ -2554,9 +2552,6 @@ function executarGritoHidraCombate(dificuldadeParam) {
             }
         });
         
-        // Retornar estados para sincronização multiplayer
-        return estadosTiles;
-        
     } else if (dificuldadeParam === 'dificil') {
         // DIFÍCIL: Girar E movimentar (embaralhar todos os tiles mantendo cartas e jogadores)
         console.log('🐉 Modo Difícil: Embaralhando tabuleiro mantendo cartas e jogadores');
@@ -2572,8 +2567,6 @@ function executarGritoHidraCombate(dificuldadeParam) {
             const j = Math.floor(Math.random() * (i + 1));
             [tiposTiles[i], tiposTiles[j]] = [tiposTiles[j], tiposTiles[i]];
         }
-        
-        const estadosTiles = []; // Para sincronização multiplayer
         
         // Aplicar novos tipos e rotações aleatórias
         todosOsTiles.forEach((tile, idx) => {
@@ -2622,9 +2615,6 @@ function executarGritoHidraCombate(dificuldadeParam) {
         // Re-renderizar cartas e jogadores
         renderizarCartas();
         desenharJogadores();
-        
-        // Retornar estados para sincronização multiplayer
-        return estadosTiles;
     }
     
     // Remover destaque após 2 segundos
@@ -2640,6 +2630,9 @@ function executarGritoHidraCombate(dificuldadeParam) {
     salvarEstadoLocal();
     
     console.log('✅ Grito da Hidra (combate) executado');
+    
+    // Retornar estados para sincronização multiplayer
+    return estadosTiles;
 }
 
 // REMOVIDO: Botão Grito da Hidra manual (agora é automático no fim do turno)
