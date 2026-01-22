@@ -2389,18 +2389,19 @@ if (botaoGritoHidraCombate) {
 function gritoHidraCombate() {
     console.log('🐉 [INICIO] gritoHidraCombate() chamado');
     
-    // Executar localmente PRIMEIRO
+    // Executar localmente PRIMEIRO e capturar os estados dos tiles
     console.log('🐉 Executando grito-hidra-combate localmente');
-    executarGritoHidraCombate(dificuldade);
+    const estadosTiles = executarGritoHidraCombate(dificuldade);
     
     // Verificar se está em modo multiplayer
     const modoMultiplayer = sessionStorage.getItem('modoMultiplayer') === 'true';
     
-    // Depois sincronizar com outros jogadores
-    if (modoMultiplayer && typeof enviarAcao === 'function') {
-        console.log('🐉 [MULTIPLAYER] Enviando grito-hidra-combate para servidor');
+    // Depois sincronizar com outros jogadores, enviando os estados exatos dos tiles
+    if (modoMultiplayer && typeof enviarAcao === 'function' && estadosTiles) {
+        console.log('🐉 [MULTIPLAYER] Enviando grito-hidra-combate para servidor com estados:', estadosTiles);
         enviarAcao('grito-hidra-combate', {
-            dificuldade: dificuldade
+            dificuldade: dificuldade,
+            estadosTiles: estadosTiles
         });
     }
 }
@@ -2440,12 +2441,22 @@ function executarGritoHidraCombate(dificuldadeParam) {
         // FÁCIL: Apenas girar todos os tiles 90° para a direita
         console.log('🐉 Modo Fácil: Girando todos os tiles 90° para direita');
         const tiles = tabuleiro.querySelectorAll('.tile');
+        const estadosTiles = []; // Para sincronização multiplayer
+        
         tiles.forEach(tile => {
             tile.classList.add("tile-grito-hidra");
             
-            // Não girar tiles especiais
+            // Não girar tiles especiais (verificação usando dataset.id para identificar)
             const tiposEspeciais = ['entrada', 'saida', 'hidra'];
-            if (tiposEspeciais.includes(tile.tipo)) {
+            const tipo = tile.tipo || tile.className.split(' ').find(c => tiposEspeciais.includes(c) || c === 'camara');
+            
+            if (tiposEspeciais.includes(tipo)) {
+                console.log(`🐉 Tile especial ${tile.dataset.id} (${tipo}) não será girado`);
+                estadosTiles.push({
+                    id: tile.dataset.id,
+                    rotacao: Number(tile.dataset.rotacao) || 0,
+                    tipo: tipo
+                });
                 return;
             }
             
@@ -2457,8 +2468,17 @@ function executarGritoHidraCombate(dificuldadeParam) {
             
             // Atualizar rotação do tile
             if (tile.rotacao !== undefined) {
-                tile.rotacao = (tile.rotacao + 90) % 360;
+                tile.rotacao = novaRot;
+            } else {
+                tile.rotacao = novaRot;
             }
+            
+            // Salvar estado para sincronização
+            estadosTiles.push({
+                id: tile.dataset.id,
+                rotacao: novaRot,
+                tipo: tipo
+            });
             
             // Contra-rotação nos overlays
             const contraRot = -novaRot;
@@ -2474,16 +2494,29 @@ function executarGritoHidraCombate(dificuldadeParam) {
             }
         });
         
+        // Retornar estados para sincronização multiplayer
+        return estadosTiles;
+        
     } else if (dificuldadeParam === 'medio' || dificuldadeParam === 'normal') {
         // MÉDIO: Girar todos os tiles de forma aleatória
         console.log('🐉 Modo Médio: Girando todos os tiles aleatoriamente');
         const tiles = tabuleiro.querySelectorAll('.tile');
+        const estadosTiles = []; // Para sincronização multiplayer
+        
         tiles.forEach(tile => {
             tile.classList.add("tile-grito-hidra");
             
             // Não girar tiles especiais
             const tiposEspeciais = ['entrada', 'saida', 'hidra'];
-            if (tiposEspeciais.includes(tile.tipo)) {
+            const tipo = tile.tipo || tile.className.split(' ').find(c => tiposEspeciais.includes(c) || c === 'camara');
+            
+            if (tiposEspeciais.includes(tipo)) {
+                console.log(`🐉 Tile especial ${tile.dataset.id} (${tipo}) não será girado`);
+                estadosTiles.push({
+                    id: tile.dataset.id,
+                    rotacao: Number(tile.dataset.rotacao) || 0,
+                    tipo: tipo
+                });
                 return;
             }
             
@@ -2496,7 +2529,16 @@ function executarGritoHidraCombate(dificuldadeParam) {
             // Atualizar rotação do tile
             if (tile.rotacao !== undefined) {
                 tile.rotacao = novaRot;
+            } else {
+                tile.rotacao = novaRot;
             }
+            
+            // Salvar estado para sincronização
+            estadosTiles.push({
+                id: tile.dataset.id,
+                rotacao: novaRot,
+                tipo: tipo
+            });
             
             // Contra-rotação nos overlays
             const contraRot = -novaRot;
@@ -2511,6 +2553,9 @@ function executarGritoHidraCombate(dificuldadeParam) {
                 overlay.style.transformOrigin = '50% 50%';
             }
         });
+        
+        // Retornar estados para sincronização multiplayer
+        return estadosTiles;
         
     } else if (dificuldadeParam === 'dificil') {
         // DIFÍCIL: Girar E movimentar (embaralhar todos os tiles mantendo cartas e jogadores)
@@ -2528,6 +2573,8 @@ function executarGritoHidraCombate(dificuldadeParam) {
             [tiposTiles[i], tiposTiles[j]] = [tiposTiles[j], tiposTiles[i]];
         }
         
+        const estadosTiles = []; // Para sincronização multiplayer
+        
         // Aplicar novos tipos e rotações aleatórias
         todosOsTiles.forEach((tile, idx) => {
             tile.classList.add("tile-grito-hidra");
@@ -2543,6 +2590,13 @@ function executarGritoHidraCombate(dificuldadeParam) {
             tile.dataset.rotacao = novaRot;
             tile.style.transform = `rotate(${novaRot}deg)`;
             tile.rotacao = novaRot;
+            
+            // Salvar estado para sincronização
+            estadosTiles.push({
+                id: tile.dataset.id,
+                rotacao: novaRot,
+                tipo: novoTipo
+            });
             
             // Contra-rotação nos overlays
             const contraRot = -novaRot;
@@ -2568,6 +2622,9 @@ function executarGritoHidraCombate(dificuldadeParam) {
         // Re-renderizar cartas e jogadores
         renderizarCartas();
         desenharJogadores();
+        
+        // Retornar estados para sincronização multiplayer
+        return estadosTiles;
     }
     
     // Remover destaque após 2 segundos

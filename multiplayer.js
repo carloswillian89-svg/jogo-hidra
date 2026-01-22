@@ -705,16 +705,98 @@ function processarGritoHidraRemoto(dados) {
 }
 
 function processarGritoHidraCombateRemoto(dados) {
-    const { dificuldade } = dados;
+    const { dificuldade, estadosTiles } = dados;
     
     // Tocar som da hidra para todos os jogadores
     if (typeof tocarSom === 'function') {
         tocarSom('hidra');
     }
     
-    if (typeof executarGritoHidraCombate === 'function') {
+    // Se recebemos os estados dos tiles, aplicamos diretamente
+    if (estadosTiles && Array.isArray(estadosTiles)) {
+        console.log('🐉 [MULTIPLAYER REMOTO] Aplicando estados dos tiles recebidos:', estadosTiles);
+        aplicarEstadosTiles(estadosTiles);
+    } else if (typeof executarGritoHidraCombate === 'function') {
+        // Fallback: executar localmente (pode causar dessincronização)
+        console.log('🐉 [MULTIPLAYER REMOTO] Executando grito-hidra-combate localmente (fallback)');
         executarGritoHidraCombate(dificuldade);
     }
+}
+
+function aplicarEstadosTiles(estadosTiles) {
+    const tabuleiro = document.getElementById('tabuleiro');
+    if (!tabuleiro) {
+        console.error('❌ Tabuleiro não encontrado');
+        return;
+    }
+    
+    // Adicionar animação de terremoto
+    tabuleiro.classList.add("terremoto");
+    
+    // Aplicar cada estado
+    estadosTiles.forEach(estado => {
+        const tile = tabuleiro.querySelector(`[data-id="${estado.id}"]`);
+        if (!tile) {
+            console.warn(`⚠️ Tile ${estado.id} não encontrado`);
+            return;
+        }
+        
+        // Adicionar classe de destaque
+        tile.classList.add("tile-grito-hidra");
+        
+        // Atualizar tipo se for modo difícil
+        if (estado.tipo && tile.tipo !== estado.tipo) {
+            tile.tipo = estado.tipo;
+            tile.className = `tile ${estado.tipo} tile-grito-hidra`;
+            
+            // Atualizar matriz
+            const [lin, col] = estado.id.split('-').map(Number);
+            if (typeof tabuleiroMatriz !== 'undefined' && tabuleiroMatriz[lin] && tabuleiroMatriz[lin][col] !== undefined) {
+                tabuleiroMatriz[lin][col] = estado.tipo;
+            }
+        }
+        
+        // Atualizar rotação
+        tile.dataset.rotacao = estado.rotacao;
+        tile.style.transform = `rotate(${estado.rotacao}deg)`;
+        if (tile.rotacao !== undefined) {
+            tile.rotacao = estado.rotacao;
+        } else {
+            tile.rotacao = estado.rotacao;
+        }
+        
+        // Aplicar contra-rotação aos overlays
+        const contraRot = -estado.rotacao;
+        const cartasOverlay = tile.querySelector('.cartas-no-tile');
+        const overlay = tile.querySelector('.overlay-no-rotacao');
+        if (cartasOverlay) {
+            cartasOverlay.style.transform = `rotate(${contraRot}deg)`;
+            cartasOverlay.style.transformOrigin = '50% 50%';
+        }
+        if (overlay) {
+            overlay.style.transform = `rotate(${contraRot}deg)`;
+            overlay.style.transformOrigin = '50% 50%';
+        }
+    });
+    
+    // Re-renderizar cartas e jogadores
+    if (typeof renderizarCartas === 'function') {
+        renderizarCartas();
+    }
+    if (typeof desenharJogadores === 'function') {
+        desenharJogadores();
+    }
+    
+    // Remover animação após 2 segundos
+    setTimeout(() => {
+        const tiles = tabuleiro.querySelectorAll('.tile');
+        tiles.forEach(tile => {
+            tile.classList.remove("tile-grito-hidra");
+        });
+        tabuleiro.classList.remove("terremoto");
+    }, 2000);
+    
+    console.log('✅ Estados dos tiles aplicados com sucesso');
 }
 
 function processarVirarCartaRemoto(dados) {
