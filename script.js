@@ -852,6 +852,15 @@ function desenharJogadores() {
     )
 
     jogadoresOrdenados.forEach((jogador, index) => {
+        // Se jogador.tile não existir mas tileId existir, tentar buscar o tile
+        if ((!jogador.tile || !(jogador.tile instanceof HTMLElement)) && jogador.tileId) {
+            const tileEncontrado = document.querySelector(`.tile[data-id="${jogador.tileId}"]`);
+            if (tileEncontrado) {
+                jogador.tile = tileEncontrado;
+                console.log(`🔄 Tile restaurado para jogador ${jogador.id}: ${jogador.tileId}`);
+            }
+        }
+        
         if (!jogador.tile || !(jogador.tile instanceof HTMLElement)) {
             console.error("Jogador com tile inválido:", jogador)
             return
