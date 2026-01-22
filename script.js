@@ -1548,10 +1548,6 @@ function atualizarInfoTurno(mostrarNotificacao = false) {
 // ==================== PERSISTÊNCIA LOCAL ====================
 
 function salvarEstadoLocal() {
-    // Só salvar em modo local
-    const emModoMultiplayer = sessionStorage.getItem('modoMultiplayer') === 'true';
-    if (emModoMultiplayer) return;
-    
     // Coletar informações atuais dos tiles
     const tilesInfo = [];
     const tiles = tabuleiro.querySelectorAll('.tile');
@@ -1649,7 +1645,22 @@ function carregarEstadoLocal() {
                     const tile = document.querySelector(`.tile[data-id="${CSS.escape(id)}"]`);
                     if (tile) {
                         tile.rotacao = rotacao;
+                        tile.dataset.rotacao = rotacao;
                         tile.style.transform = `rotate(${rotacao}deg)`;
+                        
+                        // Aplicar contra-rotação nos overlays
+                        const contraRot = -rotacao;
+                        const cartasOverlay = tile.querySelector('.cartas-no-tile');
+                        const overlay = tile.querySelector('.overlay-no-rotacao');
+                        if (cartasOverlay) {
+                            cartasOverlay.style.transform = `rotate(${contraRot}deg)`;
+                            cartasOverlay.style.transformOrigin = '50% 50%';
+                        }
+                        if (overlay) {
+                            overlay.style.transform = `rotate(${contraRot}deg)`;
+                            overlay.style.transformOrigin = '50% 50%';
+                        }
+                        
                         console.log(`  Tile ${id}: rotação ${rotacao}°`);
                     }
                 }
@@ -1661,7 +1672,22 @@ function carregarEstadoLocal() {
                 const tile = document.querySelector(`.tile[data-id="${CSS.escape(id)}"]`);
                 if (tile) {
                     tile.rotacao = rotacao;
+                    tile.dataset.rotacao = rotacao;
                     tile.style.transform = `rotate(${rotacao}deg)`;
+                    
+                    // Aplicar contra-rotação nos overlays
+                    const contraRot = -rotacao;
+                    const cartasOverlay = tile.querySelector('.cartas-no-tile');
+                    const overlay = tile.querySelector('.overlay-no-rotacao');
+                    if (cartasOverlay) {
+                        cartasOverlay.style.transform = `rotate(${contraRot}deg)`;
+                        cartasOverlay.style.transformOrigin = '50% 50%';
+                    }
+                    if (overlay) {
+                        overlay.style.transform = `rotate(${contraRot}deg)`;
+                        overlay.style.transformOrigin = '50% 50%';
+                    }
+                    
                     console.log(`  Tile ${id}: rotação ${rotacao}°`);
                 }
             });
@@ -2453,10 +2479,15 @@ function executarGritoHidraCombate(dificuldadeParam) {
             const tipo = tile.tipo || tile.className.split(' ').find(c => tiposEspeciais.includes(c) || c === 'camara');
             
             if (tiposEspeciais.includes(tipo)) {
-                console.log(`🐉 Tile especial ${tile.dataset.id} (${tipo}) não será girado`);
+                console.log(`🐉 Tile especial ${tile.dataset.id} (${tipo}) mantém rotação 0°`);
+                // Garantir que tile especial sempre fique em 0°
+                tile.dataset.rotacao = 0;
+                tile.style.transform = 'rotate(0deg)';
+                tile.rotacao = 0;
+                
                 estadosTiles.push({
                     id: tile.dataset.id,
-                    rotacao: Number(tile.dataset.rotacao) || 0,
+                    rotacao: 0,
                     tipo: tipo
                 });
                 return;
@@ -2509,10 +2540,15 @@ function executarGritoHidraCombate(dificuldadeParam) {
             const tipo = tile.tipo || tile.className.split(' ').find(c => tiposEspeciais.includes(c) || c === 'camara');
             
             if (tiposEspeciais.includes(tipo)) {
-                console.log(`🐉 Tile especial ${tile.dataset.id} (${tipo}) não será girado`);
+                console.log(`🐉 Tile especial ${tile.dataset.id} (${tipo}) mantém rotação 0°`);
+                // Garantir que tile especial sempre fique em 0°
+                tile.dataset.rotacao = 0;
+                tile.style.transform = 'rotate(0deg)';
+                tile.rotacao = 0;
+                
                 estadosTiles.push({
                     id: tile.dataset.id,
-                    rotacao: Number(tile.dataset.rotacao) || 0,
+                    rotacao: 0,
                     tipo: tipo
                 });
                 return;
