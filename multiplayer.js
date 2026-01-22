@@ -46,6 +46,13 @@ function inicializarJogoMultiplayer(jogadoresData) {
     meuSocketId = socket.id;
     console.log('Inicializando multiplayer - Sala:', codigoSala);
     
+    // 🔥 Limpar estado local antigo ao entrar do lobby (não é um reload)
+    const foiReload = performance.navigation && performance.navigation.type === 1;
+    if (!foiReload) {
+        console.log('🗑️ Limpando estado local (vindo do lobby)...');
+        localStorage.removeItem('labirinto-hidra-estado');
+    }
+    
     // Primeiro configurar eventos para receber respostas
     configurarEventosSocket();
     
@@ -317,19 +324,25 @@ function configurarEventosSocket() {
             jogadorAtualIndex: dados.jogadorAtualIndex
         });
         
-        // 🔥 IMPORTANTE: Só carregar estado local se for um RECARREGAMENTO
-        // Verificar se o jogo já foi iniciado anteriormente
+        // 🔥 IMPORTANTE: Só carregar estado local se for um RECARREGAMENTO REAL (F5)
+        // Verificar se veio de um reload da página (performance.navigation.type === 1)
+        const foiReload = performance.navigation && performance.navigation.type === 1;
         const jogoJaIniciado = sessionStorage.getItem('jogoJaIniciado') === 'true';
         const estadoSalvo = localStorage.getItem('labirinto-hidra-estado');
         
         console.log('🔍 Verificação de recarregamento:', {
+            foiReload,
             jogoJaIniciado,
             temEstadoSalvo: !!estadoSalvo,
             temFuncaoCarregar: typeof carregarEstadoLocal === 'function'
         });
         
-        if (jogoJaIniciado && estadoSalvo && typeof carregarEstadoLocal === 'function') {
-            console.log('🔄 Recarregamento detectado! Tentando carregar estado local...');
+        // Só carregar estado local se:
+        // 1. Foi um reload real da página (F5)
+        // 2. E o jogo já havia sido iniciado
+        // 3. E tem estado salvo
+        if (foiReload && jogoJaIniciado && estadoSalvo && typeof carregarEstadoLocal === 'function') {
+            console.log('🔄 Reload detectado! Tentando carregar estado local...');
             const carregou = carregarEstadoLocal();
             
             if (carregou) {
