@@ -289,6 +289,42 @@ function configurarEventosSocket() {
             window.marcarTabuleiroRecebido();
         }
         
+        console.log('📥 Recebendo tabuleiro do host...');
+        
+        // 🔥 IMPORTANTE: Tentar carregar estado local PRIMEIRO
+        // Se existe estado salvo, usá-lo ao invés do recebido
+        const estadoSalvo = localStorage.getItem('labirinto-hidra-estado');
+        
+        if (estadoSalvo && typeof carregarEstadoLocal === 'function') {
+            console.log('💾 Estado local encontrado! Carregando ao invés do recebido...');
+            const carregou = carregarEstadoLocal();
+            
+            if (carregou) {
+                console.log('✅ Estado local carregado com sucesso');
+                
+                // Atualizar apenas jogador atual se recebido do host
+                if (dados.jogadorAtualIndex !== undefined) {
+                    jogadorAtualIndex = dados.jogadorAtualIndex;
+                }
+                
+                // Atualizar contador de rodadas se recebido
+                if (dados.rodadasContador !== undefined) {
+                    rodadaAtual = dados.rodadasContador;
+                    const rodadasValor = document.querySelector('#rodadas-valor');
+                    if (rodadasValor) {
+                        rodadasValor.textContent = rodadaAtual;
+                    }
+                }
+                
+                // Atualizar UI
+                if (typeof atualizarInfoTurno === 'function') atualizarInfoTurno();
+                if (typeof atualizarDestaqueInventario === 'function') atualizarDestaqueInventario();
+                return; // Não processar o tabuleiro recebido
+            }
+        }
+        
+        console.log('📋 Nenhum estado local ou falha ao carregar. Usando tabuleiro recebido do host.');
+        
         tabuleiroMatriz = dados.tabuleiro;
         entradaPosicao = dados.entradaPosicao;
         jogadorAtualIndex = dados.jogadorAtualIndex || 0;
