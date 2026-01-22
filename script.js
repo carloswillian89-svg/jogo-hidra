@@ -1646,31 +1646,43 @@ function carregarEstadoLocal() {
         const tiposCarregados = Array.from(tilesCarregados).map(t => ({id: t.dataset.id, tipo: t.tipo}));
         console.log('  Tiles após criar:', tiposCarregados);
         
-        // Restaurar rotações dos tiles se houver
+        // Restaurar tipos e rotações dos tiles se houver
         if (estado.tilesInfo && estado.tilesInfo.length > 0) {
-            console.log('🔄 Restaurando rotações dos tiles...');
-            estado.tilesInfo.forEach(({id, rotacao}) => {
-                if (rotacao && rotacao !== 0) {
-                    const tile = document.querySelector(`.tile[data-id="${CSS.escape(id)}"]`);
-                    if (tile) {
-                        tile.rotacao = rotacao;
-                        tile.dataset.rotacao = rotacao;
-                        tile.style.transform = `rotate(${rotacao}deg)`;
+            console.log('🔄 Restaurando tipos e rotações dos tiles...');
+            estado.tilesInfo.forEach(({id, tipo, rotacao}) => {
+                const tile = document.querySelector(`.tile[data-id="${CSS.escape(id)}"]`);
+                if (tile) {
+                    // Restaurar tipo se diferente (importante para modo difícil do grito)
+                    if (tipo && tile.tipo !== tipo) {
+                        console.log(`  🔄 Tile ${id}: mudando tipo de ${tile.tipo} para ${tipo}`);
+                        tile.tipo = tipo;
+                        tile.className = `tile ${tipo}`;
                         
-                        // Aplicar contra-rotação nos overlays
-                        const contraRot = -rotacao;
-                        const cartasOverlay = tile.querySelector('.cartas-no-tile');
-                        const overlay = tile.querySelector('.overlay-no-rotacao');
-                        if (cartasOverlay) {
-                            cartasOverlay.style.transform = `rotate(${contraRot}deg)`;
-                            cartasOverlay.style.transformOrigin = '50% 50%';
-                        }
-                        if (overlay) {
-                            overlay.style.transform = `rotate(${contraRot}deg)`;
-                            overlay.style.transformOrigin = '50% 50%';
-                        }
-                        
-                        console.log(`  Tile ${id}: rotação ${rotacao}°`);
+                        // Atualizar matriz também
+                        const [lin, col] = id.split('-').map(Number);
+                        tabuleiroMatriz[lin][col] = tipo;
+                    }
+                    
+                    // Restaurar rotação
+                    tile.rotacao = rotacao || 0;
+                    tile.dataset.rotacao = rotacao || 0;
+                    tile.style.transform = `rotate(${rotacao || 0}deg)`;
+                    
+                    // Aplicar contra-rotação nos overlays
+                    const contraRot = -(rotacao || 0);
+                    const cartasOverlay = tile.querySelector('.cartas-no-tile');
+                    const overlay = tile.querySelector('.overlay-no-rotacao');
+                    if (cartasOverlay) {
+                        cartasOverlay.style.transform = `rotate(${contraRot}deg)`;
+                        cartasOverlay.style.transformOrigin = '50% 50%';
+                    }
+                    if (overlay) {
+                        overlay.style.transform = `rotate(${contraRot}deg)`;
+                        overlay.style.transformOrigin = '50% 50%';
+                    }
+                    
+                    if (rotacao && rotacao !== 0) {
+                        console.log(`  Tile ${id}: tipo=${tipo}, rotação ${rotacao}°`);
                     }
                 }
             });

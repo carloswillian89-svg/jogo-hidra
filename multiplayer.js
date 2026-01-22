@@ -241,20 +241,32 @@ function exibirInfoMultiplayer(jogadoresData) {
 
 function atualizarLabelsJogadores() {
     console.log('🏷️ Atualizando labels dos inventários...');
+    
+    // Mapeamento fixo: personagem -> slot de inventário
+    // Os slots são fixos no HTML: jogador-1=Torvin, jogador-2=Elara, jogador-3=Zephyr, jogador-4=Kaelen
+    const personagemParaSlot = {
+        'torvin': 1,
+        'elara': 2,
+        'zephyr': 3,
+        'kaelen': 4
+    };
+    
+    // Os nomes são FIXOS no HTML, não precisam ser alterados
+    // Apenas deixar como estão para evitar problemas
+    console.log('📌 Labels dos inventários são fixos por personagem (não por ordem de jogada)');
+    
+    /* Código removido: não alterar labels dinamicamente
     jogadores.forEach((jogador) => {
-        console.log(`  Jogador ID:${jogador.id} Personagem:"${jogador.personagem}" Nome:"${jogador.nome}"`);
-        const label = document.querySelector(`#jogador-${jogador.id} .zona-label`);
-        if (label) {
-            // Converter personagem para nome com primeira letra maiúscula
-            const nomePersonagem = jogador.personagem ? 
-                jogador.personagem.charAt(0).toUpperCase() + jogador.personagem.slice(1) : 
-                `Jogador ${jogador.id}`;
-            console.log(`    Alterando label de #jogador-${jogador.id} de "${label.textContent}" para "${nomePersonagem}"`);
-            label.textContent = nomePersonagem;
-        } else {
-            console.warn(`    ⚠️ Label não encontrado para #jogador-${jogador.id}`);
+        const slotId = personagemParaSlot[jogador.personagem?.toLowerCase()];
+        if (slotId) {
+            const label = document.querySelector(`#jogador-${slotId} .zona-label`);
+            if (label) {
+                // Manter o nome fixo do personagem
+                console.log(`  Slot ${slotId} (${label.textContent}) mantido`);
+            }
         }
     });
+    */
 }
 
 function configurarEventosSocket() {
