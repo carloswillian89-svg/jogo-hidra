@@ -1393,9 +1393,10 @@ function executarGritoHidra(linha, coluna, direcaoLinha, direcaoColuna, rotacoes
             novaRotacao = rotacoesLinha[col];  // Tiles normais recebem rotação aleatória
         }
         
+        // IMPORTANTE: Atualizar TODAS as propriedades de rotação
         tile.rotacao = novaRotacao;
-        tile.style.transform = `rotate(${novaRotacao}deg)`;
         tile.dataset.rotacao = String(novaRotacao);
+        tile.style.transform = `rotate(${novaRotacao}deg)`;
         
         // Contra-rotação nos overlays
         const contraRot = -novaRotacao;
@@ -1410,7 +1411,7 @@ function executarGritoHidra(linha, coluna, direcaoLinha, direcaoColuna, rotacoes
             overlay.style.transformOrigin = '50% 50%';
         }
         
-        console.log(`  🔄 Linha[${col}]: tipo=${tile.tipo}, rot=${novaRotacao}°`);
+        console.log(`  🔄 Linha[${col}]: ID=${tile.dataset.id} tipo=${tile.tipo}, rot=${novaRotacao}° (dataset=${tile.dataset.rotacao}, prop=${tile.rotacao})`);
     }
     
     // Aplicar rotações na coluna
@@ -1425,9 +1426,10 @@ function executarGritoHidra(linha, coluna, direcaoLinha, direcaoColuna, rotacoes
             novaRotacao = rotacoesColuna[lin];  // Tiles normais recebem rotação aleatória
         }
         
+        // IMPORTANTE: Atualizar TODAS as propriedades de rotação
         tile.rotacao = novaRotacao;
-        tile.style.transform = `rotate(${novaRotacao}deg)`;
         tile.dataset.rotacao = String(novaRotacao);
+        tile.style.transform = `rotate(${novaRotacao}deg)`;
         
         // Contra-rotação nos overlays
         const contraRot = -novaRotacao;
@@ -1442,7 +1444,7 @@ function executarGritoHidra(linha, coluna, direcaoLinha, direcaoColuna, rotacoes
             overlay.style.transformOrigin = '50% 50%';
         }
         
-        console.log(`  🔄 Coluna[${lin}]: tipo=${tile.tipo}, rot=${novaRotacao}°`);
+        console.log(`  🔄 Coluna[${lin}]: ID=${tile.dataset.id} tipo=${tile.tipo}, rot=${novaRotacao}° (dataset=${tile.dataset.rotacao}, prop=${tile.rotacao})`);
     }
     
     // Atualizar matriz baseado na configuração atual do tabuleiro
@@ -1573,8 +1575,15 @@ function salvarEstadoLocal() {
     
     tiles.forEach(tile => {
         const tipo = tile.tipo;
-        // Tiles especiais SEMPRE devem ter rotação 0
-        const rotacao = tiposEspeciais.includes(tipo) ? 0 : (tile.rotacao || Number(tile.dataset.rotacao) || 0);
+        // Garantir que sempre pegamos a rotação correta
+        const rotDataset = Number(tile.dataset.rotacao);
+        const rotProp = tile.rotacao;
+        const rotacao = tiposEspeciais.includes(tipo) ? 0 : (rotDataset || rotProp || 0);
+        
+        // DEBUG: Log apenas se houver discrepância
+        if (rotDataset !== rotProp && !tiposEspeciais.includes(tipo)) {
+            console.warn(`⚠️ Discrepância rotação tile ${tile.dataset.id}: dataset=${rotDataset}, prop=${rotProp}, usando=${rotacao}`);
+        }
         
         tilesInfo.push({
             id: tile.dataset.id,
