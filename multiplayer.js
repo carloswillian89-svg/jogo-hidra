@@ -348,9 +348,24 @@ function configurarEventosSocket() {
             if (carregou) {
                 console.log('✅ Estado local carregado com sucesso');
                 
-                // Atualizar apenas jogador atual se recebido do host
+                // 🔥 CRÍTICO: Sincronizar ordemJogada dos jogadores com servidor
+                if (dados.jogadoresEstado && dados.jogadoresEstado.length > 0) {
+                    console.log('🔄 Sincronizando ordemJogada com servidor...');
+                    jogadores.forEach(j => {
+                        const jogadorServidor = dados.jogadoresEstado.find(js => js.id === j.id);
+                        if (jogadorServidor && jogadorServidor.ordemJogada) {
+                            const ordemAntiga = j.ordemJogada;
+                            j.ordemJogada = jogadorServidor.ordemJogada;
+                            console.log(`  🔄 Jogador ${j.nome}: ordemJogada ${ordemAntiga} → ${j.ordemJogada}`);
+                        }
+                    });
+                }
+                
+                // Atualizar jogador atual com índice do servidor
                 if (dados.jogadorAtualIndex !== undefined) {
+                    const antigoIndex = jogadorAtualIndex;
                     jogadorAtualIndex = dados.jogadorAtualIndex;
+                    console.log(`🎮 jogadorAtualIndex atualizado: ${antigoIndex} → ${jogadorAtualIndex}`);
                 }
                 
                 // Atualizar contador de rodadas se recebido
@@ -361,6 +376,9 @@ function configurarEventosSocket() {
                         rodadasValor.textContent = rodadaAtual;
                     }
                 }
+                
+                // Redesenhar jogadores com ordemJogada atualizada
+                desenharJogadores();
                 
                 // Atualizar UI
                 if (typeof atualizarInfoTurno === 'function') atualizarInfoTurno();
