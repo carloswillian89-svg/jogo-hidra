@@ -1215,10 +1215,10 @@ function girarTile(tile) {
     const rotAtual = Number(tile.dataset.rotacao) || 0
     const novaRot = (rotAtual + 90) % 360
     
-    tile.dataset.rotacao = novaRot
-
-    //const OFFSET_VISUAL  = -90
-    tile.style.transform = `rotate(${novaRot }deg)`
+    // IMPORTANTE: Atualizar TODAS as propriedades de rotação
+    tile.rotacao = novaRot;
+    tile.dataset.rotacao = String(novaRot);
+    tile.style.transform = `rotate(${novaRot}deg)`;
 
     // aplica contra-rotação em overlays (cartas e jogadores) para que
     // permaneçam na orientação correta independente da rotação do tile
@@ -2676,9 +2676,10 @@ function executarGritoHidraCombate(dificuldadeParam) {
             const rotacoes = [0, 90, 180, 270];
             const novaRot = rotacoes[Math.floor(Math.random() * rotacoes.length)];
             
-            tile.dataset.rotacao = novaRot;
-            tile.style.transform = `rotate(${novaRot}deg)`;
+            // IMPORTANTE: Atualizar TODAS as propriedades de rotação
             tile.rotacao = novaRot;
+            tile.dataset.rotacao = String(novaRot);
+            tile.style.transform = `rotate(${novaRot}deg)`;
             
             console.log(`🎲 Tile ${tile.dataset.id}: tipo=${novoTipo}, rotação=${novaRot}°`);
             
@@ -2711,6 +2712,11 @@ function executarGritoHidraCombate(dificuldadeParam) {
         tilesEspeciais.forEach(({tile, tipo, id}) => {
             tile.classList.add("tile-grito-hidra");
             console.log(`🔒 Tile especial ${id}: tipo=${tipo} mantido (sem rotação)`);
+            
+            // Garantir que rotação está 0 para tiles especiais
+            tile.rotacao = 0;
+            tile.dataset.rotacao = '0';
+            tile.style.transform = 'rotate(0deg)';
             
             // Salvar estado dos tiles especiais
             estadosTiles.push({
