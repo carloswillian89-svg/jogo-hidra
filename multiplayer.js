@@ -232,22 +232,30 @@ function sincronizarTabuleiroServidor() {
         return;
     }
 
-    // Capturar estado ATUAL de todos os tiles
+    // 🔥 Capturar estado ATUAL de todos os tiles PELA POSIÇÃO DA MATRIZ
     const tilesEstadoAtualizado = [];
-    tiles.forEach(tile => {
-        const id = tile.id;
-        const tipo = tile.dataset.tipo || Array.from(tile.classList).find(c => 
-            ['curva', 'corredor', 'bifurcacao', 'camara', 'encruzilhada', 'entrada', 'saida', 'hidra'].includes(c)
-        );
-        const rotacao = parseInt(tile.dataset.rotacao) || 0;
-        tilesEstadoAtualizado.push({ id, tipo, rotacao });
-    });
+    for (let linha = 0; linha < TAMANHO; linha++) {
+        for (let coluna = 0; coluna < TAMANHO; coluna++) {
+            const id = `${linha}-${coluna}`;
+            const tile = document.querySelector(`.tile[data-id="${id}"]`);
+            
+            if (tile) {
+                const tipo = tile.dataset.tipo || Array.from(tile.classList).find(c => 
+                    ['curva', 'corredor', 'bifurcacao', 'camara', 'encruzilhada', 'entrada', 'saida', 'hidra'].includes(c)
+                );
+                const rotacao = parseInt(tile.dataset.rotacao) || 0;
+                tilesEstadoAtualizado.push({ id, tipo, rotacao });
+            } else {
+                console.warn(`⚠️ Tile ${id} não encontrado no DOM`);
+            }
+        }
+    }
 
     // Capturar estado das cartas
     const cartasAtualizadas = Array.from(cartas.entries()).map(([id, carta]) => ({
         id: carta.id,
         tipo: carta.tipo,
-        tileId: carta.tile ? carta.tile.id : null
+        tileId: carta.tile ? carta.tile.dataset.id : null
     }));
 
     // Capturar estado dos jogadores
@@ -258,7 +266,7 @@ function sincronizarTabuleiroServidor() {
         personagem: j.personagem,
         ordem: j.ordem,
         ordemJogada: j.ordemJogada,
-        tileId: j.tile ? j.tile.id : j.tileId
+        tileId: j.tile ? j.tile.dataset.id : j.tileId
     }));
 
     console.log('📤 Sincronizando estado completo do tabuleiro:', {
@@ -267,6 +275,7 @@ function sincronizarTabuleiroServidor() {
         jogadores: jogadoresAtualizados.length,
         jogadorAtualIndex
     });
+    console.log('  📋 Primeiros 5 tiles:', tilesEstadoAtualizado.slice(0, 5).map(t => `${t.id}:${t.tipo}:${t.rotacao}°`));
 
     socket.emit('atualizar-tabuleiro', {
         codigoSala: codigoSala,

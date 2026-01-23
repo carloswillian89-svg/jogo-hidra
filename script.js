@@ -1338,27 +1338,33 @@ function executarGritoHidra(linha, coluna, direcaoLinha, direcaoColuna, rotacoes
     // Inicia animação de terremoto
     tabuleiro.classList.add("terremoto");
     
-    // Adicionar destaque visual
+    // Adicionar destaque visual - BUSCAR PELO data-id
     for (let col = 0; col < TAMANHO; col++) {
-        tabuleiro.children[linha * TAMANHO + col].classList.add("tile-grito-hidra");
+        const tile = document.querySelector(`.tile[data-id="${linha}-${col}"]`);
+        if (tile) tile.classList.add("tile-grito-hidra");
     }
     for (let lin = 0; lin < TAMANHO; lin++) {
-        tabuleiro.children[lin * TAMANHO + coluna].classList.add("tile-grito-hidra");
+        const tile = document.querySelector(`.tile[data-id="${lin}-${coluna}"]`);
+        if (tile) tile.classList.add("tile-grito-hidra");
     }
     
     // PASSO 1: Mover linha fisicamente usando trocarTiles
     console.log(`🔄 Movendo linha ${linha} para ${direcaoLinha}`);
     if (direcaoLinha === 'direita') {
         for (let i = TAMANHO - 1; i > 0; i--) {
-            const tile1 = tabuleiro.children[linha * TAMANHO + i];
-            const tile2 = tabuleiro.children[linha * TAMANHO + (i - 1)];
-            trocarTiles(tile2, tile1, false, false);
+            const tile1Id = `${linha}-${i}`;
+            const tile2Id = `${linha}-${i - 1}`;
+            const tile1 = document.querySelector(`.tile[data-id="${tile1Id}"]`);
+            const tile2 = document.querySelector(`.tile[data-id="${tile2Id}"]`);
+            if (tile1 && tile2) trocarTiles(tile2, tile1, false, false);
         }
     } else {
         for (let i = 0; i < TAMANHO - 1; i++) {
-            const tile1 = tabuleiro.children[linha * TAMANHO + i];
-            const tile2 = tabuleiro.children[linha * TAMANHO + (i + 1)];
-            trocarTiles(tile1, tile2, false, false);
+            const tile1Id = `${linha}-${i}`;
+            const tile2Id = `${linha}-${i + 1}`;
+            const tile1 = document.querySelector(`.tile[data-id="${tile1Id}"]`);
+            const tile2 = document.querySelector(`.tile[data-id="${tile2Id}"]`);
+            if (tile1 && tile2) trocarTiles(tile1, tile2, false, false);
         }
     }
     
@@ -1366,24 +1372,35 @@ function executarGritoHidra(linha, coluna, direcaoLinha, direcaoColuna, rotacoes
     console.log(`🔄 Movendo coluna ${coluna} para ${direcaoColuna}`);
     if (direcaoColuna === 'baixo') {
         for (let i = TAMANHO - 1; i > 0; i--) {
-            const tile1 = tabuleiro.children[i * TAMANHO + coluna];
-            const tile2 = tabuleiro.children[(i - 1) * TAMANHO + coluna];
-            trocarTiles(tile2, tile1, false, false);
+            const tile1Id = `${i}-${coluna}`;
+            const tile2Id = `${i - 1}-${coluna}`;
+            const tile1 = document.querySelector(`.tile[data-id="${tile1Id}"]`);
+            const tile2 = document.querySelector(`.tile[data-id="${tile2Id}"]`);
+            if (tile1 && tile2) trocarTiles(tile2, tile1, false, false);
         }
     } else {
         for (let i = 0; i < TAMANHO - 1; i++) {
-            const tile1 = tabuleiro.children[i * TAMANHO + coluna];
-            const tile2 = tabuleiro.children[(i + 1) * TAMANHO + coluna];
-            trocarTiles(tile1, tile2, false, false);
+            const tile1Id = `${i}-${coluna}`;
+            const tile2Id = `${i + 1}-${coluna}`;
+            const tile1 = document.querySelector(`.tile[data-id="${tile1Id}"]`);
+            const tile2 = document.querySelector(`.tile[data-id="${tile2Id}"]`);
+            if (tile1 && tile2) trocarTiles(tile1, tile2, false, false);
         }
     }
     
     // PASSO 3: Aplicar rotações aos tiles (após terem sido movidos)
     console.log(`🎲 Aplicando rotações`);
     
-    // Aplicar rotações na linha
+    // Aplicar rotações na linha - BUSCAR PELO data-id, não pela posição do DOM!
     for (let col = 0; col < TAMANHO; col++) {
-        const tile = tabuleiro.children[linha * TAMANHO + col];
+        const tileId = `${linha}-${col}`;
+        const tile = document.querySelector(`.tile[data-id="${tileId}"]`);
+        
+        if (!tile) {
+            console.warn(`⚠️ Tile ${tileId} não encontrado!`);
+            continue;
+        }
+        
         const tiposEspeciais = ['entrada', 'saida', 'hidra'];
         
         let novaRotacao;
@@ -1414,9 +1431,16 @@ function executarGritoHidra(linha, coluna, direcaoLinha, direcaoColuna, rotacoes
         console.log(`  🔄 Linha[${col}]: ID=${tile.dataset.id} tipo=${tile.tipo}, rot=${novaRotacao}° (dataset=${tile.dataset.rotacao}, prop=${tile.rotacao})`);
     }
     
-    // Aplicar rotações na coluna
+    // Aplicar rotações na coluna - BUSCAR PELO data-id, não pela posição do DOM!
     for (let lin = 0; lin < TAMANHO; lin++) {
-        const tile = tabuleiro.children[lin * TAMANHO + coluna];
+        const tileId = `${lin}-${coluna}`;
+        const tile = document.querySelector(`.tile[data-id="${tileId}"]`);
+        
+        if (!tile) {
+            console.warn(`⚠️ Tile ${tileId} não encontrado!`);
+            continue;
+        }
+        
         const tiposEspeciais = ['entrada', 'saida', 'hidra'];
         
         let novaRotacao;
