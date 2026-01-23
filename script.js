@@ -2630,35 +2630,51 @@ function executarGritoHidraCombate(dificuldadeParam) {
         });
         
     } else if (dificuldadeParam === 'dificil') {
-        // DIFÍCIL: Girar E movimentar (embaralhar todos os tiles mantendo cartas e jogadores)
-        console.log('🐉 Modo Difícil: Embaralhando tabuleiro mantendo cartas e jogadores');
+        // DIFÍCIL: Girar E movimentar (embaralhar todos os tiles EXCETO especiais, mantendo cartas e jogadores)
+        console.log('🐉 Modo Difícil: Embaralhando tabuleiro mantendo cartas, jogadores e tiles especiais');
         
         // Coletar todos os tiles atuais
         const todosOsTiles = Array.from(tabuleiro.querySelectorAll('.tile'));
+        const tiposEspeciais = ['entrada', 'saida', 'hidra'];
         
-        // Salvar os tipos dos tiles
-        const tiposTiles = todosOsTiles.map(t => t.tipo);
+        // Separar tiles especiais dos normais
+        const tilesEspeciais = [];
+        const tilesNormais = [];
         
-        // Embaralhar os tipos (Fisher-Yates shuffle)
-        for (let i = tiposTiles.length - 1; i > 0; i--) {
+        todosOsTiles.forEach(tile => {
+            if (tiposEspeciais.includes(tile.tipo)) {
+                tilesEspeciais.push({
+                    tile: tile,
+                    tipo: tile.tipo,
+                    id: tile.dataset.id
+                });
+            } else {
+                tilesNormais.push(tile);
+            }
+        });
+        
+        // Salvar os tipos dos tiles NORMAIS
+        const tiposNormais = tilesNormais.map(t => t.tipo);
+        
+        // Embaralhar os tipos normais (Fisher-Yates shuffle)
+        for (let i = tiposNormais.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
-            [tiposTiles[i], tiposTiles[j]] = [tiposTiles[j], tiposTiles[i]];
+            [tiposNormais[i], tiposNormais[j]] = [tiposNormais[j], tiposNormais[i]];
         }
         
-        // Aplicar novos tipos e rotações aleatórias
-        todosOsTiles.forEach((tile, idx) => {
+        // Aplicar novos tipos e rotações aleatórias aos tiles NORMAIS
+        tilesNormais.forEach((tile, idx) => {
             tile.classList.add("tile-grito-hidra");
             
-            const novoTipo = tiposTiles[idx];
-            const tiposEspeciais = ['entrada', 'saida', 'hidra'];
+            const novoTipo = tiposNormais[idx];
             
             // Atualizar tipo do tile
             tile.tipo = novoTipo;
             tile.className = `tile ${novoTipo} tile-grito-hidra`;
             
-            // Rotação: SEMPRE 0 para tiles especiais, aleatória para outros
+            // Rotação aleatória para tiles normais
             const rotacoes = [0, 90, 180, 270];
-            const novaRot = tiposEspeciais.includes(novoTipo) ? 0 : rotacoes[Math.floor(Math.random() * rotacoes.length)];
+            const novaRot = rotacoes[Math.floor(Math.random() * rotacoes.length)];
             
             tile.dataset.rotacao = novaRot;
             tile.style.transform = `rotate(${novaRot}deg)`;
@@ -2689,6 +2705,19 @@ function executarGritoHidraCombate(dificuldadeParam) {
             // Atualizar matriz
             const [lin, col] = tile.dataset.id.split('-').map(Number);
             tabuleiroMatriz[lin][col] = novoTipo;
+        });
+        
+        // Manter tiles especiais inalterados (mas adicionar ao estadosTiles para sincronização)
+        tilesEspeciais.forEach(({tile, tipo, id}) => {
+            tile.classList.add("tile-grito-hidra");
+            console.log(`🔒 Tile especial ${id}: tipo=${tipo} mantido (sem rotação)`);
+            
+            // Salvar estado dos tiles especiais
+            estadosTiles.push({
+                id: id,
+                rotacao: 0,
+                tipo: tipo
+            });
         });
         
         // Cartas e jogadores permanecem nos mesmos tiles (IDs não mudam)
