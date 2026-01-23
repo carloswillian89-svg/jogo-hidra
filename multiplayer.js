@@ -855,6 +855,8 @@ function processarTrocarTilesRemoto(dados) {
 function processarGritoHidraRemoto(dados) {
     const { linha, coluna, direcaoLinha, direcaoColuna, rotacoesLinha, rotacoesColuna } = dados;
     
+    console.log('🐉 [REMOTO] Processando grito-hidra recebido do servidor');
+    
     // Tocar som da hidra para todos os jogadores
     if (typeof tocarSom === 'function') {
         tocarSom('hidra');
@@ -862,6 +864,11 @@ function processarGritoHidraRemoto(dados) {
     
     if (typeof executarGritoHidra === 'function') {
         executarGritoHidra(linha, coluna, direcaoLinha, direcaoColuna, rotacoesLinha, rotacoesColuna);
+    }
+    
+    // Salvar estado local após executar
+    if (typeof salvarEstadoLocal === 'function') {
+        salvarEstadoLocal();
     }
 }
 

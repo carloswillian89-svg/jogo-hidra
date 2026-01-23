@@ -94,6 +94,7 @@ const CONEXOES_BASE = {
 }
 
 let tileArrastado = null
+let timeoutGritoHidra = null // Timeout para remover animações do grito da hidra
 
 // Configurações globais do jogo (recuperadas do lobby)
 let dificuldade = sessionStorage.getItem('dificuldadeJogo') || 'normal'; // 'facil', 'normal', 'dificil'
@@ -1316,7 +1317,8 @@ function gritoHidra() {
     }
 
     if (modoMultiplayer && typeof enviarAcao === 'function') {
-        // Em multiplayer, enviar dados para servidor E executar localmente também
+        // Em multiplayer, apenas o HOST envia a ação (não executa localmente)
+        // Os clientes (incluindo host) executarão quando receberem via socket
         console.log('🐉 [MULTIPLAYER] Enviando grito-hidra para servidor');
         enviarAcao('grito-hidra', {
             linha: linhaAleatoria,
@@ -1327,9 +1329,7 @@ function gritoHidra() {
             rotacoesColuna: rotacoesColuna
         });
         
-        // 🔥 EXECUTAR TAMBÉM LOCALMENTE (para que o host veja o efeito)
-        console.log('🐉 [MULTIPLAYER LOCAL] Executando grito-hidra localmente também');
-        executarGritoHidra(linhaAleatoria, colunaAleatoria, direcaoLinha, direcaoColuna, rotacoesLinha, rotacoesColuna);
+        // NÃO executar localmente - aguardar receber via socket para sincronizar com outros jogadores
     } else {
         // Em modo local, executar diretamente
         console.log('🐉 [LOCAL] Executando grito-hidra localmente');
@@ -1491,8 +1491,9 @@ function executarGritoHidra(linha, coluna, direcaoLinha, direcaoColuna, rotacoes
     // Salvar estado
     salvarEstadoLocal();
     
-    // 🔥 MULTIPLAYER: Enviar estado atualizado do tabuleiro para o servidor
+    // 🔥 MULTIPLAYER: Enviar estado atualizado do tabuleiro para o servidor (apenas host)
     // Aguardar um pouco para garantir que todos os estados foram atualizados
+    const modoMultiplayer = sessionStorage.getItem('modoMultiplayer') === 'true';
     if (modoMultiplayer && ehHost && typeof sincronizarTabuleiroServidor === 'function') {
         setTimeout(() => {
             console.log('📤 [HOST] Sincronizando tabuleiro com servidor após Grito da Hidra...');
@@ -1500,12 +1501,20 @@ function executarGritoHidra(linha, coluna, direcaoLinha, direcaoColuna, rotacoes
         }, 100);
     }
     
+    // Limpar timeout anterior se existir
+    if (timeoutGritoHidra) {
+        clearTimeout(timeoutGritoHidra);
+        console.log('⏱️ Timeout anterior do grito da hidra cancelado');
+    }
+    
     // Remover destaque após 2 segundos
-    setTimeout(() => {
+    timeoutGritoHidra = setTimeout(() => {
+        console.log('✨ Removendo animações do grito da hidra...');
         document.querySelectorAll('.tile').forEach(tile => {
             tile.classList.remove("tile-grito-hidra");
         });
         tabuleiro.classList.remove("terremoto");
+        timeoutGritoHidra = null;
     }, 2000);
 
     console.log(`✅ Grito da Hidra executado`);
@@ -2792,13 +2801,21 @@ function executarGritoHidraCombate(dificuldadeParam) {
         desenharJogadores();
     }
     
+    // Limpar timeout anterior se existir
+    if (timeoutGritoHidra) {
+        clearTimeout(timeoutGritoHidra);
+        console.log('⏱️ Timeout anterior do grito da hidra cancelado');
+    }
+    
     // Remover destaque após 2 segundos
-    setTimeout(() => {
+    timeoutGritoHidra = setTimeout(() => {
+        console.log('✨ Removendo animações do grito da hidra (combate)...');
         const tiles = tabuleiro.querySelectorAll('.tile');
         tiles.forEach(tile => {
             tile.classList.remove("tile-grito-hidra");
         });
         tabuleiro.classList.remove("terremoto");
+        timeoutGritoHidra = null;
     }, 2000);
     
     // Salvar estado
