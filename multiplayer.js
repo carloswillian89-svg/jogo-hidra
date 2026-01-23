@@ -240,10 +240,20 @@ function sincronizarTabuleiroServidor() {
             const tile = document.querySelector(`.tile[data-id="${id}"]`);
             
             if (tile) {
-                const tipo = tile.dataset.tipo || Array.from(tile.classList).find(c => 
-                    ['curva', 'corredor', 'bifurcacao', 'camara', 'encruzilhada', 'entrada', 'saida', 'hidra'].includes(c)
-                );
+                // Priorizar tile.tipo, senão buscar na classe ou dataset
+                const tipo = tile.tipo || 
+                            tile.dataset.tipo || 
+                            Array.from(tile.classList).find(c => 
+                                ['curva', 'corredor', 'bifurcacao', 'camara', 'encruzilhada', 'entrada', 'saida', 'hidra'].includes(c)
+                            );
                 const rotacao = parseInt(tile.dataset.rotacao) || 0;
+                
+                // Garantir que o tipo está na matriz também
+                if (tipo && tabuleiroMatriz[linha][coluna] !== tipo) {
+                    console.log(`🔄 Atualizando matriz[${linha}][${coluna}]: ${tabuleiroMatriz[linha][coluna]} -> ${tipo}`);
+                    tabuleiroMatriz[linha][coluna] = tipo;
+                }
+                
                 tilesEstadoAtualizado.push({ id, tipo, rotacao });
             } else {
                 console.warn(`⚠️ Tile ${id} não encontrado no DOM`);
@@ -446,6 +456,7 @@ function configurarEventosSocket() {
                         // Criar novo tile com o tipo correto
                         const novoTile = criarTile(tileInfo.tipo);
                         novoTile.dataset.id = tileInfo.id;
+                        novoTile.dataset.tipo = tileInfo.tipo;
                         
                         // Aplicar rotação
                         novoTile.rotacao = tileInfo.rotacao;
@@ -899,7 +910,9 @@ function aplicarEstadosTiles(estadosTiles) {
         // Atualizar tipo se for modo difícil
         if (estado.tipo && tile.tipo !== estado.tipo) {
             tile.tipo = estado.tipo;
-            tile.className = `tile ${estado.tipo} tile-grito-hidra`;
+            tile.dataset.tipo = estado.tipo;
+            tile.className = `tile ${estado.tipo}`;
+            tile.classList.add("tile-grito-hidra");
             
             // Atualizar matriz
             const [lin, col] = estado.id.split('-').map(Number);

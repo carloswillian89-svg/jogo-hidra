@@ -607,6 +607,7 @@ function criarTile(tipo) {
 
     
     tile.tipo = tipo
+    tile.dataset.tipo = tipo
 
     tile.addEventListener("click", (event) => {
         if (!event.shiftKey) return
@@ -1491,9 +1492,12 @@ function executarGritoHidra(linha, coluna, direcaoLinha, direcaoColuna, rotacoes
     salvarEstadoLocal();
     
     // 🔥 MULTIPLAYER: Enviar estado atualizado do tabuleiro para o servidor
+    // Aguardar um pouco para garantir que todos os estados foram atualizados
     if (modoMultiplayer && ehHost && typeof sincronizarTabuleiroServidor === 'function') {
-        console.log('📤 [HOST] Sincronizando tabuleiro com servidor após Grito da Hidra...');
-        sincronizarTabuleiroServidor();
+        setTimeout(() => {
+            console.log('📤 [HOST] Sincronizando tabuleiro com servidor após Grito da Hidra...');
+            sincronizarTabuleiroServidor();
+        }, 100);
     }
     
     // Remover destaque após 2 segundos
@@ -2515,9 +2519,12 @@ function gritoHidraCombate() {
         });
         
         // 🔥 Sincronizar estado completo do tabuleiro com o servidor
+        // Aguardar um pouco para garantir que todos os estados foram atualizados
         if (ehHost && typeof sincronizarTabuleiroServidor === 'function') {
-            console.log('📤 [HOST] Sincronizando tabuleiro com servidor após Grito da Hidra de Combate...');
-            sincronizarTabuleiroServidor();
+            setTimeout(() => {
+                console.log('📤 [HOST] Sincronizando tabuleiro com servidor após Grito da Hidra de Combate...');
+                sincronizarTabuleiroServidor();
+            }, 100);
         }
     }
 }
@@ -2719,7 +2726,9 @@ function executarGritoHidraCombate(dificuldadeParam) {
             
             // Atualizar tipo do tile
             tile.tipo = novoTipo;
-            tile.className = `tile ${novoTipo} tile-grito-hidra`;
+            tile.dataset.tipo = novoTipo;
+            tile.className = `tile ${novoTipo}`;
+            tile.classList.add("tile-grito-hidra");
             
             // Rotação aleatória para tiles normais
             const rotacoes = [0, 90, 180, 270];
