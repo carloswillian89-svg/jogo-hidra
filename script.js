@@ -1315,7 +1315,7 @@ function gritoHidra() {
     }
 
     if (modoMultiplayer && typeof enviarAcao === 'function') {
-        // Em multiplayer, enviar dados para servidor
+        // Em multiplayer, enviar dados para servidor E executar localmente também
         console.log('🐉 [MULTIPLAYER] Enviando grito-hidra para servidor');
         enviarAcao('grito-hidra', {
             linha: linhaAleatoria,
@@ -1325,6 +1325,10 @@ function gritoHidra() {
             rotacoesLinha: rotacoesLinha,
             rotacoesColuna: rotacoesColuna
         });
+        
+        // 🔥 EXECUTAR TAMBÉM LOCALMENTE (para que o host veja o efeito)
+        console.log('🐉 [MULTIPLAYER LOCAL] Executando grito-hidra localmente também');
+        executarGritoHidra(linhaAleatoria, colunaAleatoria, direcaoLinha, direcaoColuna, rotacoesLinha, rotacoesColuna);
     } else {
         // Em modo local, executar diretamente
         console.log('🐉 [LOCAL] Executando grito-hidra localmente');
@@ -2509,6 +2513,12 @@ function gritoHidraCombate() {
             dificuldade: dificuldade,
             estadosTiles: estadosTiles
         });
+        
+        // 🔥 Sincronizar estado completo do tabuleiro com o servidor
+        if (ehHost && typeof sincronizarTabuleiroServidor === 'function') {
+            console.log('📤 [HOST] Sincronizando tabuleiro com servidor após Grito da Hidra de Combate...');
+            sincronizarTabuleiroServidor();
+        }
     }
 }
 
