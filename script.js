@@ -1462,6 +1462,12 @@ function executarGritoHidra(linha, coluna, direcaoLinha, direcaoColuna, rotacoes
     // Salvar estado
     salvarEstadoLocal();
     
+    // 🔥 MULTIPLAYER: Enviar estado atualizado do tabuleiro para o servidor
+    if (modoMultiplayer && ehHost && typeof sincronizarTabuleiroServidor === 'function') {
+        console.log('📤 [HOST] Sincronizando tabuleiro com servidor após Grito da Hidra...');
+        sincronizarTabuleiroServidor();
+    }
+    
     // Remover destaque após 2 segundos
     setTimeout(() => {
         document.querySelectorAll('.tile').forEach(tile => {

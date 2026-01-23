@@ -477,6 +477,43 @@ io.on('connection', (socket) => {
         });
     });
 
+    // 🔥 Atualizar tabuleiro após mudanças (Grito da Hidra, trocas, etc)
+    socket.on('atualizar-tabuleiro', (dados) => {
+        const sala = salas.get(dados.codigoSala);
+        if (!sala) {
+            console.log(`❌ Sala ${dados.codigoSala} não encontrada`);
+            return;
+        }
+
+        console.log(`📥 [ATUALIZAÇÃO] Estado do tabuleiro recebido do host (sala ${dados.codigoSala})`);
+        
+        // Atualizar estado completo na sala
+        sala.tabuleiro = dados.tabuleiro;
+        sala.tilesEstado = dados.tilesEstado;
+        sala.cartasEstado = dados.cartasEstado;
+        sala.entradaPosicao = dados.entradaPosicao;
+        sala.jogadorAtualIndex = dados.jogadorAtualIndex;
+
+        // Atualizar jogadores
+        if (dados.jogadoresEstado && dados.jogadoresEstado.length > 0) {
+            dados.jogadoresEstado.forEach(jogadorEstado => {
+                const jogador = sala.jogadores.find(j => j.id === jogadorEstado.id);
+                if (jogador) {
+                    jogador.tileId = jogadorEstado.tileId;
+                    jogador.ordemJogada = jogadorEstado.ordemJogada;
+                }
+            });
+        }
+
+        console.log(`✅ Estado do servidor atualizado:`, {
+            tiles: sala.tilesEstado?.length,
+            cartas: sala.cartasEstado?.length,
+            jogadores: sala.jogadores.length,
+            jogadorAtual: sala.jogadorAtualIndex
+        });
+        console.log(`  📊 Primeiros 3 tiles:`, sala.tilesEstado?.slice(0, 3).map(t => `${t.id}:${t.tipo}:${t.rotacao}°`));
+    });
+
     // Reiniciar tabuleiro
     socket.on('reiniciar-tabuleiro', (dados) => {
         const sala = salas.get(dados.codigoSala);

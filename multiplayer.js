@@ -219,6 +219,68 @@ function gerarTabuleiroHost() {
     console.log('✅ Host marcou jogo como iniciado');
 }
 
+// 🔥 Sincronizar estado completo do tabuleiro com o servidor (após Grito da Hidra, trocas, etc)
+function sincronizarTabuleiroServidor() {
+    if (!ehHost) {
+        console.log('⚠️ Apenas o host pode sincronizar tabuleiro');
+        return;
+    }
+
+    const tiles = document.querySelectorAll('.tile');
+    if (tiles.length === 0) {
+        console.log('⚠️ Nenhum tile encontrado para sincronizar');
+        return;
+    }
+
+    // Capturar estado ATUAL de todos os tiles
+    const tilesEstadoAtualizado = [];
+    tiles.forEach(tile => {
+        const id = tile.id;
+        const tipo = tile.dataset.tipo || Array.from(tile.classList).find(c => 
+            ['curva', 'corredor', 'bifurcacao', 'camara', 'encruzilhada', 'entrada', 'saida', 'hidra'].includes(c)
+        );
+        const rotacao = parseInt(tile.dataset.rotacao) || 0;
+        tilesEstadoAtualizado.push({ id, tipo, rotacao });
+    });
+
+    // Capturar estado das cartas
+    const cartasAtualizadas = Array.from(cartas.entries()).map(([id, carta]) => ({
+        id: carta.id,
+        tipo: carta.tipo,
+        tileId: carta.tile ? carta.tile.id : null
+    }));
+
+    // Capturar estado dos jogadores
+    const jogadoresAtualizados = jogadores.map(j => ({
+        id: j.id,
+        socketId: j.socketId,
+        nome: j.nome,
+        personagem: j.personagem,
+        ordem: j.ordem,
+        ordemJogada: j.ordemJogada,
+        tileId: j.tile ? j.tile.id : j.tileId
+    }));
+
+    console.log('📤 Sincronizando estado completo do tabuleiro:', {
+        tiles: tilesEstadoAtualizado.length,
+        cartas: cartasAtualizadas.length,
+        jogadores: jogadoresAtualizados.length,
+        jogadorAtualIndex
+    });
+
+    socket.emit('atualizar-tabuleiro', {
+        codigoSala: codigoSala,
+        tabuleiro: tabuleiroMatriz,
+        tilesEstado: tilesEstadoAtualizado,
+        cartasEstado: cartasAtualizadas,
+        entradaPosicao: entradaPosicao,
+        jogadorAtualIndex: jogadorAtualIndex,
+        jogadoresEstado: jogadoresAtualizados
+    });
+
+    console.log('✅ Estado do tabuleiro sincronizado com servidor');
+}
+
 
 function configurarJogadoresMultiplayer(jogadoresData) {
     // Atualizar array de jogadores com dados do lobby
