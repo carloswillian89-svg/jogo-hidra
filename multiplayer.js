@@ -51,6 +51,8 @@ function inicializarJogoMultiplayer(jogadoresData) {
     if (!foiReload) {
         console.log('🗑️ Limpando estado local (vindo do lobby)...');
         localStorage.removeItem('labirinto-hidra-estado');
+    } else {
+        console.log('🔄 RELOAD DETECTADO - Solicitando estado atual do servidor...');
     }
     
     // Primeiro configurar eventos para receber respostas
@@ -61,6 +63,11 @@ function inicializarJogoMultiplayer(jogadoresData) {
         codigoSala: codigoSala,
         socketId: meuSocketId
     });
+    
+    // 🔥 Se foi reload, solicitar estado atual explicitamente
+    if (foiReload) {
+        socket.emit('solicitar-tabuleiro', { codigoSala: codigoSala });
+    }
         
     // Configurar jogadores baseado nos dados do lobby
     configurarJogadoresMultiplayer(jogadoresData);
@@ -324,71 +331,9 @@ function configurarEventosSocket() {
             jogadorAtualIndex: dados.jogadorAtualIndex
         });
         
-        // 🔥 IMPORTANTE: Só carregar estado local se for um RECARREGAMENTO REAL (F5)
-        // Verificar se veio de um reload da página (performance.navigation.type === 1)
-        const foiReload = performance.navigation && performance.navigation.type === 1;
-        const jogoJaIniciado = sessionStorage.getItem('jogoJaIniciado') === 'true';
-        const estadoSalvo = localStorage.getItem('labirinto-hidra-estado');
-        
-        console.log('🔍 Verificação de recarregamento:', {
-            foiReload,
-            jogoJaIniciado,
-            temEstadoSalvo: !!estadoSalvo,
-            temFuncaoCarregar: typeof carregarEstadoLocal === 'function'
-        });
-        
-        // Só carregar estado local se:
-        // 1. Foi um reload real da página (F5)
-        // 2. E o jogo já havia sido iniciado
-        // 3. E tem estado salvo
-        if (foiReload && jogoJaIniciado && estadoSalvo && typeof carregarEstadoLocal === 'function') {
-            console.log('🔄 Reload detectado! Tentando carregar estado local...');
-            const carregou = carregarEstadoLocal();
-            
-            if (carregou) {
-                console.log('✅ Estado local carregado com sucesso');
-                
-                // 🔥 CRÍTICO: Sincronizar ordemJogada dos jogadores com servidor
-                if (dados.jogadoresEstado && dados.jogadoresEstado.length > 0) {
-                    console.log('🔄 Sincronizando ordemJogada com servidor...');
-                    jogadores.forEach(j => {
-                        const jogadorServidor = dados.jogadoresEstado.find(js => js.id === j.id);
-                        if (jogadorServidor && jogadorServidor.ordemJogada) {
-                            const ordemAntiga = j.ordemJogada;
-                            j.ordemJogada = jogadorServidor.ordemJogada;
-                            console.log(`  🔄 Jogador ${j.nome}: ordemJogada ${ordemAntiga} → ${j.ordemJogada}`);
-                        }
-                    });
-                }
-                
-                // Atualizar jogador atual com índice do servidor
-                if (dados.jogadorAtualIndex !== undefined) {
-                    const antigoIndex = jogadorAtualIndex;
-                    jogadorAtualIndex = dados.jogadorAtualIndex;
-                    console.log(`🎮 jogadorAtualIndex atualizado: ${antigoIndex} → ${jogadorAtualIndex}`);
-                }
-                
-                // Atualizar contador de rodadas se recebido
-                if (dados.rodadasContador !== undefined) {
-                    rodadaAtual = dados.rodadasContador;
-                    const rodadasValor = document.querySelector('#rodadas-valor');
-                    if (rodadasValor) {
-                        rodadasValor.textContent = rodadaAtual;
-                    }
-                }
-                
-                // Redesenhar jogadores com ordemJogada atualizada
-                desenharJogadores();
-                
-                // Atualizar UI
-                if (typeof atualizarInfoTurno === 'function') atualizarInfoTurno();
-                if (typeof atualizarDestaqueInventario === 'function') atualizarDestaqueInventario();
-                return; // Não processar o tabuleiro recebido
-            }
-        }
-        
-        // Primeira vez ou sem estado salvo - usar tabuleiro do host
-        console.log('🆕 Primeiro carregamento ou sem estado local. Usando tabuleiro do host.');
+        // 🔥 IMPORTANTE: Em MULTIPLAYER, SEMPRE usar o estado do servidor
+        // O servidor é a ÚNICA fonte da verdade - localStorage pode estar desatualizado
+        console.log('🌐 MULTIPLAYER: Sincronizando com estado do servidor (ignorando localStorage local)');
         
         // Marcar que o jogo foi iniciado (para próximos recarregamentos)
         sessionStorage.setItem('jogoJaIniciado', 'true');

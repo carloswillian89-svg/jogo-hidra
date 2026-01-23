@@ -387,6 +387,33 @@ io.on('connection', (socket) => {
         }
     });
 
+    // Solicitar tabuleiro explicitamente (usado no reload)
+    socket.on('solicitar-tabuleiro', (dados) => {
+        console.log(`📞 Solicitação de tabuleiro recebida de ${socket.id} (sala ${dados.codigoSala})`);
+        const sala = salas.get(dados.codigoSala);
+        if (!sala) {
+            console.log(`❌ Sala ${dados.codigoSala} não encontrada`);
+            return;
+        }
+
+        // Enviar estado atual se disponível
+        if (sala.tabuleiro) {
+            console.log(`📤 Enviando tabuleiro salvo para ${socket.id}`);
+            socket.emit('receber-tabuleiro', {
+                tabuleiro: sala.tabuleiro,
+                tilesEstado: sala.tilesEstado,
+                cartasEstado: sala.cartasEstado,
+                entradaPosicao: sala.entradaPosicao,
+                jogadorAtualIndex: sala.jogadorAtualIndex,
+                jogadoresEstado: sala.jogadores,
+                estadoSala: sala.estado,
+                rodadasContador: sala.rodadasContador || 1
+            });
+        } else {
+            console.log(`⚠️ Tabuleiro ainda não foi gerado na sala ${dados.codigoSala}`);
+        }
+    });
+
     // Sincronizar tabuleiro
     socket.on('enviar-tabuleiro', (dados) => {
         const sala = salas.get(dados.codigoSala);
