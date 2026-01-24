@@ -1534,17 +1534,21 @@ function executarGritoHidra(linha, coluna, direcaoLinha, direcaoColuna, rotacoes
     }
     
     // Remover destaque após 2 segundos
+    console.log('⏰ Agendando remoção de bordas vermelhas em 2 segundos...');
     timeoutGritoHidra = setTimeout(() => {
         console.log('✨ Removendo animações do grito da hidra...');
         const tilesComBorda = document.querySelectorAll('.tile-grito-hidra');
         console.log(`  🔍 Encontrados ${tilesComBorda.length} tiles com borda vermelha`);
         
+        let removidos = 0;
         document.querySelectorAll('.tile').forEach(tile => {
             if (tile.classList.contains("tile-grito-hidra")) {
                 tile.classList.remove("tile-grito-hidra");
-                console.log(`  ✅ Removida borda de ${tile.dataset.id}`);
+                removidos++;
             }
         });
+        
+        console.log(`  ✅ Removidas ${removidos} bordas vermelhas`);
         
         tabuleiro.classList.remove("terremoto");
         console.log('  ✅ Animação de terremoto removida');

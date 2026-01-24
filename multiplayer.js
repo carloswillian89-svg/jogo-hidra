@@ -286,6 +286,7 @@ function sincronizarTabuleiroServidor() {
         jogadorAtualIndex
     });
     console.log('  📋 Primeiros 5 tiles:', tilesEstadoAtualizado.slice(0, 5).map(t => `${t.id}:${t.tipo}:${t.rotacao}°`));
+    console.log('  📋 Últimos 5 tiles:', tilesEstadoAtualizado.slice(-5).map(t => `${t.id}:${t.tipo}:${t.rotacao}°`));
 
     socket.emit('atualizar-tabuleiro', {
         codigoSala: codigoSala,
@@ -856,6 +857,8 @@ function processarGritoHidraRemoto(dados) {
     const { linha, coluna, direcaoLinha, direcaoColuna, rotacoesLinha, rotacoesColuna } = dados;
     
     console.log('🐉 [REMOTO] Processando grito-hidra recebido do servidor');
+    console.log(`  🎯 Linha: ${linha}, Coluna: ${coluna}`);
+    console.log(`  ➡️ Direções: linha=${direcaoLinha}, coluna=${direcaoColuna}`);
     
     // Tocar som da hidra para todos os jogadores
     if (typeof tocarSom === 'function') {
@@ -864,11 +867,12 @@ function processarGritoHidraRemoto(dados) {
     
     if (typeof executarGritoHidra === 'function') {
         executarGritoHidra(linha, coluna, direcaoLinha, direcaoColuna, rotacoesLinha, rotacoesColuna);
-    }
-    
-    // Salvar estado local após executar
-    if (typeof salvarEstadoLocal === 'function') {
-        salvarEstadoLocal();
+        
+        // Salvar estado local IMEDIATAMENTE após executar
+        console.log('💾 [REMOTO] Salvando estado local após grito da hidra...');
+        if (typeof salvarEstadoLocal === 'function') {
+            salvarEstadoLocal();
+        }
     }
 }
 
