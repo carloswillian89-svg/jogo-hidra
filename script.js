@@ -22,6 +22,30 @@ let volumeGlobal = parseFloat(localStorage.getItem('volumeJogo')) || 0.5;
 // Carregar volume da música salvo ou usar 50% como padrão
 let volumeMusica = parseFloat(localStorage.getItem('volumeMusica')) || 0.5;
 
+// Exibir dificuldade escolhida no index
+window.addEventListener('DOMContentLoaded', () => {
+    const dificuldade = sessionStorage.getItem('dificuldadeJogo') || 'normal';
+    const infoDifEl = document.getElementById('info-dificuldade');
+    if (infoDifEl) {
+        let txt = 'Dificuldade: ';
+        if (dificuldade === 'facil') txt += 'Fácil';
+        else if (dificuldade === 'normal') txt += 'Normal';
+        else if (dificuldade === 'dificil') txt += 'Difícil';
+        else txt += dificuldade;
+        infoDifEl.textContent = txt;
+    }
+
+    // Exibir nomes dos jogadores ao lado dos personagens
+    if (window.jogadores) {
+        for (let i = 1; i <= 4; i++) {
+            const nomeEl = document.getElementById(`nome-jogador-${i}`);
+            if (nomeEl && window.jogadores[i-1] && window.jogadores[i-1].nome) {
+                nomeEl.textContent = window.jogadores[i-1].nome;
+            }
+        }
+    }
+});
+
 // Aplicar volume a todos os sons (efeitos)
 function atualizarVolumeTodos() {
     Object.values(sons).forEach(som => {
@@ -1645,11 +1669,14 @@ function atualizarInfoTurno(mostrarNotificacao = false) {
         // se algo falhar, mantém o fallback para jogador
     }
 
-    document.getElementById("infoTurno").innerText = `Vez de ${nomeExibicao}`
+    // Exibe nome do jogador junto ao personagem
+    let nomeJogador = atual.nome || '';
+    let textoTurno = nomeJogador ? `${nomeExibicao} (${nomeJogador})` : nomeExibicao;
+    document.getElementById("infoTurno").innerText = `Vez de ${textoTurno}`
     
     // Mostrar notificação visual de mudança de turno apenas se solicitado
     if (mostrarNotificacao) {
-        mostrarNotificacaoTurno(nomeExibicao);
+        mostrarNotificacaoTurno(textoTurno);
     }
 }
 
