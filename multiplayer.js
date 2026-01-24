@@ -266,7 +266,10 @@ function sincronizarTabuleiroServidor() {
     const cartasAtualizadas = Array.from(cartas.entries()).map(([id, carta]) => ({
         id: carta.id,
         tipo: carta.tipo,
-        tileId: carta.tile ? carta.tile.dataset.id : null
+        zona: carta.zona || 'deck',
+        tileId: carta.tile ? carta.tile.dataset.id : null,
+        faceUp: carta.faceUp || false,
+        dono: carta.dono || null
     }));
 
     // Capturar estado dos jogadores
@@ -586,9 +589,26 @@ function configurarEventosSocket() {
         
         // Receber e aplicar estado das cartas
         if (dados.cartasEstado) {
+            console.log(`🃏 Aplicando estado de ${dados.cartasEstado.length} cartas...`);
             cartas.clear();
             dados.cartasEstado.forEach(c => {
-                cartas.set(c.id, c);
+                // Determinar zona com base no tileId
+                let zona = c.zona || 'deck';
+                if (c.tileId && !zona.startsWith('tile-')) {
+                    zona = `tile-${c.tileId}`;
+                }
+                
+                // Garantir que todas as propriedades estejam definidas
+                const cartaCompleta = {
+                    id: c.id,
+                    tipo: c.tipo,
+                    zona: zona,
+                    faceUp: c.faceUp || false,
+                    dono: c.dono || null,
+                    tile: c.tileId ? document.querySelector(`.tile[data-id="${c.tileId}"]`) : null
+                };
+                cartas.set(c.id, cartaCompleta);
+                console.log(`  🃏 Carta ${c.id}: zona=${cartaCompleta.zona}, tile=${c.tileId}`);
             });
             renderizarCartas();
         } else {
