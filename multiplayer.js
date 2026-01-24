@@ -209,7 +209,8 @@ function gerarTabuleiroHost() {
         cartasEstado: cartasEstado,
         entradaPosicao: entradaPosicao,
         jogadorAtualIndex: jogadorAtualIndex,
-        jogadoresEstado: jogadoresEstado
+        jogadoresEstado: jogadoresEstado,
+        rodadasContador: rodadaAtual
     });
     
     console.log('✅ [HOST] Evento enviar-tabuleiro emitido');
@@ -266,10 +267,14 @@ function sincronizarTabuleiroServidor() {
     const cartasAtualizadas = Array.from(cartas.entries()).map(([id, carta]) => ({
         id: carta.id,
         tipo: carta.tipo,
+        nome: carta.nome || '',
         zona: carta.zona || 'deck',
         tileId: carta.tile ? carta.tile.dataset.id : null,
         faceUp: carta.faceUp || false,
-        dono: carta.dono || null
+        dono: carta.dono || null,
+        efeito: carta.efeito || '',
+        imagem: carta.imagem || '',
+        imagemMiniatura: carta.imagemMiniatura || ''
     }));
 
     // Capturar estado dos jogadores
@@ -299,7 +304,8 @@ function sincronizarTabuleiroServidor() {
         cartasEstado: cartasAtualizadas,
         entradaPosicao: entradaPosicao,
         jogadorAtualIndex: jogadorAtualIndex,
-        jogadoresEstado: jogadoresAtualizados
+        jogadoresEstado: jogadoresAtualizados,
+        rodadasContador: rodadaAtual
     });
 
     console.log('✅ Estado do tabuleiro sincronizado com servidor');
@@ -603,12 +609,15 @@ function configurarEventosSocket() {
                     id: c.id,
                     tipo: c.tipo,
                     zona: zona,
-                    faceUp: c.faceUp || false,
+                    faceUp: c.faceUp === true,  // Força booleano explícito
                     dono: c.dono || null,
-                    tile: c.tileId ? document.querySelector(`.tile[data-id="${c.tileId}"]`) : null
+                    tile: c.tileId ? document.querySelector(`.tile[data-id="${c.tileId}"]`) : null,
+                    imagem: c.imagem || '',
+                    imagemMiniatura: c.imagemMiniatura || '',
+                    nome: c.nome || ''
                 };
                 cartas.set(c.id, cartaCompleta);
-                console.log(`  🃏 Carta ${c.id}: zona=${cartaCompleta.zona}, tile=${c.tileId}`);
+                console.log(`  🃏 Carta ${c.id}: zona=${cartaCompleta.zona}, tile=${c.tileId}, faceUp=${cartaCompleta.faceUp}`);
             });
             renderizarCartas();
         } else {
@@ -1087,6 +1096,9 @@ function processarPassarTurnoRemoto(dados) {
         // Se era último a jogar, executar ações de fim de rodada
         if (dados.eraUltimoAJogar) {
             console.log('🔄 [REMOTO] Último jogador da rodada - executando ações...');
+            
+            // 🔥 IMPORTANTE: Rodada já foi incrementada no servidor e recebida em dados.rodadaAtual
+            // NÃO incrementar aqui para evitar duplicação
             
             // Adicionar artefato ao tabuleiro
             if (typeof adicionarArtefatoAoTabuleiro === 'function') {

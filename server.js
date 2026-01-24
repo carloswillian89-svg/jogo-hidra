@@ -493,6 +493,12 @@ io.on('connection', (socket) => {
         sala.cartasEstado = dados.cartasEstado;
         sala.entradaPosicao = dados.entradaPosicao;
         sala.jogadorAtualIndex = dados.jogadorAtualIndex;
+        
+        // 🔥 Atualizar contador de rodadas se fornecido
+        if (typeof dados.rodadasContador !== 'undefined') {
+            sala.rodadasContador = dados.rodadasContador;
+            console.log(`  📊 Rodada atualizada: ${sala.rodadasContador}`);
+        }
 
         // Atualizar jogadores
         if (dados.jogadoresEstado && dados.jogadoresEstado.length > 0) {
@@ -522,7 +528,8 @@ io.on('connection', (socket) => {
             cartasEstado: sala.cartasEstado,
             entradaPosicao: sala.entradaPosicao,
             jogadorAtualIndex: sala.jogadorAtualIndex,
-            jogadoresEstado: sala.jogadores
+            jogadoresEstado: sala.jogadores,
+            rodadasContador: sala.rodadasContador
         });
     });
 
