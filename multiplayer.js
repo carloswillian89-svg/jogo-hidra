@@ -221,7 +221,8 @@ function gerarTabuleiroHost() {
 
 // 🔥 Sincronizar estado completo do tabuleiro com o servidor (após Grito da Hidra, trocas, etc)
 function sincronizarTabuleiroServidor() {
-    if (!ehHost) {
+    const souHost = sessionStorage.getItem('ehHost') === 'true';
+    if (!souHost) {
         console.log('⚠️ Apenas o host pode sincronizar tabuleiro');
         return;
     }
