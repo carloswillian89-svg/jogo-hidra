@@ -1343,16 +1343,6 @@ function executarGritoHidra(linha, coluna, direcaoLinha, direcaoColuna, rotacoes
     // Inicia animação de terremoto
     tabuleiro.classList.add("terremoto");
     
-    // Adicionar destaque visual - BUSCAR PELO data-id
-    for (let col = 0; col < TAMANHO; col++) {
-        const tile = document.querySelector(`.tile[data-id="${linha}-${col}"]`);
-        if (tile) tile.classList.add("tile-grito-hidra");
-    }
-    for (let lin = 0; lin < TAMANHO; lin++) {
-        const tile = document.querySelector(`.tile[data-id="${lin}-${coluna}"]`);
-        if (tile) tile.classList.add("tile-grito-hidra");
-    }
-    
     // PASSO 1: Mover linha fisicamente usando trocarTiles
     console.log(`🔄 Movendo linha ${linha} para ${direcaoLinha}`);
     if (direcaoLinha === 'direita') {
@@ -1406,6 +1396,9 @@ function executarGritoHidra(linha, coluna, direcaoLinha, direcaoColuna, rotacoes
             continue;
         }
         
+        // Adicionar destaque visual APÓS os movimentos
+        tile.classList.add("tile-grito-hidra");
+        
         const tiposEspeciais = ['entrada', 'saida', 'hidra'];
         
         let novaRotacao;
@@ -1437,14 +1430,25 @@ function executarGritoHidra(linha, coluna, direcaoLinha, direcaoColuna, rotacoes
     }
     
     // Aplicar rotações na coluna - BUSCAR PELO data-id, não pela posição do DOM!
+    // IMPORTANTE: Pular o tile de cruzamento (linha,coluna) pois ele já recebeu rotação
     for (let lin = 0; lin < TAMANHO; lin++) {
         const tileId = `${lin}-${coluna}`;
+        
+        // Pular o tile de cruzamento para não sobrescrever sua rotação
+        if (lin === linha) {
+            console.log(`  ⏭️ Pulando cruzamento ${tileId} (já rotacionado)`);
+            continue;
+        }
+        
         const tile = document.querySelector(`.tile[data-id="${tileId}"]`);
         
         if (!tile) {
             console.warn(`⚠️ Tile ${tileId} não encontrado!`);
             continue;
         }
+        
+        // Adicionar destaque visual APÓS os movimentos
+        tile.classList.add("tile-grito-hidra");
         
         const tiposEspeciais = ['entrada', 'saida', 'hidra'];
         
