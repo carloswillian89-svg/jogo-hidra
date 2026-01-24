@@ -1031,8 +1031,19 @@ function processarMoverJogadorRemoto(dados) {
 }
 
 function processarPassarTurnoRemoto(dados) {
+    console.log('🔄 [REMOTO] Processando passar-turno:', dados);
+    
     if (dados && typeof dados.jogadorAtualIndex !== 'undefined') {
         jogadorAtualIndex = dados.jogadorAtualIndex;
+        
+        // Atualizar rodada se foi enviada
+        if (typeof dados.rodadaAtual !== 'undefined') {
+            rodadaAtual = dados.rodadaAtual;
+            if (typeof atualizarRodadaUI === 'function') {
+                atualizarRodadaUI();
+            }
+        }
+        
         desenharJogadores();
         if (typeof renderizarCartasPersonagens === 'function') {
             renderizarCartasPersonagens(jogadorAtual().id);
@@ -1046,6 +1057,32 @@ function processarPassarTurnoRemoto(dados) {
         // Tocar som de mudança de turno
         if (typeof tocarSom === 'function') {
             tocarSom('encerrarTurno');
+        }
+        
+        // Se era último a jogar, executar ações de fim de rodada
+        if (dados.eraUltimoAJogar) {
+            console.log('🔄 [REMOTO] Último jogador da rodada - executando ações...');
+            
+            // Adicionar artefato ao tabuleiro
+            if (typeof adicionarArtefatoAoTabuleiro === 'function') {
+                adicionarArtefatoAoTabuleiro();
+            }
+            
+            // Executar Grito da Hidra após um pequeno delay
+            setTimeout(() => {
+                console.log('🐉 [REMOTO] Executando Grito da Hidra automaticamente');
+                if (typeof tocarSom === 'function') {
+                    tocarSom('hidra');
+                }
+                if (typeof gritoHidra === 'function') {
+                    gritoHidra();
+                }
+            }, 800);
+        }
+        
+        // Salvar estado
+        if (typeof salvarEstadoLocal === 'function') {
+            salvarEstadoLocal();
         }
     }
 }
