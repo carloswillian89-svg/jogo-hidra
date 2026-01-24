@@ -1343,6 +1343,19 @@ function executarGritoHidra(linha, coluna, direcaoLinha, direcaoColuna, rotacoes
     // Inicia animação de terremoto
     tabuleiro.classList.add("terremoto");
     
+    // 🔥 MARCAR tiles afetados ANTES das trocas (pelos IDs originais)
+    const tilesAfetados = new Set();
+    for (let col = 0; col < TAMANHO; col++) {
+        const tile = document.querySelector(`.tile[data-id="${linha}-${col}"]`);
+        if (tile) tilesAfetados.add(tile);
+    }
+    for (let lin = 0; lin < TAMANHO; lin++) {
+        const tile = document.querySelector(`.tile[data-id="${lin}-${coluna}"]`);
+        if (tile) tilesAfetados.add(tile);
+    }
+    
+    console.log(`🎯 ${tilesAfetados.size} tiles serão afetados`);
+    
     // PASSO 1: Mover linha fisicamente usando trocarTiles
     console.log(`🔄 Movendo linha ${linha} para ${direcaoLinha}`);
     if (direcaoLinha === 'direita') {
@@ -1383,10 +1396,17 @@ function executarGritoHidra(linha, coluna, direcaoLinha, direcaoColuna, rotacoes
         }
     }
     
+    // 🔥 Adicionar classe de destaque aos tiles que foram marcados
+    console.log('🎨 Adicionando bordas vermelhas aos tiles afetados...');
+    tilesAfetados.forEach(tile => {
+        tile.classList.add("tile-grito-hidra");
+    });
+    
     // PASSO 3: Aplicar rotações aos tiles (após terem sido movidos)
+    // Buscar pelos IDs ATUAIS (pós-troca)
     console.log(`🎲 Aplicando rotações`);
     
-    // Aplicar rotações na linha - BUSCAR PELO data-id, não pela posição do DOM!
+    // Aplicar rotações na linha
     for (let col = 0; col < TAMANHO; col++) {
         const tileId = `${linha}-${col}`;
         const tile = document.querySelector(`.tile[data-id="${tileId}"]`);
@@ -1395,9 +1415,6 @@ function executarGritoHidra(linha, coluna, direcaoLinha, direcaoColuna, rotacoes
             console.warn(`⚠️ Tile ${tileId} não encontrado!`);
             continue;
         }
-        
-        // Adicionar destaque visual APÓS os movimentos
-        tile.classList.add("tile-grito-hidra");
         
         const tiposEspeciais = ['entrada', 'saida', 'hidra'];
         
@@ -1446,9 +1463,6 @@ function executarGritoHidra(linha, coluna, direcaoLinha, direcaoColuna, rotacoes
             console.warn(`⚠️ Tile ${tileId} não encontrado!`);
             continue;
         }
-        
-        // Adicionar destaque visual APÓS os movimentos
-        tile.classList.add("tile-grito-hidra");
         
         const tiposEspeciais = ['entrada', 'saida', 'hidra'];
         
