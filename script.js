@@ -1480,11 +1480,13 @@ function executarGritoHidra(linha, coluna, direcaoLinha, direcaoColuna, rotacoes
         console.log(`  🔄 Coluna[${lin}]: ID=${tile.dataset.id} tipo=${tile.tipo}, rot=${novaRotacao}° (dataset=${tile.dataset.rotacao}, prop=${tile.rotacao})`);
     }
     
-    // Atualizar matriz baseado na configuração atual do tabuleiro
+    // Atualizar matriz baseado nos data-id dos tiles (não pela posição DOM)
     for (let lin = 0; lin < TAMANHO; lin++) {
         for (let col = 0; col < TAMANHO; col++) {
-            const tile = tabuleiro.children[lin * TAMANHO + col];
-            tabuleiroMatriz[lin][col] = tile.tipo;
+            const tile = document.querySelector(`.tile[data-id="${lin}-${col}"]`);
+            if (tile) {
+                tabuleiroMatriz[lin][col] = tile.tipo;
+            }
         }
     }
     
@@ -1496,13 +1498,13 @@ function executarGritoHidra(linha, coluna, direcaoLinha, direcaoColuna, rotacoes
     salvarEstadoLocal();
     
     // 🔥 MULTIPLAYER: Enviar estado atualizado do tabuleiro para o servidor (apenas host)
-    // Aguardar um pouco para garantir que todos os estados foram atualizados
+    // Aguardar um pouco mais para garantir que todos os estados foram atualizados
     const modoMultiplayer = sessionStorage.getItem('modoMultiplayer') === 'true';
     if (modoMultiplayer && ehHost && typeof sincronizarTabuleiroServidor === 'function') {
         setTimeout(() => {
             console.log('📤 [HOST] Sincronizando tabuleiro com servidor após Grito da Hidra...');
             sincronizarTabuleiroServidor();
-        }, 100);
+        }, 500); // Aumentado de 100ms para 500ms
     }
     
     // Limpar timeout anterior se existir
@@ -1514,10 +1516,18 @@ function executarGritoHidra(linha, coluna, direcaoLinha, direcaoColuna, rotacoes
     // Remover destaque após 2 segundos
     timeoutGritoHidra = setTimeout(() => {
         console.log('✨ Removendo animações do grito da hidra...');
+        const tilesComBorda = document.querySelectorAll('.tile-grito-hidra');
+        console.log(`  🔍 Encontrados ${tilesComBorda.length} tiles com borda vermelha`);
+        
         document.querySelectorAll('.tile').forEach(tile => {
-            tile.classList.remove("tile-grito-hidra");
+            if (tile.classList.contains("tile-grito-hidra")) {
+                tile.classList.remove("tile-grito-hidra");
+                console.log(`  ✅ Removida borda de ${tile.dataset.id}`);
+            }
         });
+        
         tabuleiro.classList.remove("terremoto");
+        console.log('  ✅ Animação de terremoto removida');
         timeoutGritoHidra = null;
     }, 2000);
 
