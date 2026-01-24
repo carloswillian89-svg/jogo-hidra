@@ -94,7 +94,8 @@ const CONEXOES_BASE = {
 }
 
 let tileArrastado = null
-let timeoutGritoHidra = null // Timeout para remover animações do grito da hidra
+let timeoutGritoHidra = null // Timeout para remover animações do grito da hidra (fim de turno)
+let timeoutGritoHidraCombate = null // Timeout para remover animações do grito da hidra (combate)
 
 // Configurações globais do jogo (recuperadas do lobby)
 let dificuldade = sessionStorage.getItem('dificuldadeJogo') || 'normal'; // 'facil', 'normal', 'dificil'
@@ -2840,20 +2841,20 @@ function executarGritoHidraCombate(dificuldadeParam) {
     }
     
     // Limpar timeout anterior se existir
-    if (timeoutGritoHidra) {
-        clearTimeout(timeoutGritoHidra);
-        console.log('⏱️ Timeout anterior do grito da hidra cancelado');
+    if (timeoutGritoHidraCombate) {
+        clearTimeout(timeoutGritoHidraCombate);
+        console.log('⏱️ Timeout anterior do grito da hidra (combate) cancelado');
     }
     
     // Remover destaque após 2 segundos
-    timeoutGritoHidra = setTimeout(() => {
+    timeoutGritoHidraCombate = setTimeout(() => {
         console.log('✨ Removendo animações do grito da hidra (combate)...');
         const tiles = tabuleiro.querySelectorAll('.tile');
         tiles.forEach(tile => {
             tile.classList.remove("tile-grito-hidra");
         });
         tabuleiro.classList.remove("terremoto");
-        timeoutGritoHidra = null;
+        timeoutGritoHidraCombate = null;
     }, 2000);
     
     // Salvar estado
