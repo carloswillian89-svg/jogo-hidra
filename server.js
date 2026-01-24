@@ -512,6 +512,7 @@ io.on('connection', (socket) => {
             jogadorAtual: sala.jogadorAtualIndex
         });
         console.log(`  📊 Primeiros 3 tiles:`, sala.tilesEstado?.slice(0, 3).map(t => `${t.id}:${t.tipo}:${t.rotacao}°`));
+        console.log(`  📊 Últimos 3 tiles:`, sala.tilesEstado?.slice(-3).map(t => `${t.id}:${t.tipo}:${t.rotacao}°`));
         
         // 🔥 Enviar estado atualizado para todos os outros jogadores (exceto o host que enviou)
         console.log(`📤 Enviando estado atualizado para outros jogadores da sala ${dados.codigoSala}`);

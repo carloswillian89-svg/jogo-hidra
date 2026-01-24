@@ -1072,16 +1072,23 @@ function processarPassarTurnoRemoto(dados) {
                 adicionarArtefatoAoTabuleiro();
             }
             
-            // Executar Grito da Hidra após um pequeno delay
-            setTimeout(() => {
-                console.log('🐉 [REMOTO] Executando Grito da Hidra automaticamente');
-                if (typeof tocarSom === 'function') {
-                    tocarSom('hidra');
-                }
-                if (typeof gritoHidra === 'function') {
-                    gritoHidra();
-                }
-            }, 800);
+            // 🔥 APENAS O HOST envia o grito da hidra para o servidor
+            // Todos os clientes (incluindo host) executarão quando receberem via socket
+            const souHost = sessionStorage.getItem('ehHost') === 'true';
+            if (souHost) {
+                // Executar Grito da Hidra após um pequeno delay
+                setTimeout(() => {
+                    console.log('🐉 [HOST] Enviando Grito da Hidra para servidor');
+                    if (typeof tocarSom === 'function') {
+                        tocarSom('hidra');
+                    }
+                    if (typeof gritoHidra === 'function') {
+                        gritoHidra(); // Isso vai enviar para o servidor
+                    }
+                }, 800);
+            } else {
+                console.log('⏳ [CLIENTE] Aguardando Grito da Hidra do host via servidor...');
+            }
         }
         
         // Salvar estado

@@ -96,6 +96,7 @@ const CONEXOES_BASE = {
 let tileArrastado = null
 let timeoutGritoHidra = null // Timeout para remover animações do grito da hidra (fim de turno)
 let timeoutGritoHidraCombate = null // Timeout para remover animações do grito da hidra (combate)
+let ehHost = false // Flag para identificar se é o host da sala
 
 // Configurações globais do jogo (recuperadas do lobby)
 let dificuldade = sessionStorage.getItem('dificuldadeJogo') || 'normal'; // 'facil', 'normal', 'dificil'
@@ -1520,7 +1521,8 @@ function executarGritoHidra(linha, coluna, direcaoLinha, direcaoColuna, rotacoes
     // 🔥 MULTIPLAYER: Enviar estado atualizado do tabuleiro para o servidor (apenas host)
     // Sincronizar IMEDIATAMENTE após todas as atualizações
     const modoMultiplayer = sessionStorage.getItem('modoMultiplayer') === 'true';
-    if (modoMultiplayer && ehHost && typeof sincronizarTabuleiroServidor === 'function') {
+    const souHost = sessionStorage.getItem('ehHost') === 'true';
+    if (modoMultiplayer && souHost && typeof sincronizarTabuleiroServidor === 'function') {
         // Usar requestAnimationFrame para garantir que o DOM foi atualizado
         requestAnimationFrame(() => {
             console.log('📤 [HOST] Sincronizando tabuleiro com servidor após Grito da Hidra...');
