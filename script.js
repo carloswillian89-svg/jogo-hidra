@@ -1295,7 +1295,7 @@ function podeMover(jogador, tileDestino) {
 
 
 function gritoHidra() {
-    console.log('🐉 [INICIO] gritoHidra() chamado - Fim da rodada');
+    console.log('🐉 [INICIO] gritoHidra() chamado - FIM DA RODADA (movimentação de linha/coluna)');
     
     // Verificar se está em modo multiplayer
     const modoMultiplayer = sessionStorage.getItem('modoMultiplayer') === 'true';
@@ -1517,13 +1517,14 @@ function executarGritoHidra(linha, coluna, direcaoLinha, direcaoColuna, rotacoes
     salvarEstadoLocal();
     
     // 🔥 MULTIPLAYER: Enviar estado atualizado do tabuleiro para o servidor (apenas host)
-    // Aguardar um pouco mais para garantir que todos os estados foram atualizados
+    // Sincronizar IMEDIATAMENTE após todas as atualizações
     const modoMultiplayer = sessionStorage.getItem('modoMultiplayer') === 'true';
     if (modoMultiplayer && ehHost && typeof sincronizarTabuleiroServidor === 'function') {
-        setTimeout(() => {
+        // Usar requestAnimationFrame para garantir que o DOM foi atualizado
+        requestAnimationFrame(() => {
             console.log('📤 [HOST] Sincronizando tabuleiro com servidor após Grito da Hidra...');
             sincronizarTabuleiroServidor();
-        }, 500); // Aumentado de 100ms para 500ms
+        });
     }
     
     // Limpar timeout anterior se existir
@@ -2543,7 +2544,7 @@ if (botaoGritoHidraCombate) {
 
 // Função de Grito da Hidra ao perder combate
 function gritoHidraCombate() {
-    console.log('🐉 [INICIO] gritoHidraCombate() chamado');
+    console.log('🐉 [INICIO] gritoHidraCombate() chamado - PERDER COMBATE (varia com dificuldade)');
     
     // Executar localmente PRIMEIRO e capturar os estados dos tiles
     console.log('🐉 Executando grito-hidra-combate localmente');
