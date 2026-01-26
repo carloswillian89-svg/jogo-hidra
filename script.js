@@ -1975,8 +1975,12 @@ function atualizarDestaqueInventario() {
         const personagem = personagemPorSlot[i];
         // Busca o jogador que está com esse personagem
         const jogador = jogadores.find(j => j.personagem && j.personagem.toLowerCase() === personagem);
-        if (!jogador) continue;
+        if (!jogador) {
+            console.log(`[INVENTARIO] Slot ${i} (${personagem}): nenhum jogador associado!`);
+            continue;
+        }
         const cartasJogador = [...cartas.values()].filter(c => c.dono === jogador.id);
+        console.log(`[INVENTARIO] Slot ${i} (${personagem}): jogador id=${jogador.id}, nome=${jogador.nome || '-'}, personagem=${jogador.personagem}, cartas=`, cartasJogador.map(c=>c.nome));
         cartasJogador.forEach(carta => {
             const cartaEl = document.createElement("div");
             cartaEl.className = "carta-inventario";
