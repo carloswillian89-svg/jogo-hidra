@@ -356,10 +356,8 @@ function moverJogador(tileDestino) {
         });
     }
 
-    // Checar vitória ao mover
-    if (tileDestino.dataset.tipo === 'saida' || tileDestino.tipo === 'saida') {
-        mostrarAnimacaoVitoria(jogador);
-    }
+
+    // Não mostrar animação de vitória aqui. Agora só será mostrada ao encerrar o jogo pelo host.
 
     // Salvar estado após mover jogador
     salvarEstadoLocal();
