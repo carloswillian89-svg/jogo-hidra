@@ -1939,27 +1939,45 @@ function limparEstadoLocal() {
 
 // atualiza destaque do slot de inventário do jogador ativo
 function atualizarDestaqueInventario() {
-    // limpa todos
+    // Limpa todos os destaques
     for (let i = 1; i <= 4; i++) {
         const el = document.getElementById(`jogador-${i}`)
         if (el) el.classList.remove("ativo")
     }
 
-    const atual = jogadorAtual()
-    
-    // Mapear personagem para slot de inventário no HTML
-    // Torvin=azul(1), Elara=vermelho(2), Zephyr=verde(3), Kaelen=roxo(4)
+    // Destaca o inventário do jogador atual
+    const atual = jogadorAtual();
+    // Encontrar o slot correto pelo personagem do jogador atual
     const personagemParaSlot = {
         'torvin': 1,
         'elara': 2,
         'zephyr': 3,
         'kaelen': 4
     };
-    
     const slotId = personagemParaSlot[atual.personagem?.toLowerCase()];
     if (slotId) {
         const ativoEl = document.getElementById(`jogador-${slotId}`);
         if (ativoEl) ativoEl.classList.add("ativo");
+    }
+
+    // Exibir cartas do inventário do jogador correto
+    for (let i = 1; i <= 4; i++) {
+        const slotEl = document.getElementById(`inventario-jogador-${i}`);
+        if (!slotEl) continue;
+        // Limpa inventário
+        slotEl.innerHTML = "";
+        // Descobre personagem do slot
+        const personagem = Object.keys(personagemParaSlot).find(p => personagemParaSlot[p] === i);
+        const jogador = jogadores.find(j => j.personagem?.toLowerCase() === personagem);
+        if (!jogador) continue;
+        // Filtra cartas do jogador
+        const cartasJogador = [...cartas.values()].filter(c => c.dono === jogador.id);
+        cartasJogador.forEach(carta => {
+            const cartaEl = document.createElement("div");
+            cartaEl.className = "carta-inventario";
+            cartaEl.innerHTML = `<img src='${carta.imagemMiniatura}' alt='${carta.nome}' title='${carta.nome}'>`;
+            slotEl.appendChild(cartaEl);
+        });
     }
 }
 
