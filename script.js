@@ -1351,14 +1351,14 @@ function podeMover(jogador, tileDestino) {
         return false;
     }
 
-    // Verificar se o jogador possui os artefatos "A Coroa da Fuga" (a5) E "O Mapa do Espectro" (a9)
-    const temA5 = [...cartas.values()].some(c => c.id === "a5" && c.dono === jogador.id);
-    const temA9 = [...cartas.values()].some(c => c.id === "a9" && c.dono === jogador.id);
+	// Verificar se o jogador possui os artefatos "A Coroa da Fuga" (a5) OU "O Mapa do Espectro" (a9)
+	const temA5 = [...cartas.values()].some(c => c.id === "a5" && c.dono === jogador.id);
+	const temA9 = [...cartas.values()].some(c => c.id === "a9" && c.dono === jogador.id);
 
-    // Só pode ignorar paredes se tiver os dois artefatos
-    if (temA5 && temA9) {
-        return true;
-    }
+	// Pode ignorar paredes se tiver pelo menos um dos artefatos
+	if (temA5 || temA9) {
+		return true;
+	}
 
     const origemPos = posicaoDoTile(jogador.tile);
     const destinoPos = posicaoDoTile(tileDestino);
@@ -3372,6 +3372,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     console.error('❌ Botão Iniciar Jogo não encontrado no DOM');
                 }
             }, 200);
+
+            // Adicionar listener para evento de encerramento do jogo
+            socket.on('jogo-encerrado', () => {
+                console.log('🏁 Jogo encerrado! Verificando vitória...');
+                // Procurar jogador na saída
+                const saidaTile = Object.values(tabuleiro.querySelectorAll('.tile')).find(tile => tile.dataset.tipo === 'saida');
+                if (!saidaTile) return;
+                const jogadorVencedor = jogadores.find(j => j.tileId === saidaTile.dataset.id);
+                if (jogadorVencedor) {
+                    mostrarAnimacaoVitoria(jogadorVencedor);
+                }
+            });
         });
     } else {
         console.log('🎮 Modo local - Socket desativado');
