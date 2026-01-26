@@ -1961,16 +1961,21 @@ function atualizarDestaqueInventario() {
     }
 
     // Exibir cartas do inventário do jogador correto
+    // Mapeamento fixo: 1=Torvin, 2=Elara, 3=Zephyr, 4=Kaelen
+    const personagemPorSlot = {
+        1: 'torvin',
+        2: 'elara',
+        3: 'zephyr',
+        4: 'kaelen'
+    };
     for (let i = 1; i <= 4; i++) {
         const slotEl = document.getElementById(`inventario-jogador-${i}`);
         if (!slotEl) continue;
         slotEl.innerHTML = "";
-        // Descobre personagem do slot (1=Torvin, 2=Elara, 3=Zephyr, 4=Kaelen)
-        const personagem = Object.keys(personagemParaSlot).find(p => personagemParaSlot[p] === i);
-        // Busca o jogador que está jogando com esse personagem
+        const personagem = personagemPorSlot[i];
+        // Busca o jogador que está com esse personagem
         const jogador = jogadores.find(j => j.personagem && j.personagem.toLowerCase() === personagem);
         if (!jogador) continue;
-        // Filtra cartas do jogador
         const cartasJogador = [...cartas.values()].filter(c => c.dono === jogador.id);
         cartasJogador.forEach(carta => {
             const cartaEl = document.createElement("div");
