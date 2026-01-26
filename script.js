@@ -1965,10 +1965,10 @@ function atualizarDestaqueInventario() {
         const slotEl = document.getElementById(`inventario-jogador-${i}`);
         if (!slotEl) continue;
         slotEl.innerHTML = "";
-        // Descobre personagem do slot
+        // Descobre personagem do slot (1=Torvin, 2=Elara, 3=Zephyr, 4=Kaelen)
         const personagem = Object.keys(personagemParaSlot).find(p => personagemParaSlot[p] === i);
-        // Busca o jogador que tem esse personagem E essa ordem visual (slot)
-        const jogador = jogadores.find(j => personagemParaSlot[j.personagem?.toLowerCase()] === i);
+        // Busca o jogador que está jogando com esse personagem
+        const jogador = jogadores.find(j => j.personagem && j.personagem.toLowerCase() === personagem);
         if (!jogador) continue;
         // Filtra cartas do jogador
         const cartasJogador = [...cartas.values()].filter(c => c.dono === jogador.id);
