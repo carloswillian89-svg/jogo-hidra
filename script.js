@@ -1964,11 +1964,11 @@ function atualizarDestaqueInventario() {
     for (let i = 1; i <= 4; i++) {
         const slotEl = document.getElementById(`inventario-jogador-${i}`);
         if (!slotEl) continue;
-        // Limpa inventário
         slotEl.innerHTML = "";
         // Descobre personagem do slot
         const personagem = Object.keys(personagemParaSlot).find(p => personagemParaSlot[p] === i);
-        const jogador = jogadores.find(j => j.personagem?.toLowerCase() === personagem);
+        // Busca o jogador que tem esse personagem E essa ordem visual (slot)
+        const jogador = jogadores.find(j => personagemParaSlot[j.personagem?.toLowerCase()] === i);
         if (!jogador) continue;
         // Filtra cartas do jogador
         const cartasJogador = [...cartas.values()].filter(c => c.dono === jogador.id);
