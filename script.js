@@ -338,16 +338,16 @@ function gerarMatriz() {
 
 
 function moverJogador(tileDestino) {
-    const jogador = jogadorAtual()
+    const jogador = jogadorAtual();
 
-    if (!podeMover(jogador, tileDestino)) return
+    if (!podeMover(jogador, tileDestino)) return;
 
-    jogador.tile = tileDestino
-    jogador.tileId = tileDestino.dataset.id
+    jogador.tile = tileDestino;
+    jogador.tileId = tileDestino.dataset.id;
 
     tocarSom('passos');
-    desenharJogadores()
-    
+    desenharJogadores();
+
     // Enviar movimento para outros jogadores no modo multiplayer
     if (typeof enviarAcao === 'function') {
         enviarAcao('mover-jogador', {
@@ -355,9 +355,70 @@ function moverJogador(tileDestino) {
             tileId: tileDestino.dataset.id
         });
     }
-    
+
+    // Checar vitória ao mover
+    if (tileDestino.dataset.tipo === 'saida' || tileDestino.tipo === 'saida') {
+        mostrarAnimacaoVitoria(jogador);
+    }
+
     // Salvar estado após mover jogador
     salvarEstadoLocal();
+}
+
+// Função para mostrar animação e mensagem de vitória
+function mostrarAnimacaoVitoria(jogador) {
+    // Evitar múltiplas animações
+    if (document.getElementById('animacao-vitoria')) return;
+
+    // Overlay de vitória
+    const overlay = document.createElement('div');
+    overlay.id = 'animacao-vitoria';
+    overlay.style.position = 'fixed';
+    overlay.style.top = 0;
+    overlay.style.left = 0;
+    overlay.style.width = '100vw';
+    overlay.style.height = '100vh';
+    overlay.style.background = 'rgba(0,0,0,0.85)';
+    overlay.style.display = 'flex';
+    overlay.style.flexDirection = 'column';
+    overlay.style.alignItems = 'center';
+    overlay.style.justifyContent = 'center';
+    overlay.style.zIndex = 9999;
+
+    // Mensagem
+    const msg = document.createElement('div');
+    msg.innerHTML = `<h1 style="color: #fff; font-size: 3em; margin-bottom: 0.5em; text-shadow: 2px 2px 8px #000;">Vitória!</h1>` +
+        `<p style="color: #fff; font-size: 1.5em;">${jogador.personagem ? jogador.personagem : 'Jogador'} chegou à saída!</p>`;
+    msg.style.textAlign = 'center';
+
+    // Animação simples (confetes)
+    const confete = document.createElement('div');
+    confete.style.position = 'absolute';
+    confete.style.top = 0;
+    confete.style.left = 0;
+    confete.style.width = '100%';
+    confete.style.height = '100%';
+    confete.style.pointerEvents = 'none';
+    confete.innerHTML = `<style>@keyframes confete-fall {0%{transform:translateY(-100px);}100%{transform:translateY(100vh);}}.confete{position:absolute;width:16px;height:16px;border-radius:50%;opacity:0.8;animation:confete-fall 2.5s linear forwards;}</style>`;
+    for(let i=0;i<40;i++){
+        const c = document.createElement('div');
+        c.className = 'confete';
+        c.style.background = `hsl(${Math.random()*360},90%,60%)`;
+        c.style.left = `${Math.random()*100}%`;
+        c.style.top = `${-Math.random()*100}px`;
+        c.style.animationDelay = `${Math.random()*0.8}s`;
+        confete.appendChild(c);
+    }
+
+    overlay.appendChild(confete);
+    overlay.appendChild(msg);
+    document.body.appendChild(overlay);
+
+    tocarSom('encerrarJogo');
+
+    setTimeout(() => {
+        if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+    }, 5000);
 }
 
 const tilesEstado = new Map()
@@ -1286,35 +1347,36 @@ function girarTile(tile) {
 }
 
 
+
 function podeMover(jogador, tileDestino) {
     if (!saoAdjacentes(jogador.tile, tileDestino)) {
-        return false
+        return false;
     }
 
-    // Verificar se o jogador possui os artefatos a2 ou a9
-    const temA2 = [...cartas.values()].some(c => c.id === "a2" && c.dono === jogador.id)
-    const temA9 = [...cartas.values()].some(c => c.id === "a9" && c.dono === jogador.id)
+    // Verificar se o jogador possui os artefatos "A Coroa da Fuga" (a5) E "O Mapa do Espectro" (a9)
+    const temA5 = [...cartas.values()].some(c => c.id === "a5" && c.dono === jogador.id);
+    const temA9 = [...cartas.values()].some(c => c.id === "a9" && c.dono === jogador.id);
 
-    // Se tem pelo menos um dos artefatos, pode se mover para qualquer tile adjacente (ignora paredes)
-    if (temA2 || temA9) {
-        return true
+    // Só pode ignorar paredes se tiver os dois artefatos
+    if (temA5 && temA9) {
+        return true;
     }
 
-    const origemPos = posicaoDoTile(jogador.tile)
-    const destinoPos = posicaoDoTile(tileDestino)
+    const origemPos = posicaoDoTile(jogador.tile);
+    const destinoPos = posicaoDoTile(tileDestino);
 
-    const dir = direcaoEntre(origemPos, destinoPos)
-    if (!dir) return false
+    const dir = direcaoEntre(origemPos, destinoPos);
+    if (!dir) return false;
 
-    const oposta = { N:"S", S:"N", L:"O", O:"L" }[dir]
+    const oposta = { N: "S", S: "N", L: "O", O: "L" }[dir];
 
-    const conexOrigem = conexoesDoTile(jogador.tile)
-    const conexDestino = conexoesDoTile(tileDestino)
+    const conexOrigem = conexoesDoTile(jogador.tile);
+    const conexDestino = conexoesDoTile(tileDestino);
 
     return (
         conexOrigem.includes(dir) &&
         conexDestino.includes(oposta)
-    )
+    );
 }
 
 
